@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Admin — NARR'IA</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo.png') }}">
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f5f7fa;
+            margin: 0;
+            color: #333;
+        }
+        header {
+            background: #1F4E79;
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 1.4rem;
+        }
+        header .links a {
+            color: white;
+            text-decoration: none;
+            margin-left: 1.5rem;
+            font-size: 0.9rem;
+        }
+        header .links a:hover { text-decoration: underline; }
+        .container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .stat-card {
+            background: white;
+            padding: 1.2rem 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            border-top: 3px solid #1F4E79;
+        }
+        .stat-card.cost { border-top-color: #C55A11; }
+        .stat-card.cost .stat-value { color: #C55A11; }
+        .stat-label {
+            font-size: 0.85rem;
+            color: #666;
+            margin-bottom: 0.4rem;
+        }
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: #1F4E79;
+        }
+        .users-table {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+        .users-table h2 {
+            margin: 0;
+            padding: 1.2rem 1.5rem;
+            border-bottom: 1px solid #e0e6ed;
+            font-size: 1.1rem;
+            color: #1F4E79;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid #e0e6ed;
+            font-size: 0.9rem;
+        }
+        th {
+            background: #f8fafc;
+            color: #555;
+            font-weight: 500;
+            font-size: 0.85rem;
+        }
+        td.right { text-align: right; }
+        td.center { text-align: center; }
+        .badge {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        .badge.admin { background: #C55A11; color: white; }
+        .badge.active { background: #d4edda; color: #155724; }
+        .badge.inactive { background: #f8d7da; color: #721c24; }
+        .quota-bar {
+            display: inline-block;
+            width: 100px;
+            height: 8px;
+            background: #e0e6ed;
+            border-radius: 4px;
+            overflow: hidden;
+            vertical-align: middle;
+        }
+        .quota-fill {
+            height: 100%;
+            background: #1F4E79;
+            transition: width 0.3s;
+        }
+        .quota-fill.warning { background: #f0ad4e; }
+        .quota-fill.danger { background: #C55A11; }
+        button.btn-action {
+            background: #1F4E79;
+            color: white;
+            border: none;
+            padding: 0.3rem 0.7rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            margin-right: 0.3rem;
+        }
+        button.btn-action:hover { background: #2E5F8E; }
+        button.btn-action.danger { background: #C55A11; }
+        button.btn-action.danger:hover { background: #D66A21; }
+        .loading {
+            padding: 3rem;
+            text-align: center;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>NARR'IA — Console d'administration</h1>
+        <div class="links">
+            <a href="/">Retour à l'application</a>
+            <a href="#" id="logoutBtn">Déconnexion</a>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="stat-label">Utilisateurs au total</div>
+                <div class="stat-value" id="totalUsers">—</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Utilisateurs actifs</div>
+                <div class="stat-value" id="activeUsers">—</div>
+            </div>
+            <div class="stat-card cost">
+                <div class="stat-label">Coût total (30 derniers jours)</div>
+                <div class="stat-value" id="totalCost">—</div>
+            </div>
+        </div>
+
+        <div class="users-table">
+            <h2>Liste des testeurs</h2>
+            <div id="tableContainer">
+                <div class="loading">Chargement...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function loadUsers() {
+            try {
+                const res = await fetch('/api/admin/users');
+                if (!res.ok) {
+                    document.getElementById('tableContainer').innerHTML =
+                        '<div class="loading">Erreur de chargement.</div>';
+                    return;
+                }
+                const data = await res.json();
+                renderStats(data);
+                renderTable(data.users);
+            } catch (err) {
+                document.getElementById('tableContainer').innerHTML =
+                    '<div class="loading">Erreur : ' + err.message + '</div>';
+            }
+        }
+
+        function renderStats(data) {
+            document.getElementById('totalUsers').textContent = data.total_users;
+            const active = data.users.filter(u => u.is_active).length;
+            document.getElementById('activeUsers').textContent = active;
+            document.getElementById('totalCost').textContent =
+                '$' + data.total_cost_30d_usd.toFixed(2);
+        }
+
+        function renderTable(users) {
+            if (users.length === 0) {
+                document.getElementById('tableContainer').innerHTML =
+                    '<div class="loading">Aucun utilisateur.</div>';
+                return;
+            }
+
+            const rows = users.map(u => {
+                const lastLogin = u.last_login_at
+                    ? new Date(u.last_login_at * 1000).toLocaleDateString('fr-FR')
+                    : '—';
+                const created = new Date(u.created_at * 1000).toLocaleDateString('fr-FR');
+                const usage30dPct = (u.used_30d / u.quota_monthly) * 100;
+                const fillClass = usage30dPct > 80 ? 'danger'
+                                  : usage30dPct > 50 ? 'warning' : '';
+                const cost = (u.usage.total_cost || 0).toFixed(3);
+                return `
+                <tr>
+                    <td><strong>${escapeHtml(u.full_name || u.email)}</strong>
+                        <br><small style="color:#888">${escapeHtml(u.email)}</small>
+                        ${u.is_admin ? '<br><span class="badge admin">Admin</span>' : ''}
+                    </td>
+                    <td>${escapeHtml(u.affiliation || '—')}</td>
+                    <td class="center">
+                        <span class="badge ${u.is_active ? 'active' : 'inactive'}">
+                            ${u.is_active ? 'Actif' : 'Inactif'}
+                        </span>
+                    </td>
+                    <td>${created}</td>
+                    <td>${lastLogin}</td>
+                    <td>${u.used_24h} / ${u.quota_daily}</td>
+                    <td>
+                        ${u.used_30d} / ${u.quota_monthly}
+                        <span class="quota-bar"><span class="quota-fill ${fillClass}"
+                            style="width:${Math.min(usage30dPct, 100)}%"></span></span>
+                    </td>
+                    <td class="right">$${cost}</td>
+                    <td>
+                        <button class="btn-action" onclick="setQuota(${u.id})">Quota</button>
+                        <button class="btn-action ${u.is_active ? 'danger' : ''}"
+                            onclick="toggleActive(${u.id}, ${!u.is_active})">
+                            ${u.is_active ? 'Désactiver' : 'Activer'}
+                        </button>
+                    </td>
+                </tr>`;
+            }).join('');
+
+            document.getElementById('tableContainer').innerHTML = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Utilisateur</th>
+                            <th>Affiliation</th>
+                            <th>État</th>
+                            <th>Créé le</th>
+                            <th>Dernière connexion</th>
+                            <th>24h</th>
+                            <th>30j</th>
+                            <th>Coût</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>${rows}</tbody>
+                </table>`;
+        }
+
+        function escapeHtml(s) {
+            return String(s || '').replace(/[&<>"']/g, c =>
+                ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+        }
+
+        async function setQuota(userId) {
+            const daily = prompt('Nouveau quota journalier ? (0-1000)', '5');
+            if (daily === null) return;
+            const monthly = prompt('Nouveau quota mensuel ? (0-10000)', '50');
+            if (monthly === null) return;
+            const res = await fetch(`/api/admin/user/${userId}/quota`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({quota_daily: parseInt(daily), quota_monthly: parseInt(monthly)})
+            });
+            if (res.ok) loadUsers();
+            else alert('Erreur : ' + (await res.json()).error);
+        }
+
+        async function toggleActive(userId, active) {
+            if (!confirm(active ? 'Activer ce compte ?' : 'Désactiver ce compte ?')) return;
+            const res = await fetch(`/api/admin/user/${userId}/active`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({active: active})
+            });
+            if (res.ok) loadUsers();
+            else alert('Erreur : ' + (await res.json()).error);
+        }
+
+        document.getElementById('logoutBtn').addEventListener('click', async (e) => {
+            e.preventDefault();
+            await fetch('/api/auth/logout', {method: 'POST'});
+            window.location.href = '/login';
+        });
+
+        loadUsers();
+    </script>
+</body>
+</html>

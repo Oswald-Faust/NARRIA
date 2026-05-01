@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NARR'IA — Narratologie computationnelle du plagiat d'intrigue</title>
+<link rel="icon" type="image/svg+xml" href="/static/img/logo.svg">
+<link rel="stylesheet" href="/static/css/narria.css">
+</head>
+<body>
+
+<!-- ═══ HEADER ═══ -->
+<header class="narria-header">
+  <div class="brand">
+    <img src="/static/img/logo.svg" alt="NARR'IA" class="brand-logo">
+    <div class="brand-text">
+      <h1>NARR<span class="accent">'</span>IA</h1>
+      <p class="subtitle">Narratologie computationnelle du plagiat d'intrigue</p>
+    </div>
+  </div>
+  <div class="meta">
+    <span class="version">v{{ version }}</span>
+    <span id="mode-indicator" class="mode-indicator mode-local" title="Mode d'extraction actif">
+      <span class="mode-dot"></span>
+      <span class="mode-label">Local</span>
+    </span>
+    <span class="institution">Université de Kindia — Département de Lettres Modernes</span>
+    <!-- Zone utilisateur (visible uniquement si AUTH activé) -->
+    <span id="userZone" class="user-zone" style="display:none">
+      <span id="userName" class="user-name"></span>
+      <span id="quotaBadge" class="quota-badge" title="Analyses restantes aujourd'hui"></span>
+      <a href="/admin" id="adminLink" class="user-link" style="display:none">Admin</a>
+      <a href="#" id="logoutLink" class="user-link">Déconnexion</a>
+    </span>
+  </div>
+</header>
+
+<!-- ═══ NAVIGATION ═══ -->
+<nav class="tabs">
+  <button class="tab active" data-tab="home">Accueil</button>
+  <button class="tab" data-tab="analyze">Analyser un texte</button>
+  <button class="tab" data-tab="compare">Comparer deux textes</button>
+  <button class="tab" data-tab="history">📚 Historique</button>
+  <button class="tab" data-tab="repertoire">Répertoire des fonctions</button>
+  <button class="tab" data-tab="config">⚙ Configuration</button>
+  <button class="tab" data-tab="about">À propos</button>
+</nav>
+
+<main>
+
+  <!-- ═══ TAB : ACCUEIL ═══ -->
+  <section class="tab-content active" id="tab-home">
+    <div class="hero">
+      <h2>Bienvenue dans NARR'IA</h2>
+      <p class="lead">
+        NARR'IA est un système de narratologie computationnelle pour la détection
+        du vol d'intrigue — la reprise non déclarée et substantiellement identique
+        de la structure narrative profonde d'une œuvre antérieure.
+      </p>
+      <p class="lead">
+        Contrairement aux outils de détection de plagiat textuel (qui comparent
+        des mots), NARR'IA compare des <strong>structures narratives profondes</strong> :
+        l'enchaînement des fonctions cardinales, les configurations actantielles,
+        les trajectoires modales et la courbe tensive d'une œuvre.
+      </p>
+    </div>
+
+    <div class="cards">
+      <div class="card" onclick="switchTab('analyze')">
+        <div class="card-icon">①</div>
+        <h3>Analyser un texte</h3>
+        <p>Décomposez un récit en graphe narratif (fonctions, actants, tension dramatique).</p>
+        <button class="btn">Commencer →</button>
+      </div>
+      <div class="card" onclick="switchTab('compare')">
+        <div class="card-icon">②</div>
+        <h3>Comparer deux textes</h3>
+        <p>Détectez les correspondances structurales entre deux œuvres et obtenez les scores SNS, SS, ST, SRJ.</p>
+        <button class="btn">Commencer →</button>
+      </div>
+      <div class="card" onclick="switchTab('repertoire')">
+        <div class="card-icon">③</div>
+        <h3>Explorer le répertoire</h3>
+        <p>Consultez les 53 fonctions narratives organisées en 7 familles, dont 7 fonctions spécifiques aux traditions africaines.</p>
+        <button class="btn">Consulter →</button>
+      </div>
+    </div>
+
+    <div class="info-box">
+      <h4>⚠ Avertissement scientifique et éthique</h4>
+      <p>
+        NARR'IA produit des <strong>estimations probabilistes</strong> de similarité
+        structurale, non des verdicts définitifs de plagiat. Ses résultats doivent être
+        interprétés par un expert humain et ne peuvent en aucun cas constituer à eux
+        seuls une preuve de plagiat. Toute utilisation des sorties de NARR'IA pour
+        formuler une accusation publique exige une investigation complémentaire et,
+        le cas échéant, un avis juridique.
+      </p>
+    </div>
+  </section>
+
+  <!-- ═══ TAB : ANALYSE ═══ -->
+  <section class="tab-content" id="tab-analyze">
+    <h2>Analyser un texte</h2>
+    <p class="section-lead">
+      Saisissez un texte narratif pour en extraire le graphe narratif profond.
+      Le système effectuera la segmentation (Module 1) puis l'extraction des
+      fonctions, des actants, des modalités et de la signature tensive (Module 2).
+    </p>
+
+    <form id="analyze-form" class="narria-form">
+      <div class="form-row">
+        <div class="form-field">
+          <label for="analyze-title">Titre de l'œuvre</label>
+          <input type="text" id="analyze-title" required placeholder="Ex. : Les soleils des indépendances">
+        </div>
+        <div class="form-field">
+          <label for="analyze-author">Auteur</label>
+          <input type="text" id="analyze-author" required placeholder="Ex. : Ahmadou Kourouma">
+        </div>
+      </div>
+
+      <div class="form-field">
+        <label for="analyze-text">Texte à analyser</label>
+        <div class="upload-dropzone" id="analyze-dropzone" data-target="analyze">
+          <div class="upload-icon">📁</div>
+          <p>
+            <strong>Glissez-déposez un fichier ici</strong>
+            ou <button type="button" class="btn-link upload-browse-btn" data-target="analyze">parcourir</button>
+          </p>
+          <p class="upload-hint">Formats : .txt, .docx, .pdf, .odt, .epub &nbsp;·&nbsp; Taille max : 300 Mo</p>
+          <input type="file" id="analyze-file-input" data-target="analyze" accept=".txt,.docx,.pdf,.odt,.epub" style="display:none;">
+        </div>
+        <textarea id="analyze-text" rows="10" required placeholder="… ou collez ici le texte intégral directement (minimum 200 caractères)"></textarea>
+        <div id="analyze-file-info" class="file-info hidden"></div>
+        <div class="form-hint">
+          <button type="button" class="btn-link" onclick="loadSample('amants_conakry', 'analyze')">Charger l'échantillon « Les Amants de Conakry »</button>
+          ·
+          <button type="button" class="btn-link" onclick="loadSample('saison_pluies', 'analyze')">Charger « Saison des pluies »</button>
+          ·
+          <button type="button" class="btn-link" onclick="loadSample('romeo_juliette', 'analyze')">Charger « Roméo et Juliette »</button>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary">Lancer l'analyse</button>
+        <span id="analyze-status" class="status"></span>
+      </div>
+    </form>
+
+    <div id="analyze-results" class="results hidden">
+      <h3>Résultats de l'analyse</h3>
+      <div id="analyze-output"></div>
+    </div>
+  </section>
+
+  <!-- ═══ TAB : COMPARAISON ═══ -->
+  <section class="tab-content" id="tab-compare">
+    <h2>Comparer deux textes</h2>
+    <p class="section-lead">
+      Comparez les structures narratives profondes de deux œuvres pour détecter
+      d'éventuelles correspondances. NARR'IA produit quatre scores : SNS (similarité
+      narrative), SS (spécificité), ST (transformation) et SRJ (risque juridique).
+    </p>
+
+    <div class="compare-grid">
+      <div class="compare-col">
+        <h3>① Œuvre de référence</h3>
+        <form id="ref-form" class="narria-form compact">
+          <input type="text" id="ref-title" required placeholder="Titre">
+          <input type="text" id="ref-author" required placeholder="Auteur">
+          <div class="upload-dropzone upload-dropzone-compact" id="ref-dropzone" data-target="ref">
+            <span class="upload-icon-small">📁</span>
+            <span><button type="button" class="btn-link upload-browse-btn" data-target="ref">Téléverser un fichier</button> (.txt, .docx, .pdf, .odt, .epub)</span>
+            <input type="file" id="ref-file-input" data-target="ref" accept=".txt,.docx,.pdf,.odt,.epub" style="display:none;">
+          </div>
+          <textarea id="ref-text" rows="6" required placeholder="… ou collez le texte ici"></textarea>
+          <div id="ref-file-info" class="file-info hidden"></div>
+          <div class="form-hint">
+            <button type="button" class="btn-link" onclick="loadSample('romeo_juliette', 'ref')">Charger « Roméo et Juliette »</button>
+          </div>
+          <button type="submit" class="btn">Analyser la référence</button>
+          <span id="ref-status" class="status"></span>
+        </form>
+      </div>
+
+      <div class="compare-col">
+        <h3>② Œuvre candidate</h3>
+        <form id="cand-form" class="narria-form compact">
+          <input type="text" id="cand-title" required placeholder="Titre">
+          <input type="text" id="cand-author" required placeholder="Auteur">
+          <div class="upload-dropzone upload-dropzone-compact" id="cand-dropzone" data-target="cand">
+            <span class="upload-icon-small">📁</span>
+            <span><button type="button" class="btn-link upload-browse-btn" data-target="cand">Téléverser un fichier</button> (.txt, .docx, .pdf, .odt, .epub)</span>
+            <input type="file" id="cand-file-input" data-target="cand" accept=".txt,.docx,.pdf,.odt,.epub" style="display:none;">
+          </div>
+          <textarea id="cand-text" rows="6" required placeholder="… ou collez le texte ici"></textarea>
+          <div id="cand-file-info" class="file-info hidden"></div>
+          <div class="form-hint">
+            <button type="button" class="btn-link" onclick="loadSample('amants_conakry', 'cand')">Charger « Les Amants de Conakry »</button>
+          </div>
+          <button type="submit" class="btn">Analyser la candidate</button>
+          <span id="cand-status" class="status"></span>
+        </form>
+      </div>
+    </div>
+
+    <div class="compare-action">
+      <button id="btn-compare" class="btn btn-primary btn-large" disabled>
+        Lancer la comparaison →
+      </button>
+      <span id="compare-status" class="status"></span>
+    </div>
+
+    <div id="compare-results" class="results hidden">
+      <h3>Résultats de la comparaison</h3>
+      <div id="compare-output"></div>
+      <div class="results-actions">
+        <button id="btn-report" class="btn">📄 Générer le rapport complet</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ TAB : HISTORIQUE ═══ -->
+  <section class="tab-content" id="tab-history">
+    <h2>Historique des analyses</h2>
+    <p class="section-lead">
+      Cet historique conserve toutes les analyses et comparaisons que vous avez réalisées avec NARR'IA.
+      Les données sont stockées localement sur votre machine, dans <code>~/.narria/</code>.
+    </p>
+
+    <div id="history-stats" class="history-stats">
+      <div class="loading">Chargement…</div>
+    </div>
+
+    <div class="history-actions">
+      <button id="btn-refresh-history" class="btn">🔄 Rafraîchir</button>
+      <button id="btn-clear-history" class="btn btn-danger">🗑 Effacer tout l'historique</button>
+    </div>
+
+    <h3>Analyses</h3>
+    <div id="history-analyses-list"></div>
+
+    <h3>Comparaisons</h3>
+    <div id="history-comparisons-list"></div>
+  </section>
+
+  <!-- ═══ TAB : RÉPERTOIRE ═══ -->
+  <section class="tab-content" id="tab-repertoire">
+    <h2>Répertoire des fonctions narratives de NARR'IA</h2>
+    <p class="section-lead">
+      Le répertoire NARR'IA comprend 53 fonctions narratives distribuées en 7 familles.
+      Il étend le répertoire proppien classique (31 fonctions) avec des fonctions
+      spécifiques aux genres modernes et aux traditions narratives africaines
+      (7 fonctions africaines signalées par le préfixe « FN »).
+    </p>
+    <div id="repertoire-content" class="repertoire">
+      <p class="loading">Chargement du répertoire…</p>
+    </div>
+  </section>
+
+  <!-- ═══ TAB : CONFIGURATION ═══ -->
+  <section class="tab-content" id="tab-config">
+    <h2>Configuration</h2>
+    <p class="section-lead">
+      NARR'IA fonctionne en deux modes : <strong>local</strong> (heuristiques par mots-clés,
+      rapide, gratuit, peu précis) ou <strong>LLM</strong> (analyse sémantique profonde
+      via Claude, précis, payant, nécessite Internet).
+    </p>
+
+    <div class="config-card">
+      <h3>Mode actif</h3>
+      <div id="config-mode-display" class="config-mode-display">
+        <p class="loading">Chargement…</p>
+      </div>
+    </div>
+
+    <div class="config-card">
+      <h3>Connecter votre clé API Anthropic (mode LLM)</h3>
+      <p>
+        Pour activer le mode d'analyse par Claude, fournissez votre clé API Anthropic
+        personnelle. La clé est stockée uniquement sur votre machine, dans
+        <code>~/.narria/config.json</code> avec permissions restrictives.
+      </p>
+      <p>
+        <strong>Pour obtenir une clé :</strong> créez un compte gratuit sur
+        <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a>,
+        puis créez une clé dans « API Keys ». Anthropic offre un crédit gratuit
+        à la création du compte (≈ 5 USD, suffisant pour analyser une vingtaine de textes
+        courts).
+      </p>
+      <p>
+        <strong>Coût indicatif :</strong> modèle Claude Sonnet 4.5 à 3 USD / million de
+        tokens d'entrée et 15 USD / million de tokens de sortie. Analyse d'un roman de
+        80 000 mots ≈ 0,50 USD.
+      </p>
+
+      <div class="form-field">
+        <label for="config-api-key">Clé API (commence par <code>sk-ant-</code>)</label>
+        <input type="password" id="config-api-key" placeholder="sk-ant-api03-…" autocomplete="off">
+      </div>
+      <div class="form-actions">
+        <button id="btn-save-key" class="btn btn-primary">Enregistrer la clé</button>
+        <button id="btn-test-key" class="btn">Tester la connexion</button>
+        <button id="btn-remove-key" class="btn">Supprimer la clé</button>
+        <span id="config-status" class="status"></span>
+      </div>
+    </div>
+
+    <div class="config-card">
+      <h3>Avertissements importants</h3>
+      <ul>
+        <li><strong>Vie privée :</strong> en mode LLM, les textes que vous analysez
+            transitent par les serveurs d'Anthropic. Pour des œuvres non publiées
+            ou sensibles, vérifiez la compatibilité avec votre politique éditoriale.
+            Anthropic n'entraîne pas ses modèles sur les données API par défaut.</li>
+        <li><strong>Coût :</strong> chaque analyse LLM consomme des tokens facturés
+            à votre compte Anthropic. L'application affiche une estimation de coût
+            avant chaque analyse.</li>
+        <li><strong>Fallback automatique :</strong> si aucune clé n'est configurée
+            ou si l'API est indisponible, l'application bascule en mode local.
+            Vos analyses continuent de fonctionner.</li>
+        <li><strong>Confidentialité de la clé :</strong> ne partagez jamais votre clé
+            API. Elle permet de débiter votre compte. Si vous partagez ce document
+            ou cette application, supprimez la clé d'abord (bouton « Supprimer »).</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ═══ TAB : À PROPOS ═══ -->
+  <section class="tab-content" id="tab-about">
+    <h2>À propos de NARR'IA</h2>
+    <div class="about-content">
+      <p>
+        <strong>NARR'IA</strong> est un système de narratologie computationnelle
+        conçu pour la détection, la quantification et la qualification du vol d'intrigue
+        — c'est-à-dire la reprise non déclarée et substantiellement identique de la
+        structure narrative profonde d'une œuvre préexistante, indépendamment de la
+        réalisation linguistique de surface.
+      </p>
+
+      <h3>Architecture</h3>
+      <p>Le système s'articule en cinq modules interdépendants :</p>
+      <ul>
+        <li><strong>Module 1 — Segmentation narrative</strong> : découpage automatique du texte brut en unités narratives significatives.</li>
+        <li><strong>Module 2 — Extraction de la structure</strong> : identification des fonctions cardinales, configurations actantielles, modalités et signature tensive. Production du graphe narratif (NarRep-Graph).</li>
+        <li><strong>Module 3 — Analyse comparative</strong> : comparaison de deux graphes narratifs en cinq phases (ANN, isomorphisme, GED narrative, DTW, détecteurs typologiques). Production des scores SNS, SS, ST et SRJ.</li>
+        <li><strong>Module 4 — Base de données</strong> : stockage et indexation des graphes narratifs dans un corpus de référence.</li>
+        <li><strong>Module 5 — Interprétation et rapports</strong> : génération de rapports d'analyse nuancés, avec garde-fous contre les usages abusifs.</li>
+      </ul>
+
+      <h3>Ouvrage de référence</h3>
+      <p>
+        La théorisation complète de NARR'IA fait l'objet d'un ouvrage actuellement en cours de
+        révision en vue de sa soumission à un éditeur :<br>
+        <em>Adéchinan David Adékambi,
+        <strong>NARR'IA — Vers une narratologie computationnelle du plagiat d'intrigue</strong>
+        (manuscrit en cours de finalisation).</em>
+      </p>
+      <p>
+        Cet ouvrage prolonge un essai antérieur déjà publié :<br>
+        <em>Adéchinan David Adékambi,
+        <strong>Vol d'intrigue dans le champ du récit fictionnel : Comment cerner scientifiquement le plagiat d'intrigue en littérature</strong>,
+        Collection « Approches littéraires » dirigée par Jérôme Martin, Paris, L'Harmattan, 2025.</em>
+      </p>
+
+      <h3>Principes éthiques</h3>
+      <ul>
+        <li>Les sorties de NARR'IA sont <strong>probabilistes</strong>, jamais définitives.</li>
+        <li>Les résultats doivent être <strong>interprétés par un expert humain</strong>.</li>
+        <li>Aucune accusation publique ne doit être formulée sur la seule base des sorties du système.</li>
+        <li>Les données traitées <strong>restent sur la machine de l'utilisateur</strong> ; rien n'est envoyé sur internet.</li>
+      </ul>
+
+      <h3>Licence</h3>
+      <p>MIT License — © 2026 Adéchinan David Adékambi, Université de Kindia.</p>
+    </div>
+  </section>
+
+</main>
+
+<footer class="narria-footer">
+  <p>
+    NARR'IA v{{ version }} ·
+    © 2026 Adéchinan David Adékambi ·
+    Département de Lettres Modernes, Université de Kindia ·
+    République de Guinée
+  </p>
+</footer>
+
+<script src="/static/js/narria.js"></script>
+<script>
+// ─── Gestion de la zone utilisateur (auth) ───
+(async function loadUserZone() {
+  try {
+    const res = await fetch('/api/auth/me');
+    if (!res.ok) return;
+    const data = await res.json();
+    if (!data.auth_enabled) return;  // mode local sans auth
+    if (!data.user) return;  // pas connecté (mais auth activé : la redirection serveur s'occupera)
+    
+    const zone = document.getElementById('userZone');
+    const name = document.getElementById('userName');
+    const badge = document.getElementById('quotaBadge');
+    const adminLink = document.getElementById('adminLink');
+    const logoutLink = document.getElementById('logoutLink');
+    
+    name.textContent = data.user.full_name || data.user.email;
+    
+    if (data.quota) {
+      const remaining = data.quota.remaining_24h;
+      const total = data.quota.quota_daily;
+      badge.textContent = `${remaining}/${total} aujourd'hui`;
+      const pct = remaining / total;
+      if (pct < 0.2) badge.classList.add('danger');
+      else if (pct < 0.5) badge.classList.add('warning');
+    }
+    
+    if (data.user.is_admin) {
+      adminLink.style.display = 'inline';
+    }
+    
+    logoutLink.addEventListener('click', async (e) => {
+      e.preventDefault();
+      await fetch('/api/auth/logout', {method: 'POST'});
+      window.location.href = '/login';
+    });
+    
+    zone.style.display = 'inline-flex';
+  } catch (err) {
+    console.error('Erreur chargement zone utilisateur:', err);
+  }
+})();
+</script>
+</body>
+</html>

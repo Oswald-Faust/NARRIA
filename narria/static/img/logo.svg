@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" width="240" height="240" role="img" aria-label="Logo NARR'IA">
+  <!-- Cercle de fond avec dégradé subtil -->
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1F4E79"/>
+      <stop offset="100%" stop-color="#163A5C"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+  
+  <!-- Anneau extérieur bleu -->
+  <circle cx="120" cy="120" r="112" fill="url(#bgGradient)" filter="url(#shadow)"/>
+  
+  <!-- Anneau intérieur gold (filet décoratif) -->
+  <circle cx="120" cy="120" r="100" fill="none" stroke="#C55A11" stroke-width="2" opacity="0.6"/>
+  
+  <!-- Triangle actantiel discret en arrière-plan (Sujet / Objet / Destinateur) -->
+  <g opacity="0.18" stroke="white" stroke-width="1.5" fill="none">
+    <line x1="120" y1="55" x2="65" y2="155"/>
+    <line x1="120" y1="55" x2="175" y2="155"/>
+    <line x1="65" y1="155" x2="175" y2="155"/>
+    <circle cx="120" cy="55" r="4" fill="white"/>
+    <circle cx="65" cy="155" r="4" fill="white"/>
+    <circle cx="175" cy="155" r="4" fill="white"/>
+  </g>
+  
+  <!-- Le N stylisé au centre -->
+  <!-- Construction : trois traits formant un N géométrique -->
+  <g fill="white" stroke="#C55A11" stroke-width="0" stroke-linejoin="miter">
+    <!-- Barre verticale gauche du N -->
+    <rect x="62" y="78" width="14" height="84" rx="1"/>
+    <!-- Barre verticale droite du N -->
+    <rect x="164" y="78" width="14" height="84" rx="1"/>
+    <!-- Diagonale du N -->
+    <polygon points="76,78 90,78 178,162 164,162"/>
+  </g>
+  
+  <!-- Apostrophe stylisée gold (entre N et IA, signature NARR'IA) -->
+  <circle cx="195" cy="86" r="4.5" fill="#C55A11"/>
+  
+  <!-- Trois nœuds narratifs sur la diagonale du N (clin d'œil au graphe) -->
+  <g>
+    <circle cx="98" cy="98" r="5" fill="#C55A11"/>
+    <circle cx="120" cy="120" r="5" fill="#C55A11"/>
+    <circle cx="142" cy="142" r="5" fill="#C55A11"/>
+  </g>
+  
+  <!-- Inscription discrète "NARRIA" en bas -->
+  <text x="120" y="200" text-anchor="middle"
+        font-family="Georgia, 'Times New Roman', serif"
+        font-size="14"
+        font-weight="bold"
+        fill="white"
+        letter-spacing="3">NARR'IA</text>
+</svg>

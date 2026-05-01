@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Créer un compte — NARR'IA</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo.png') }}">
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(135deg, #1F4E79 0%, #2E5F8E 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            padding: 1rem;
+        }
+        .auth-card {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            width: 100%;
+            max-width: 480px;
+        }
+        .logo-row {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        .logo-row img {
+            width: 64px;
+            height: 64px;
+        }
+        h1 {
+            text-align: center;
+            color: #1F4E79;
+            margin: 0 0 0.3rem 0;
+            font-size: 1.5rem;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            font-size: 0.85rem;
+            margin-bottom: 1.5rem;
+        }
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        label {
+            display: block;
+            color: #333;
+            font-size: 0.9rem;
+            margin-bottom: 0.4rem;
+            font-weight: 500;
+        }
+        input {
+            width: 100%;
+            padding: 0.65rem 1rem;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+        input:focus {
+            outline: none;
+            border-color: #1F4E79;
+            box-shadow: 0 0 0 3px rgba(31,78,121,0.1);
+        }
+        small.hint {
+            color: #888;
+            font-size: 0.8rem;
+            display: block;
+            margin-top: 0.3rem;
+        }
+        button {
+            width: 100%;
+            background: #1F4E79;
+            color: white;
+            border: none;
+            padding: 0.85rem;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            margin-top: 0.5rem;
+        }
+        button:hover { background: #2E5F8E; }
+        button:disabled { background: #999; cursor: not-allowed; }
+        .alt-link {
+            text-align: center;
+            margin-top: 1.5rem;
+            font-size: 0.9rem;
+            color: #666;
+        }
+        .alt-link a {
+            color: #C55A11;
+            font-weight: 500;
+            text-decoration: none;
+        }
+        .alt-link a:hover { text-decoration: underline; }
+        .error-msg {
+            background: #FCE4D6;
+            color: #8B2400;
+            padding: 0.75rem 1rem;
+            border-radius: 6px;
+            border-left: 4px solid #C55A11;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            display: none;
+        }
+        .error-msg.show { display: block; }
+        .info-box {
+            background: #E7F0F7;
+            color: #1F4E79;
+            padding: 0.85rem 1rem;
+            border-radius: 6px;
+            border-left: 4px solid #1F4E79;
+            margin-bottom: 1.2rem;
+            font-size: 0.85rem;
+        }
+        footer {
+            text-align: center;
+            color: rgba(255,255,255,0.7);
+            font-size: 0.85rem;
+            margin-top: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <div class="auth-card">
+            <div class="logo-row">
+                <img src="{{ url_for('static', filename='img/logo.png') }}" alt="NARR'IA">
+            </div>
+            <h1>Créer un compte NARR'IA</h1>
+            <div class="subtitle">Accès à la version bêta privée du système</div>
+
+            <div class="info-box">
+                <strong>Bêta privée.</strong> NARR'IA est en phase de test
+                empirique avant le colloque international. Quotas par défaut :
+                5 analyses par jour, 50 par mois.
+            </div>
+
+            <div id="error" class="error-msg"></div>
+
+            <form id="registerForm">
+                <div class="form-group">
+                    <label for="full_name">Nom complet</label>
+                    <input type="text" id="full_name" name="full_name" required>
+                </div>
+                <div class="form-group">
+                    <label for="affiliation">Affiliation institutionnelle</label>
+                    <input type="text" id="affiliation" name="affiliation"
+                           placeholder="Université, laboratoire, etc.">
+                </div>
+                <div class="form-group">
+                    <label for="email">Adresse e-mail</label>
+                    <input type="email" id="email" name="email" required autocomplete="email">
+                    <small class="hint">Préférez votre e-mail institutionnel.</small>
+                </div>
+                <div class="form-group">
+                    <label for="password">Mot de passe</label>
+                    <input type="password" id="password" name="password" required minlength="8" autocomplete="new-password">
+                    <small class="hint">8 caractères minimum.</small>
+                </div>
+                <button type="submit" id="submitBtn">Créer mon compte</button>
+            </form>
+
+            <div class="alt-link">
+                Déjà un compte ? <a href="{{ url_for('login_page') }}">Se connecter</a>
+            </div>
+        </div>
+        <footer>
+            © 2026 Adéchinan David Adékambi · Université de Kindia
+        </footer>
+    </div>
+
+    <script>
+        const form = document.getElementById('registerForm');
+        const errorBox = document.getElementById('error');
+        const submitBtn = document.getElementById('submitBtn');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            errorBox.classList.remove('show');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Création...';
+
+            try {
+                const res = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        full_name: document.getElementById('full_name').value,
+                        affiliation: document.getElementById('affiliation').value,
+                        email: document.getElementById('email').value,
+                        password: document.getElementById('password').value,
+                    })
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    window.location.href = '/';
+                } else {
+                    errorBox.textContent = data.error || 'Erreur lors de la création du compte';
+                    errorBox.classList.add('show');
+                }
+            } catch (err) {
+                errorBox.textContent = 'Erreur réseau : ' + err.message;
+                errorBox.classList.add('show');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Créer mon compte';
+            }
+        });
+    </script>
+</body>
+</html>
