@@ -654,15 +654,44 @@ def api_compare():
     graph_id_ref = data.get('graph_id_ref')
     graph_id_cand = data.get('graph_id_cand')
     
-    if graph_id_ref not in SESSION['graphs']:
+    # Récupération des graphes : on tente d'abord la mémoire de session (rapide),
+    # puis on retombe sur l'historique persistant (partagé entre workers en prod).
+    # Cette approche garantit le bon fonctionnement avec Gunicorn multi-workers,
+    # où chaque worker a sa propre mémoire mais partage le volume /data.
+    
+    def _get_graph_from_memory_or_history(gid):
+        """Récupère un graphe depuis la mémoire ou depuis l'historique persistant."""
+        # 1. Tentative en mémoire (cas local ou même worker)
+        if gid in SESSION['graphs']:
+            return SESSION['graphs'][gid]
+        
+        # 2. Fallback sur l'historique persistant (cas multi-workers en production)
+        try:
+            # Chaque analyse stockée contient le graphe complet
+            for analysis in history.list_analyses():
+                if analysis.get('graph_id') == gid:
+                    full = history.get_analysis(analysis['analysis_id'])
+                    if full and full.get('graph'):
+                        # Reconstituer un NarrativeGraph depuis le dict stocké
+                        from narria.core.models import NarrativeGraph
+                        graph = NarrativeGraph.from_dict(full['graph'])
+                        # Mettre en cache dans la session pour les requêtes suivantes
+                        SESSION['graphs'][gid] = graph
+                        return graph
+        except Exception as e:
+            print(f"[NARR'IA] Erreur de récupération du graphe {gid} depuis l'historique : {e}")
+        
+        return None
+    
+    graph_ref = _get_graph_from_memory_or_history(graph_id_ref)
+    if graph_ref is None:
         return jsonify({'error': 'Graphe de référence introuvable. Analysez d\'abord le texte.'}), 404
-    if graph_id_cand not in SESSION['graphs']:
+    
+    graph_cand = _get_graph_from_memory_or_history(graph_id_cand)
+    if graph_cand is None:
         return jsonify({'error': 'Graphe candidat introuvable. Analysez d\'abord le texte.'}), 404
     
     try:
-        graph_ref = SESSION['graphs'][graph_id_ref]
-        graph_cand = SESSION['graphs'][graph_id_cand]
-        
         # Module 3 — Comparaison
         result = comparator.compare(graph_ref, graph_cand)
         
