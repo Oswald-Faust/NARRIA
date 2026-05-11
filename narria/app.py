@@ -545,6 +545,9 @@ def api_analyze_text():
         graph_id = f"g_{datetime.now().strftime('%Y%m%d_%H%M%S_%f')}"
         SESSION['graphs'][graph_id] = graph
         # Override the graph's own ID with the session-friendly one
+        os.makedirs(str(history.graphs_dir), exist_ok=True)
+        with open(str(history.graphs_dir / f"{graph_id}.json"), "w", encoding="utf-8") as f:
+            json.dump(graph.to_dict(), f)
         graph.graph_id = graph_id
         
         # Persist to history (so the analysis survives across sessions)
