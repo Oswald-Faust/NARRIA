@@ -91,6 +91,40 @@ class NarrativeGraph:
             'n_nodes': len(self.nodes),
             'n_edges': len(self.edges),
         }
+@classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> 'NarrativeGraph':
+        nodes = [
+            NarrativeNode(
+                node_id=n['node_id'],
+                segment_id=n['segment_id'],
+                function_code=n.get('function_code'),
+                function_family=n.get('function_family'),
+                function_name=n.get('function_name'),
+                actants=n.get('actants', []),
+                modalities=n.get('modalities', {}),
+                tension=n.get('tension', 0.5),
+                phase=n.get('phase'),
+                text_excerpt=n.get('text_excerpt', ''),
+            )
+            for n in data.get('nodes', [])
+        ]
+        edges = [
+            NarrativeEdge(
+                edge_id=e['edge_id'],
+                source=e['source'],
+                target=e['target'],
+                transition_type=e.get('transition_type', 'causal'),
+                weight=e.get('weight', 1.0),
+            )
+            for e in data.get('edges', [])
+        ]
+        return cls(
+            graph_id=data['graph_id'],
+            metadata=data.get('metadata', {}),
+            nodes=nodes,
+            edges=edges,
+        )
+    
 
 
 @dataclass
