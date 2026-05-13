@@ -15,7 +15,7 @@ Ou plus simplement :
     ./NARRIA.sh      (Linux / macOS)
     NARRIA.bat       (Windows)
 """
-
+import unicodedata
 import os
 import sys
 import json
@@ -1236,7 +1236,7 @@ def api_download_analysis(analysis_id, format):
         return jsonify({'error': 'Analyse introuvable'}), 404
     
     title = analysis.get('title', 'analyse').replace(' ', '_')
-    safe_title = re.sub(r'[^\w\-_]', '', title)[:40] or 'analyse'
+    safe_title = re.sub(r'[^\w\-]', '', unicodedata.normalize('NFKD', title).encode('ascii', 'ignore').decode('ascii'))[:40] or 'analyse'
     
     if format == 'json':
         content = json.dumps(analysis, ensure_ascii=False, indent=2)
