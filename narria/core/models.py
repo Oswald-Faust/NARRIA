@@ -91,7 +91,8 @@ class NarrativeGraph:
             'n_nodes': len(self.nodes),
             'n_edges': len(self.edges),
         }
-@classmethod
+
+    @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'NarrativeGraph':
         nodes = [
             NarrativeNode(
