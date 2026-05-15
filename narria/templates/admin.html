@@ -66,14 +66,17 @@
             gap: 1.4rem;
         }
         header .links a {
-            color: var(--narria-gold);
+            color: var(--narria-papier);
+            background: var(--narria-bleu);
+            padding: 0.4rem 0.9rem;
             text-decoration: none;
             font-family: var(--police-erudite);
-            font-size: 14px;
+            font-size: 13.5px;
             font-style: italic;
-            border-bottom: 0.5px solid transparent;
+            border: 0.5px solid var(--narria-bleu);
+            transition: background 0.15s;
         }
-        header .links a:hover { border-bottom-color: var(--narria-gold); }
+        header .links a:hover { background: var(--narria-bleu-clair); }
 
         /* ═══ CONTENEUR PRINCIPAL ═══ */
         .container {

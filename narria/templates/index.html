@@ -125,12 +125,16 @@
       background: var(--narria-erreur-fond);
     }
     .user-link {
-      color: var(--narria-gold);
+      color: var(--narria-papier);
+      background: var(--narria-bleu);
+      padding: 0.3rem 0.8rem;
       text-decoration: none;
       font-style: italic;
-      border-bottom: 0.5px solid transparent;
+      font-size: 13px;
+      border: 0.5px solid var(--narria-bleu);
+      transition: background 0.15s;
     }
-    .user-link:hover { border-bottom-color: var(--narria-gold); }
+    .user-link:hover { background: var(--narria-bleu-clair); }
 
     /* ═══ STRUCTURE PRINCIPALE : SOMMAIRE + CONTENU ═══ */
     .narria-body {
@@ -646,7 +650,7 @@
         <span class="mode-dot"></span>
         <span class="mode-label">Local</span>
       </span>
-      <span id="userZone" class="user-zone" style="display:none">
+      <span id="userZone" class="user-zone">
         <span id="userName" class="user-name"></span>
         <span id="quotaBadge" class="quota-badge" title="Analyses restantes aujourd'hui"></span>
         <a href="/admin" id="adminLink" class="user-link" style="display:none">Admin</a>
