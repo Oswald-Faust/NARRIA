@@ -653,16 +653,31 @@ def api_compare():
     data = request.get_json()
     graph_id_ref = data.get('graph_id_ref')
     graph_id_cand = data.get('graph_id_cand')
-    
-    if graph_id_ref not in SESSION['graphs']:
+
+    # ─── RÉCUPÉRATION DES GRAPHES (mémoire, puis repli disque) ───
+    # En multi-workers, la requête peut tomber sur un worker qui n'a pas
+    # le graphe en mémoire (parce qu'il a été créé par un autre worker).
+    # On relit alors depuis le disque, puis on remet en cache local pour
+    # accélérer les requêtes suivantes sur ce worker.
+    def _retrieve_graph(gid):
+        if gid in SESSION['graphs']:
+            return SESSION['graphs'][gid]
+        graph_dict = history.get_graph_dict(gid)
+        if not graph_dict:
+            return None
+        from narria.core.models import NarrativeGraph
+        graph = NarrativeGraph.from_dict(graph_dict)
+        SESSION['graphs'][gid] = graph
+        return graph
+
+    graph_ref = _retrieve_graph(graph_id_ref)
+    if graph_ref is None:
         return jsonify({'error': 'Graphe de référence introuvable. Analysez d\'abord le texte.'}), 404
-    if graph_id_cand not in SESSION['graphs']:
+    graph_cand = _retrieve_graph(graph_id_cand)
+    if graph_cand is None:
         return jsonify({'error': 'Graphe candidat introuvable. Analysez d\'abord le texte.'}), 404
-    
+
     try:
-        graph_ref = SESSION['graphs'][graph_id_ref]
-        graph_cand = SESSION['graphs'][graph_id_cand]
-        
         # Module 3 — Comparaison
         result = comparator.compare(graph_ref, graph_cand)
         
