@@ -3,145 +3,304 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Admin — NARR'IA</title>
+    <title>Console d'administration — NARR'IA</title>
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo.png') }}">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+
     <style>
-        * { box-sizing: border-box; }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background: #f5f7fa;
-            margin: 0;
-            color: #333;
+        :root {
+            --narria-bleu: #1F4E79;
+            --narria-bleu-clair: #2E5F8E;
+            --narria-gold: #C55A11;
+            --narria-ivoire: #FBFAF6;
+            --narria-papier: #FFFFFF;
+            --narria-tranche-clair: #C9B98A;
+            --narria-encre: #1A1A1A;
+            --narria-texte: #4A4438;
+            --narria-discret: #6B6354;
+            --narria-tres-discret: #8C8473;
+            --narria-filet: #E8E4D8;
+            --narria-erreur-fond: #FCE4D6;
+            --narria-erreur-texte: #8B2400;
+            --narria-succes-fond: #E8F2E4;
+            --narria-succes-texte: #2D5016;
+            --police-erudite: 'EB Garamond', 'Garamond', Georgia, serif;
         }
+        * { box-sizing: border-box; }
+        html, body { margin: 0; padding: 0; }
+        body {
+            font-family: var(--police-erudite);
+            background: var(--narria-ivoire);
+            color: var(--narria-encre);
+            min-height: 100vh;
+            font-size: 16px;
+            line-height: 1.55;
+        }
+
+        /* ═══ EN-TÊTE ═══ */
         header {
-            background: #1F4E79;
-            color: white;
-            padding: 1rem 2rem;
+            background: var(--narria-papier);
+            border-bottom: 0.5px solid var(--narria-filet);
+            padding: 1.6rem 2.4rem;
             display: flex;
             align-items: center;
             justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1rem;
         }
         header h1 {
+            font-family: var(--police-erudite);
+            font-size: 26px;
+            color: var(--narria-bleu);
+            font-weight: 400;
             margin: 0;
-            font-size: 1.4rem;
+            letter-spacing: 0.02em;
+        }
+        header h1 .accent { color: var(--narria-gold); font-style: italic; }
+        header .links {
+            display: flex;
+            align-items: center;
+            gap: 1.4rem;
         }
         header .links a {
-            color: white;
+            color: var(--narria-gold);
             text-decoration: none;
-            margin-left: 1.5rem;
-            font-size: 0.9rem;
+            font-family: var(--police-erudite);
+            font-size: 14px;
+            font-style: italic;
+            border-bottom: 0.5px solid transparent;
         }
-        header .links a:hover { text-decoration: underline; }
+        header .links a:hover { border-bottom-color: var(--narria-gold); }
+
+        /* ═══ CONTENEUR PRINCIPAL ═══ */
         .container {
             max-width: 1400px;
-            margin: 2rem auto;
-            padding: 0 2rem;
+            margin: 0 auto;
+            padding: 2.5rem 3rem;
         }
+        .paragraph-numero {
+            font-family: var(--police-erudite);
+            font-size: 11px;
+            letter-spacing: 0.25em;
+            color: var(--narria-gold);
+            text-transform: uppercase;
+            margin-bottom: 0.5rem;
+        }
+        h2 {
+            font-family: var(--police-erudite);
+            font-size: 30px;
+            color: var(--narria-bleu);
+            font-weight: 400;
+            margin: 0 0 0.4rem;
+            line-height: 1.1;
+        }
+        .section-lead {
+            font-family: var(--police-erudite);
+            font-size: 15px;
+            color: var(--narria-texte);
+            font-style: italic;
+            line-height: 1.6;
+            margin: 0 0 2rem;
+            max-width: 700px;
+        }
+
+        /* ═══ STATISTIQUES : trois cartes en haut ═══ */
         .stats-row {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 1rem;
-            margin-bottom: 2rem;
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
         }
         .stat-card {
-            background: white;
-            padding: 1.2rem 1.5rem;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            border-top: 3px solid #1F4E79;
+            background: var(--narria-papier);
+            padding: 1.4rem 1.6rem;
+            border: 0.5px solid var(--narria-filet);
+            border-left: 3px solid var(--narria-bleu);
         }
-        .stat-card.cost { border-top-color: #C55A11; }
-        .stat-card.cost .stat-value { color: #C55A11; }
+        .stat-card.cost { border-left-color: var(--narria-gold); }
+        .stat-card.cost .stat-value { color: var(--narria-gold); }
         .stat-label {
-            font-size: 0.85rem;
-            color: #666;
-            margin-bottom: 0.4rem;
+            font-family: var(--police-erudite);
+            font-size: 11px;
+            letter-spacing: 0.18em;
+            color: var(--narria-discret);
+            text-transform: uppercase;
+            margin-bottom: 0.6rem;
         }
         .stat-value {
-            font-size: 1.8rem;
-            font-weight: 600;
-            color: #1F4E79;
+            font-family: var(--police-erudite);
+            font-size: 38px;
+            font-weight: 400;
+            color: var(--narria-bleu);
+            line-height: 1;
+            font-feature-settings: "lnum";
         }
+
+        /* ═══ TABLEAU DES UTILISATEURS ═══ */
         .users-table {
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            overflow: hidden;
+            background: var(--narria-papier);
+            border: 0.5px solid var(--narria-filet);
         }
-        .users-table h2 {
+        .users-table-titre {
+            padding: 1.2rem 1.6rem;
+            border-bottom: 0.5px solid var(--narria-filet);
+            background: var(--narria-ivoire);
+        }
+        .users-table-titre .paragraph-numero { margin: 0 0 0.2rem; }
+        .users-table h3 {
+            font-family: var(--police-erudite);
+            font-size: 18px;
+            color: var(--narria-bleu);
+            font-weight: 500;
             margin: 0;
-            padding: 1.2rem 1.5rem;
-            border-bottom: 1px solid #e0e6ed;
-            font-size: 1.1rem;
-            color: #1F4E79;
         }
         table {
             width: 100%;
             border-collapse: collapse;
         }
         th, td {
-            padding: 0.75rem 1rem;
+            padding: 0.85rem 1rem;
             text-align: left;
-            border-bottom: 1px solid #e0e6ed;
-            font-size: 0.9rem;
+            border-bottom: 0.5px solid var(--narria-filet);
+            font-family: var(--police-erudite);
+            font-size: 14.5px;
+            color: var(--narria-encre);
+            vertical-align: middle;
         }
         th {
-            background: #f8fafc;
-            color: #555;
+            background: var(--narria-ivoire);
+            color: var(--narria-discret);
             font-weight: 500;
-            font-size: 0.85rem;
+            font-size: 11px;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            border-bottom: 0.5px solid var(--narria-bleu);
         }
+        tbody tr:hover { background: var(--narria-ivoire); }
+        tbody tr:last-child td { border-bottom: none; }
         td.right { text-align: right; }
         td.center { text-align: center; }
+        td strong {
+            font-weight: 500;
+            color: var(--narria-encre);
+        }
+        td small {
+            font-size: 12.5px;
+            color: var(--narria-discret);
+            font-style: italic;
+        }
+
+        /* Étiquettes */
         .badge {
             display: inline-block;
-            padding: 0.2rem 0.5rem;
-            border-radius: 12px;
-            font-size: 0.75rem;
-            font-weight: 500;
+            padding: 0.18rem 0.55rem;
+            font-family: var(--police-erudite);
+            font-size: 11px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            border: 0.5px solid var(--narria-filet);
         }
-        .badge.admin { background: #C55A11; color: white; }
-        .badge.active { background: #d4edda; color: #155724; }
-        .badge.inactive { background: #f8d7da; color: #721c24; }
+        .badge.active {
+            color: var(--narria-succes-texte);
+            border-color: var(--narria-succes-texte);
+            background: var(--narria-succes-fond);
+        }
+        .badge.inactive {
+            color: var(--narria-tres-discret);
+            border-color: var(--narria-tres-discret);
+            background: var(--narria-ivoire);
+        }
+        .badge.admin {
+            color: var(--narria-gold);
+            border-color: var(--narria-gold);
+            font-style: italic;
+        }
+
+        /* Barre de quota */
         .quota-bar {
             display: inline-block;
-            width: 100px;
-            height: 8px;
-            background: #e0e6ed;
-            border-radius: 4px;
-            overflow: hidden;
+            width: 70px;
+            height: 6px;
+            background: var(--narria-filet);
+            margin-left: 0.5rem;
+            position: relative;
             vertical-align: middle;
         }
         .quota-fill {
+            display: block;
             height: 100%;
-            background: #1F4E79;
-            transition: width 0.3s;
+            background: var(--narria-bleu);
         }
-        .quota-fill.warning { background: #f0ad4e; }
-        .quota-fill.danger { background: #C55A11; }
-        button.btn-action {
-            background: #1F4E79;
-            color: white;
-            border: none;
-            padding: 0.3rem 0.7rem;
-            border-radius: 4px;
-            font-size: 0.8rem;
+        .quota-fill.warning { background: var(--narria-gold); }
+        .quota-fill.danger { background: var(--narria-erreur-texte); }
+
+        /* Boutons d'action */
+        .btn-action {
+            background: transparent;
+            color: var(--narria-bleu);
+            border: 0.5px solid var(--narria-bleu);
+            padding: 0.35rem 0.75rem;
+            margin-right: 0.4rem;
+            font-family: var(--police-erudite);
+            font-size: 13px;
+            letter-spacing: 0.05em;
             cursor: pointer;
-            margin-right: 0.3rem;
+            transition: background 0.15s, color 0.15s;
         }
-        button.btn-action:hover { background: #2E5F8E; }
-        button.btn-action.danger { background: #C55A11; }
-        button.btn-action.danger:hover { background: #D66A21; }
+        .btn-action:hover {
+            background: var(--narria-bleu);
+            color: var(--narria-papier);
+        }
+        .btn-action.danger {
+            color: var(--narria-erreur-texte);
+            border-color: var(--narria-erreur-texte);
+        }
+        .btn-action.danger:hover {
+            background: var(--narria-erreur-texte);
+            color: var(--narria-papier);
+        }
+
+        /* Chargement */
         .loading {
-            padding: 3rem;
+            padding: 2rem 1.6rem;
             text-align: center;
-            color: #888;
+            font-style: italic;
+            color: var(--narria-discret);
+            font-family: var(--police-erudite);
+            font-size: 15px;
+        }
+
+        /* Pied de page : signature seule */
+        .narria-pied {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1.4rem 3rem 1.6rem;
+            border-top: 0.5px solid var(--narria-filet);
+            background: var(--narria-papier);
+            text-align: center;
+            font-family: var(--police-erudite);
+            font-size: 12px;
+            color: var(--narria-tres-discret);
+            letter-spacing: 0.12em;
+            font-style: italic;
+        }
+
+        /* Adaptation mobile */
+        @media (max-width: 900px) {
+            .container { padding: 1.5rem; }
+            .stats-row { grid-template-columns: 1fr; }
+            header { padding: 1.2rem 1.5rem; }
+            table { font-size: 13px; }
+            th, td { padding: 0.6rem 0.7rem; }
         }
     </style>
 </head>
 <body>
     <header>
-        <h1>NARR'IA — Console d'administration</h1>
+        <h1>Narr<span class="accent">'</span>ia — Console d'administration</h1>
         <div class="links">
             <a href="/">Retour à l'application</a>
             <a href="#" id="logoutBtn">Déconnexion</a>
@@ -149,28 +308,43 @@
     </header>
 
     <div class="container">
+        <div class="paragraph-numero">§ Administration</div>
+        <h2>Gestion des comptes</h2>
+        <p class="section-lead">
+            Console réservée à l'administrateur. Affiche les comptes inscrits, leur
+            usage et leur coût cumulé sur trente jours. Les actions d'ajustement de
+            quota et de désactivation sont immédiates.
+        </p>
+
         <div class="stats-row">
             <div class="stat-card">
-                <div class="stat-label">Utilisateurs au total</div>
+                <div class="stat-label">— Utilisateurs au total —</div>
                 <div class="stat-value" id="totalUsers">—</div>
             </div>
             <div class="stat-card">
-                <div class="stat-label">Utilisateurs actifs</div>
+                <div class="stat-label">— Utilisateurs actifs —</div>
                 <div class="stat-value" id="activeUsers">—</div>
             </div>
             <div class="stat-card cost">
-                <div class="stat-label">Coût total (30 derniers jours)</div>
+                <div class="stat-label">— Coût total (30 jours) —</div>
                 <div class="stat-value" id="totalCost">—</div>
             </div>
         </div>
 
         <div class="users-table">
-            <h2>Liste des testeurs</h2>
+            <div class="users-table-titre">
+                <div class="paragraph-numero">— Inscrits —</div>
+                <h3>Liste des comptes</h3>
+            </div>
             <div id="tableContainer">
-                <div class="loading">Chargement...</div>
+                <div class="loading">Chargement…</div>
             </div>
         </div>
     </div>
+
+    <footer class="narria-pied">
+        Adéchinan David Adékambi
+    </footer>
 
     <script>
         async function loadUsers() {
@@ -201,7 +375,7 @@
         function renderTable(users) {
             if (users.length === 0) {
                 document.getElementById('tableContainer').innerHTML =
-                    '<div class="loading">Aucun utilisateur.</div>';
+                    '<div class="loading">Aucun utilisateur inscrit.</div>';
                 return;
             }
 
@@ -217,7 +391,7 @@
                 return `
                 <tr>
                     <td><strong>${escapeHtml(u.full_name || u.email)}</strong>
-                        <br><small style="color:#888">${escapeHtml(u.email)}</small>
+                        <br><small>${escapeHtml(u.email)}</small>
                         ${u.is_admin ? '<br><span class="badge admin">Admin</span>' : ''}
                     </td>
                     <td>${escapeHtml(u.affiliation || '—')}</td>
@@ -254,8 +428,8 @@
                             <th>État</th>
                             <th>Créé le</th>
                             <th>Dernière connexion</th>
-                            <th>24h</th>
-                            <th>30j</th>
+                            <th>24 h</th>
+                            <th>30 j</th>
                             <th>Coût</th>
                             <th>Actions</th>
                         </tr>
