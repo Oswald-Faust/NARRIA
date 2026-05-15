@@ -267,7 +267,13 @@ Réponds UNIQUEMENT avec un objet JSON valide structuré ainsi :
 **Sur les deux schémas actantiels** : tu fournis SYSTÉMATIQUEMENT les deux configurations v1 et v2, même si l'une te paraît plus naturelle que l'autre. C'est le système NARR'IA qui choisira la combinaison la plus cohérente lors d'une comparaison entre deux œuvres. Si l'œuvre n'a vraiment qu'un seul actant central possible (par exemple un monologue introspectif), tu peux dupliquer la même configuration dans v1 et v2.
 
 Règles importantes :
-- Identifie entre 5 et 30 nœuds selon la complexité du texte (un par événement cardinal)
+- **Granularité d'extraction (consigne précise)**. Le nombre de nœuds que tu identifies doit être indexé sur la LONGUEUR du texte, et non sur une « complexité » que tu apprécierais librement. La règle est :
+  • Calcule d'abord, en interne, le nombre approximatif de mots du texte fourni.
+  • Vise UN nœud par tranche d'environ 400 mots.
+  • Applique un plancher de 5 nœuds (en deçà, le récit perd sa structure analysable) et un plafond de 35 nœuds (au-delà, le graphe devient inexploitable pour la comparaison).
+  • Une tolérance de plus ou moins 15 % autour de la cible est admise pour les récits réellement denses ou réellement étalés — pas davantage.
+  Cette règle prévaut sur ton appréciation subjective : deux récits de longueurs voisines doivent produire des graphes de tailles voisines, indépendamment de l'impression de richesse narrative que t'en donne la lecture.
+- **Découpage régulier et reproductible**. Tu privilégies un découpage en événements cardinaux RÉGULIÈREMENT espacés dans le texte, plutôt qu'un découpage concentré sur les passages qui te paraissent saillants. Une seconde analyse du même texte doit pouvoir produire un découpage équivalent au tien : évite donc tout choix idiosyncratique de granularité, et préfère, à scènes ou chapitres équivalents, un nombre équivalent de nœuds.
 - Utilise les codes exacts du répertoire NARR'IA (F01-F56 et FN...)
 
 # RESTRICTION CULTURELLE STRICTE pour les fonctions africaines (FN*)

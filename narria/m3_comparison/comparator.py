@@ -105,27 +105,82 @@ class NarrativeComparator:
     def _score_isomorphism(self, g_ref: NarrativeGraph,
                             g_cand: NarrativeGraph) -> Tuple[float, List[Dict[str, Any]]]:
         """
-        Score d'isomorphisme : proportion de nœuds du candidat qui ont une
-        correspondance de fonction et d'actants dans la référence.
+        Score d'isomorphisme : proportion pondérée de nœuds du candidat qui ont
+        une correspondance de fonction et d'actants dans la référence.
+
+        CORRECTION (mai 2026) — Défaillance A documentée par FICHE_001 à FICHE_004.
+        Le seuil d'appariement, auparavant fixé à 0,30, laissait passer des
+        paires de nœuds sans parenté narrative réelle (cf. _node_similarity).
+        Il est relevé à 0,40 : combiné à la nouvelle _node_similarity, cela
+        exige qu'une correspondance repose sur une parenté de fonction
+        narrative établie, et non sur la simple coprésence de personnages.
+
+        RAFFINEMENT (mai 2026) — Défaillance E documentée par le corpus de
+        calibration (cas-témoin négatif Kourouma / Christie, S_ISO gonflé
+        à 0,792). Lorsqu'une même fonction est répétée en masse dans les deux
+        œuvres — par exemple F43 (Mort) dans deux récits l'un et l'autre
+        mortifères — l'appariement « une occurrence pour une occurrence » se
+        fait trop facilement et gonfle le score, sans qu'il y ait parenté
+        d'intrigue : il ne s'agit que d'un fonds narratif commun.
+
+        Chaque appariement est donc désormais PONDÉRÉ par la rareté de la
+        fonction sur laquelle il repose. Le principe : partager une occurrence
+        d'une fonction rare (présente une ou deux fois de chaque côté) est
+        significatif et compte plein ; partager la quinzième occurrence d'une
+        fonction omniprésente est faiblement significatif et compte pour une
+        fraction. Concrètement, le poids d'un appariement portant sur une
+        fonction décroît avec le nombre d'occurrences de cette fonction dans
+        l'œuvre candidate. Le score d'isomorphisme est la somme des poids des
+        nœuds appariés, rapportée à la somme des poids de tous les nœuds du
+        candidat — ce qui le maintient dans l'intervalle [0, 1].
+
+        Ce raffinement laisse intactes les vraies transpositions : si deux
+        œuvres partagent réellement leur trame, leurs appariements portent sur
+        des fonctions variées et la pondération ne les pénalise pas. Il ne fait
+        retomber que les scores gonflés par la seule répétition d'une fonction
+        fréquente.
         """
         if not g_ref.nodes or not g_cand.nodes:
             return 0.0, []
-        
+
+        MATCH_THRESHOLD = 0.40
+
+        # ─── Poids de rareté par fonction, calculé sur l'œuvre candidate ───
+        # Le poids d'un nœud décroît avec le nombre d'occurrences de sa
+        # fonction dans le candidat : 1 occurrence -> poids 1,0 ; au-delà, le
+        # poids décroît (2 occurrences -> 0,71 ; 5 -> 0,45 ; 15 -> 0,26).
+        # Les nœuds sans code de fonction reçoivent un poids neutre de 1,0.
+        from collections import Counter
+        func_counts = Counter(
+            n.function_code for n in g_cand.nodes if n.function_code
+        )
+
+        def node_weight(node: NarrativeNode) -> float:
+            if not node.function_code:
+                return 1.0
+            occurrences = func_counts.get(node.function_code, 1)
+            # Décroissance douce en 1/sqrt(occurrences).
+            return 1.0 / math.sqrt(occurrences)
+
         correspondences = []
-        matched = 0
-        
+        weighted_matched = 0.0
+        weighted_total = 0.0
+
         for c_node in g_cand.nodes:
+            w = node_weight(c_node)
+            weighted_total += w
+
             best_match = None
             best_score = 0.0
-            
+
             for r_node in g_ref.nodes:
                 score = self._node_similarity(r_node, c_node)
                 if score > best_score:
                     best_score = score
                     best_match = r_node
-            
-            if best_match and best_score > 0.3:
-                matched += 1
+
+            if best_match and best_score >= MATCH_THRESHOLD:
+                weighted_matched += w
                 correspondences.append({
                     'cand_node': c_node.node_id,
                     'cand_function': c_node.function_code or '—',
@@ -133,44 +188,93 @@ class NarrativeComparator:
                     'ref_function': best_match.function_code or '—',
                     'similarity': best_score,
                 })
-        
-        score = matched / len(g_cand.nodes)
+
+        score = weighted_matched / weighted_total if weighted_total > 0 else 0.0
         # Sort correspondences by similarity desc
         correspondences.sort(key=lambda c: -c['similarity'])
         return score, correspondences
     
     def _node_similarity(self, n1: NarrativeNode, n2: NarrativeNode) -> float:
-        """Similarité entre deux nœuds : fonction + actants + modalités + tension."""
+        """
+        Similarité entre deux nœuds : fonction + actants + modalités + tension.
+
+        CORRECTION (mai 2026) — Défaillance A documentée par FICHE_001 à FICHE_004.
+        L'ancienne version attribuait jusqu'à 0,30 point à deux nœuds n'ayant
+        AUCUNE parenté narrative réelle : +0,20 dès que les deux nœuds avaient
+        un nombre d'actants proche, +0,10 supplémentaire dès que chacun avait
+        au moins un actant. Comme presque tous les nœuds de presque tous les
+        récits ont des personnages, n'importe quelle paire dépassait le seuil
+        d'appariement (0,30), d'où un S_ISO systématiquement saturé à 1,000.
+
+        La fonction narrative est désormais la condition cardinale de la
+        similarité : sans correspondance de fonction (même code ou même
+        famille), deux nœuds ne peuvent pas être considérés comme apparentés,
+        quel que soit le nombre d'actants qu'ils partagent. Le simple fait de
+        « compter des personnages » ne crédite plus aucun point ; seule la
+        persistance d'actants réellement communs (mêmes noms) en crédite.
+        """
         score = 0.0
-        
-        # Fonction (40 %)
+
+        # ─── Fonction narrative (60 %) — condition cardinale ───
+        # Sans aucune parenté de fonction, les autres dimensions ne suffisent
+        # pas à elles seules à établir une similarité de nœuds.
+        #
+        # Distinction importante : « même fonction exacte » (ex. F43 vs F43)
+        # est une parenté forte. « même famille » (ex. F41 vs F43, tous deux
+        # dans la famille Résolution) est une parenté FAIBLE : les familles
+        # narratives étant peu nombreuses, deux récits quelconques partagent
+        # forcément beaucoup de familles. Le crédit de famille est donc
+        # volontairement modeste (0,15) et ne suffit pas, à lui seul, à
+        # franchir le seuil d'appariement de 0,40 : il faut qu'il soit
+        # corroboré par des actants communs, une phase identique, etc.
+        function_match = False        # parenté de fonction EXACTE
+        family_match = False          # parenté de FAMILLE seulement
         if n1.function_code and n2.function_code:
             if n1.function_code == n2.function_code:
-                score += 0.40
-            elif n1.function_family == n2.function_family:
-                score += 0.25
-        
-        # Famille actantielle (30 %) — on compare le nombre d'actants
-        if n1.actants and n2.actants:
-            if abs(len(n1.actants) - len(n2.actants)) <= 1:
-                score += 0.20
-            # Bonus si rôles analogues
-            if len(n1.actants) >= 1 and len(n2.actants) >= 1:
+                score += 0.60
+                function_match = True
+            elif (n1.function_family and n2.function_family
+                  and n1.function_family == n2.function_family):
+                score += 0.15
+                family_match = True
+
+        # Si aucune parenté de fonction n'est établie (ni exacte, ni de
+        # famille), la similarité est plafonnée très bas : les dimensions
+        # secondaires (phase, tension) ne peuvent pas, à elles seules, créer
+        # une parenté. Elles affinent une parenté existante.
+        if not function_match and not family_match:
+            if n1.phase and n2.phase and n1.phase == n2.phase:
                 score += 0.10
-        
-        # Phase (10 %)
-        if n1.phase == n2.phase:
+            if abs(n1.tension - n2.tension) < 0.15:
+                score += 0.05
+            return score
+
+        # ─── Actants réellement communs (20 %) ───
+        # On ne crédite plus le simple fait que les deux nœuds « ont des
+        # personnages ». On mesure la proportion d'actants effectivement
+        # partagés (mêmes noms), via un indice de Jaccard.
+        if n1.actants and n2.actants:
+            set1 = set(a.strip().lower() for a in n1.actants if a.strip())
+            set2 = set(a.strip().lower() for a in n2.actants if a.strip())
+            if set1 and set2:
+                inter = len(set1 & set2)
+                union = len(set1 | set2)
+                jaccard = inter / union if union > 0 else 0.0
+                score += 0.20 * jaccard
+
+        # ─── Phase dramatique (10 %) ───
+        if n1.phase and n2.phase and n1.phase == n2.phase:
             score += 0.10
-        
-        # Tension (10 %) — tolérance de 0.25
-        if abs(n1.tension - n2.tension) < 0.25:
-            score += 0.10
-        
-        # Modalités (10 %)
+
+        # ─── Tension (5 %) — tolérance resserrée de 0,25 à 0,15 ───
+        if abs(n1.tension - n2.tension) < 0.15:
+            score += 0.05
+
+        # ─── Modalités (5 %) ───
         if n1.modalities and n2.modalities:
             mod_sim = self._modality_similarity(n1.modalities, n2.modalities)
-            score += 0.10 * mod_sim
-        
+            score += 0.05 * mod_sim
+
         return score
     
     def _modality_similarity(self, m1: Dict[str, float], m2: Dict[str, float]) -> float:
@@ -218,15 +322,63 @@ class NarrativeComparator:
     def _score_function_sequence(self, g_ref: NarrativeGraph,
                                   g_cand: NarrativeGraph) -> float:
         """
-        Similarité des séquences de fonctions (DTW approximé).
+        Similarité des séquences de fonctions (DTW approximé via LCS).
+
+        CORRECTION (mai 2026) — Défaillance D documentée par le corpus de calibration
+        (cas Césaire / Shakespeare). Deux défauts cumulés sont corrigés.
+
+        Défaut 1 — Normalisation injuste par la longueur maximale.
+        L'ancienne version divisait la plus longue sous-séquence commune (LCS)
+        par max(m, n) — la longueur de la séquence la plus longue. Pour deux
+        œuvres de longueurs très différentes (Césaire : 46 nœuds ; Shakespeare :
+        22 nœuds), ce mode de calcul pénalisait mécaniquement la comparaison :
+        une transposition fidèle mais plus détaillée obtenait un score bas pour
+        une raison purement arithmétique, pas pour une infidélité de séquence.
+        La normalisation se fait désormais par la longueur de la séquence la
+        plus COURTE : on mesure quelle proportion du squelette le plus court se
+        retrouve, dans l'ordre, dans l'œuvre la plus développée. Une œuvre qui
+        contient l'intégralité de la séquence d'une autre, même en l'étoffant,
+        obtient ainsi un score élevé, ce qui est le comportement attendu d'une
+        transposition.
+
+        Défaut 2 — Les fonctions africaines (préfixe « FN ») faussent la
+        comparaison entre deux traditions.
+        Lorsqu'une œuvre occidentale est comparée à sa transposition africaine,
+        l'extracteur active sur la seule transposition les fonctions propres au
+        répertoire africain (FNBENI, FNGR, FNPROV, FNANC, FNCOMM, etc.). Ces
+        nœuds n'ont, par construction, aucun équivalent possible dans l'œuvre
+        occidentale : ils ne peuvent jamais entrer dans la sous-séquence commune
+        et abaissent donc mécaniquement le score, alors qu'ils ne signalent pas
+        une infidélité de séquence mais un AJOUT culturel propre à la
+        transposition.
+
+        Conformément à la décision de l'auteur, les fonctions « FN » sont donc
+        NEUTRALISÉES dans le seul calcul du S_FUNC : la séquence comparée est
+        filtrée de ses codes commençant par « FN ». Cette neutralisation est
+        strictement circonscrite à ce score de séquence — les nœuds « FN »
+        demeurent présents dans le graphe, dans le rapport, et dans tous les
+        autres indicateurs. Le système ne nie pas que la transposition a ajouté
+        une couche africaine ; il refuse seulement de compter cet ajout comme
+        une infidélité de séquence, ce qu'il n'est pas.
         """
         seq_ref = g_ref.function_sequence()
         seq_cand = g_cand.function_sequence()
-        
+
         if not seq_ref or not seq_cand:
             return 0.0
-        
-        # DTW simplifié via Longest Common Subsequence
+
+        # ─── Défaut 2 : neutralisation des fonctions africaines (« FN ») ───
+        # On retire de chaque séquence les codes du répertoire africain, afin
+        # que la comparaison de séquence porte sur les squelettes comparables.
+        seq_ref = [c for c in seq_ref if not c.startswith('FN')]
+        seq_cand = [c for c in seq_cand if not c.startswith('FN')]
+
+        if not seq_ref or not seq_cand:
+            # Si l'une des œuvres n'est composée que de fonctions FN, la
+            # comparaison de séquence n'est pas pertinente : score neutre.
+            return 0.5
+
+        # ─── Plus longue sous-séquence commune (LCS) ───
         m, n = len(seq_ref), len(seq_cand)
         dp = [[0] * (n + 1) for _ in range(m + 1)]
         for i in range(1, m + 1):
@@ -236,7 +388,30 @@ class NarrativeComparator:
                 else:
                     dp[i][j] = max(dp[i-1][j], dp[i][j-1])
         lcs = dp[m][n]
-        return lcs / max(m, n)
+
+        # ─── Défaut 1 : normalisation équilibrée ───
+        # Normaliser par min(m, n) seul est trop généreux : une séquence très
+        # courte obtient un score artificiellement élevé pour le moindre
+        # recouvrement, ce qui détruit le pouvoir discriminant du score entre
+        # une vraie transposition et un récit sans lien.
+        # Normaliser par max(m, n) seul est trop sévère : cela pénalise les
+        # transpositions fidèles mais plus détaillées (cas Césaire).
+        #
+        # La formule retenue combine deux termes :
+        #   - le recouvrement : quelle proportion du squelette le plus court
+        #     se retrouve, dans l'ordre, dans l'autre œuvre (lcs / min) ;
+        #   - une pénalité d'écart de longueur : le rapport min/max, qui vaut
+        #     1 pour deux œuvres de même longueur et décroît à mesure que
+        #     l'écart se creuse.
+        # Le score est la moyenne géométrique de ces deux termes. Une
+        # transposition fidèle et de longueur comparable obtient un score
+        # élevé ; une transposition fidèle mais très étoffée reste bien notée,
+        # mais sans atteindre le maximum ; un couple sans lien, dont le
+        # recouvrement est faible, ne peut pas obtenir un score gonflé même
+        # si l'une des œuvres est courte.
+        recouvrement = lcs / min(m, n)
+        ratio_longueur = min(m, n) / max(m, n)
+        return math.sqrt(recouvrement * ratio_longueur)
     
     def _score_actantial_chain(self, g_ref: NarrativeGraph,
                                 g_cand: NarrativeGraph) -> float:
@@ -653,31 +828,63 @@ class NarrativeComparator:
         """
         Classifie la modalité de vol d'intrigue parmi les cinq :
         Transposition, Amplification, Condensation, Inversion, Hybridation.
-        Retourne "Aucune modalité significative" si SNS trop bas.
+        Retourne "Aucune modalité significative" si la parenté est trop faible.
+
+        CORRECTION (mai 2026) — Défaillance B documentée par FICHE_003 et FICHE_004.
+        L'ancienne version concluait à une « Transposition » dès que
+        s_iso > 0.5, sans corroboration. Comme s_iso était saturé à 1,000
+        (défaillance A), tout couple d'œuvres de taille comparable était
+        classé « Transposition », y compris le couple-témoin négatif
+        La Peste / La Vieille femme — un faux positif caractérisé.
+
+        Deux garde-fous sont ajoutés :
+        1. Un seuil de parenté minimale combinant s_iso ET s_func : aucune
+           modalité de vol n'est retenue si la parenté n'est pas corroborée
+           par au moins deux indicateurs indépendants.
+        2. Un contrôle de cohérence interne : une « transposition » ne peut
+           être affirmée que si la séquence fonctionnelle (s_func) confirme
+           la parenté structurale. Un s_iso élevé contredit par un s_func
+           faible est traité comme un signal non concluant, et non comme
+           une transposition.
+
+        Même après correction de la défaillance A, ces garde-fous restent
+        nécessaires : ils rendent le moteur robuste à un éventuel biais
+        résiduel d'un indicateur isolé.
         """
-        if s_iso < 0.25:
-            return "Aucune modalité significative"
-        
+        # ─── Garde-fou 1 : parenté minimale corroborée ───
+        # La parenté doit être soutenue par au moins deux indicateurs.
+        # s_iso seul ne suffit plus à enclencher une classification de vol.
+        corroborated_kinship = (s_iso >= 0.45 and s_func >= 0.35)
+        if not corroborated_kinship:
+            # Parenté faible ou non corroborée : pas de modalité de vol.
+            if s_iso < 0.25:
+                return "Aucune modalité significative"
+            return "Correspondance partielle non classifiée"
+
         len_ref = len(g_ref.nodes)
         len_cand = len(g_cand.nodes)
         size_ratio = len_cand / max(len_ref, 1)
-        
+
         # Amplification : candidat sensiblement plus long avec même squelette
-        if size_ratio > 1.4 and s_func > 0.4:
+        if size_ratio > 1.4 and s_func > 0.45:
             return "Amplification"
         # Condensation : candidat sensiblement plus court avec même squelette
-        if size_ratio < 0.7 and s_func > 0.4:
+        if size_ratio < 0.7 and s_func > 0.45:
             return "Condensation"
-        # Inversion : tension profile inversé
-        if s_tens < 0.3 and s_iso > 0.4:
+        # Inversion : profil tensif inversé sur fond de parenté structurale
+        if s_tens < 0.3 and s_iso > 0.45 and s_func >= 0.35:
             return "Inversion (valences inversées)"
-        # Transposition : forte iso + même taille + ST moyen
-        if s_iso > 0.5 and 0.8 < size_ratio < 1.3:
+        # ─── Garde-fou 2 : contrôle de cohérence interne ───
+        # La transposition exige une parenté structurale ET fonctionnelle
+        # élevées, et une taille comparable. Un s_iso élevé non confirmé par
+        # s_func ne suffit pas : c'est précisément le profil du faux positif
+        # Camus / Hougron (FICHE_004).
+        if (s_iso >= 0.55 and s_func >= 0.45 and 0.8 < size_ratio < 1.3):
             return "Transposition (contextes différents)"
-        # Hybridation : iso moyen mais non-localisé
-        if 0.30 < s_iso < 0.50:
+        # Hybridation : parenté moyenne, non localisée
+        if 0.45 <= s_iso < 0.55 or (0.35 <= s_func < 0.45):
             return "Possible hybridation"
-        
+
         return "Correspondance partielle non classifiée"
     
     def _evaluate_srj(self, sns: float, ss: float, modality: str) -> Tuple[float, str]:
@@ -723,27 +930,59 @@ class NarrativeComparator:
     
     def _build_warnings(self, sns: float, g_ref: NarrativeGraph,
                          g_cand: NarrativeGraph) -> List[str]:
-        """Avertissements éthiques et méthodologiques."""
+        """
+        Avertissements éthiques et méthodologiques.
+
+        CORRECTION (mai 2026) — Défaillance C documentée par FICHE_003 et FICHE_004.
+        L'ancienne version n'émettait l'avertissement éthique central que si
+        sns > 0.70. Les cas dont le SNS était inférieur à ce seuil — y compris
+        des couples impliquant des auteurs vivants — ne recevaient donc AUCUN
+        avertissement, alors que c'est précisément la situation où il est le
+        plus nécessaire.
+
+        L'avertissement éthique central est désormais émis systématiquement
+        et inconditionnellement, en première position, pour TOUTE comparaison,
+        quel que soit le SNS et quel que soit le chemin d'exécution. Les autres
+        avertissements (texte court, fonctions non identifiées, similarité
+        élevée) s'y ajoutent selon les cas, mais ne le remplacent jamais.
+        """
         warnings = []
-        
-        if len(g_ref.nodes) < 5 or len(g_cand.nodes) < 5:
-            warnings.append(
-                "L'un des deux textes est très court (moins de 5 nœuds narratifs identifiés). "
-                "Les scores sont à interpréter avec prudence : un texte plus long "
-                "permettrait une analyse plus fiable.")
-        
+
+        # ─── Avertissement éthique central — SYSTÉMATIQUE et INCONDITIONNEL ───
+        # Émis en première position pour toute comparaison, sans exception.
+        warnings.append(
+            "Cette analyse est une aide à la décision — jamais un verdict. "
+            "Aucun score, si élevé soit-il, ne constitue une preuve de plagiat. "
+            "Les résultats de NARR'IA sont probabilistes et doivent toujours "
+            "être soumis à l'appréciation d'une expertise humaine qualifiée "
+            "(narratologue et, le cas échéant, juriste). NARR'IA n'établit "
+            "pas le plagiat : il signale des correspondances structurales à "
+            "investiguer.")
+
+        # ─── Avertissement renforcé : similarité élevée ───
         if sns > 0.70:
             warnings.append(
-                "Un SNS élevé ne constitue jamais une preuve de plagiat. "
-                "Cette analyse est une aide à la décision — jamais un verdict. "
-                "Une expertise humaine qualifiée reste indispensable.")
-        
-        # Fonctions non identifiées
+                "Le score de similarité narrative globale est élevé. "
+                "La prudence d'interprétation doit être d'autant plus grande : "
+                "une similarité structurale forte peut résulter d'une filiation "
+                "assumée, d'une convergence de genre, d'une source commune aux "
+                "deux œuvres, ou d'un emprunt non déclaré — seule l'expertise "
+                "humaine peut trancher entre ces hypothèses.")
+
+        # ─── Avertissement : texte court ───
+        if len(g_ref.nodes) < 5 or len(g_cand.nodes) < 5:
+            warnings.append(
+                "L'un des deux textes est très court (moins de 5 nœuds narratifs "
+                "identifiés). Les scores sont à interpréter avec une prudence "
+                "accrue : un texte plus long permettrait une analyse plus fiable.")
+
+        # ─── Avertissement : fonctions non identifiées ───
         funcs_ref = sum(1 for n in g_ref.nodes if n.function_code)
         total_ref = len(g_ref.nodes)
         if total_ref > 0 and funcs_ref / total_ref < 0.4:
             warnings.append(
-                "Plus de 60 % des nœuds de l'œuvre de référence n'ont pas de fonction "
-                "narrative identifiée. Les scores peuvent sous-estimer la similarité réelle.")
-        
+                "Plus de 60 % des nœuds de l'œuvre de référence n'ont pas de "
+                "fonction narrative identifiée. Les scores peuvent sous-estimer "
+                "la similarité réelle.")
+
         return warnings
