@@ -15,7 +15,7 @@ Ou plus simplement :
     ./NARRIA.sh      (Linux / macOS)
     NARRIA.bat       (Windows)
 """
-import unicodedata
+
 import os
 import sys
 import json
@@ -545,9 +545,6 @@ def api_analyze_text():
         graph_id = f"g_{datetime.now().strftime('%Y%m%d_%H%M%S_%f')}"
         SESSION['graphs'][graph_id] = graph
         # Override the graph's own ID with the session-friendly one
-        os.makedirs(str(history.graphs_dir), exist_ok=True)
-        with open(str(history.graphs_dir / f"{graph_id}.json"), "w", encoding="utf-8") as f:
-            json.dump(graph.to_dict(), f)
         graph.graph_id = graph_id
         
         # Persist to history (so the analysis survives across sessions)
@@ -657,44 +654,15 @@ def api_compare():
     graph_id_ref = data.get('graph_id_ref')
     graph_id_cand = data.get('graph_id_cand')
     
-    # Récupération des graphes : on tente d'abord la mémoire de session (rapide),
-    # puis on retombe sur l'historique persistant (partagé entre workers en prod).
-    # Cette approche garantit le bon fonctionnement avec Gunicorn multi-workers,
-    # où chaque worker a sa propre mémoire mais partage le volume /data.
-    
-    def _get_graph_from_memory_or_history(gid):
-        """Récupère un graphe depuis la mémoire ou depuis l'historique persistant."""
-        # 1. Tentative en mémoire (cas local ou même worker)
-        if gid in SESSION['graphs']:
-            return SESSION['graphs'][gid]
-        
-        # 2. Fallback sur l'historique persistant (cas multi-workers en production)
-        try:
-            # Chaque analyse stockée contient le graphe complet
-            for analysis in history.list_analyses():
-                if analysis.get('graph_id') == gid:
-                    full = history.get_analysis(analysis['analysis_id'])
-                    if full and full.get('graph'):
-                        # Reconstituer un NarrativeGraph depuis le dict stocké
-                        from narria.core.models import NarrativeGraph
-                        graph = NarrativeGraph.from_dict(full['graph'])
-                        # Mettre en cache dans la session pour les requêtes suivantes
-                        SESSION['graphs'][gid] = graph
-                        return graph
-        except Exception as e:
-            print(f"[NARR'IA] Erreur de récupération du graphe {gid} depuis l'historique : {e}")
-        
-        return None
-    
-    graph_ref = _get_graph_from_memory_or_history(graph_id_ref)
-    if graph_ref is None:
+    if graph_id_ref not in SESSION['graphs']:
         return jsonify({'error': 'Graphe de référence introuvable. Analysez d\'abord le texte.'}), 404
-    
-    graph_cand = _get_graph_from_memory_or_history(graph_id_cand)
-    if graph_cand is None:
+    if graph_id_cand not in SESSION['graphs']:
         return jsonify({'error': 'Graphe candidat introuvable. Analysez d\'abord le texte.'}), 404
     
     try:
+        graph_ref = SESSION['graphs'][graph_id_ref]
+        graph_cand = SESSION['graphs'][graph_id_cand]
+        
         # Module 3 — Comparaison
         result = comparator.compare(graph_ref, graph_cand)
         
@@ -730,15 +698,26 @@ def api_compare():
             'warnings': result.warnings,
         }
         
-        # Persist comparison in history
+        # Persist comparison in history (le comp_id retourné devient l'identifiant
+        # canonique : il permet au frontend de retrouver la comparaison sur disque
+        # même si elle n'est plus en mémoire ; nécessaire en multi-workers).
+        persisted_comp_id = None
         try:
-            history.record_comparison(
+            comp_entry = history.record_comparison(
                 ref_id=graph_id_ref,
                 cand_id=graph_id_cand,
                 comparison_result=response_payload,
             )
+            persisted_comp_id = comp_entry.get('comparison_id')
         except Exception as e:
             print(f"[NARR'IA] Erreur d'archivage de la comparaison : {e}")
+
+        # On utilise le comp_id comme analysis_id pour le frontend, afin que la
+        # génération de rapport puisse retrouver la comparaison sur disque.
+        # Si la persistance a échoué, on retombe sur l'ancien identifiant mémoire.
+        if persisted_comp_id:
+            SESSION['analyses'][persisted_comp_id] = SESSION['analyses'][analysis_id]
+            response_payload['analysis_id'] = persisted_comp_id
         
         # ─── JOURNALISATION QUOTA ───
         if _auth_enabled() and user:
@@ -765,26 +744,75 @@ def api_compare():
 
 @app.route('/api/generate-report/<analysis_id>', methods=['POST'])
 def api_generate_report(analysis_id):
-    """Génère un rapport complet (HTML) pour une analyse."""
-    if analysis_id not in SESSION['analyses']:
-        return jsonify({'error': 'Analyse introuvable'}), 404
-    
+    """Génère un rapport complet (HTML) pour une analyse.
+
+    Cherche d'abord en mémoire (SESSION). Si absent — cas typique en multi-workers
+    où la requête tombe sur un worker différent de celui qui a fait la
+    comparaison — recharge la comparaison et les graphes depuis le disque.
+    """
     try:
-        analysis = SESSION['analyses'][analysis_id]
-        report_html = reporter.generate_html(
-            result=analysis['result'],
-            graph_ref=analysis['graph_ref'],
-            graph_cand=analysis['graph_cand'],
-        )
-        
-        # Save report to disk
+        # ─── PISTE 1 : mémoire vive (worker chanceux) ───
+        if analysis_id in SESSION['analyses']:
+            analysis = SESSION['analyses'][analysis_id]
+            report_html = reporter.generate_html(
+                result=analysis['result'],
+                graph_ref=analysis['graph_ref'],
+                graph_cand=analysis['graph_cand'],
+            )
+        else:
+            # ─── PISTE 2 : repli disque (multi-workers) ───
+            # On accepte ici un comparison_id (c_*) — c'est ce que renvoie
+            # désormais api_compare comme analysis_id.
+            comp = history.get_comparison(analysis_id)
+            if not comp:
+                return jsonify({'error': 'Analyse introuvable (ni en mémoire, ni sur disque).'}), 404
+
+            ref_graph_id = comp.get('ref_graph_id')
+            cand_graph_id = comp.get('cand_graph_id')
+            full_result = comp.get('full_result') or {}
+
+            graph_ref_dict = history.get_graph_dict(ref_graph_id) if ref_graph_id else None
+            graph_cand_dict = history.get_graph_dict(cand_graph_id) if cand_graph_id else None
+            if not graph_ref_dict or not graph_cand_dict:
+                return jsonify({'error': 'Les graphes de la comparaison sont introuvables sur disque.'}), 404
+
+            # Reconstruction des objets Python depuis les dicts
+            from narria.core.models import NarrativeGraph, ComparisonResult
+            graph_ref = NarrativeGraph.from_dict(graph_ref_dict)
+            graph_cand = NarrativeGraph.from_dict(graph_cand_dict)
+
+            details = full_result.get('details') or {}
+            result = ComparisonResult(
+                sns=full_result.get('sns', 0.0),
+                sns_normalized=full_result.get('sns_n', 0.0),
+                ss=full_result.get('ss', 0.0),
+                st=full_result.get('st', 0.0),
+                srj=full_result.get('srj', 0.0),
+                srj_level=full_result.get('srj_level') or full_result.get('srj_class', 'Faible'),
+                s_iso=details.get('s_iso', 0.0),
+                s_ged=details.get('s_ged', 0.0),
+                s_func=details.get('s_func', 0.0),
+                s_act=details.get('s_act', 0.0),
+                s_tens=details.get('s_tens', 0.0),
+                detected_modality=full_result.get('modality', 'Aucune'),
+                verdict=full_result.get('verdict', ''),
+                correspondences=full_result.get('correspondences', []),
+                warnings=full_result.get('warnings', []),
+            )
+            report_html = reporter.generate_html(
+                result=result,
+                graph_ref=graph_ref,
+                graph_cand=graph_cand,
+            )
+
+        # ─── ÉCRITURE DU RAPPORT SUR DISQUE ───
         reports_dir = BASE_DIR / 'reports'
         reports_dir.mkdir(exist_ok=True)
         report_path = reports_dir / f"rapport_{analysis_id}.html"
         report_path.write_text(report_html, encoding='utf-8')
-        
+
         SESSION['last_report'] = str(report_path)
-        
+
         return jsonify({
             'success': True,
             'report_path': str(report_path),
@@ -1236,7 +1264,7 @@ def api_download_analysis(analysis_id, format):
         return jsonify({'error': 'Analyse introuvable'}), 404
     
     title = analysis.get('title', 'analyse').replace(' ', '_')
-    safe_title = re.sub(r'[^\w\-]', '', unicodedata.normalize('NFKD', title).encode('ascii', 'ignore').decode('ascii'))[:40] or 'analyse'
+    safe_title = re.sub(r'[^\w\-_]', '', title)[:40] or 'analyse'
     
     if format == 'json':
         content = json.dumps(analysis, ensure_ascii=False, indent=2)
