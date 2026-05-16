@@ -147,6 +147,7 @@ def forgot_password_page():
     return render_template('forgot_password.html')
 
 
+
 @app.route('/api/auth/forgot-password', methods=['POST'])
 def api_forgot_password():
     """Envoie un email de réinitialisation de mot de passe."""
@@ -180,7 +181,39 @@ def api_forgot_password():
         except Exception as e:
             print(f"[NARR'IA] Erreur envoi email : {e}")
     return jsonify({'message': 'Si cet email existe, un lien a été envoyé.'})
-    
+
+@app.route('/reset-password', methods=['GET'])
+def reset_password_page():
+    """Affiche la page de réinitialisation de mot de passe."""
+    if not _auth_enabled():
+        return redirect(url_for('home'))
+    return render_template('reset_password.html')
+
+
+@app.route('/api/auth/reset-password', methods=['POST'])
+def api_reset_password():
+    """Réinitialise le mot de passe avec le token reçu par email."""
+    data = request.get_json()
+    token = data.get('token', '')
+    password = data.get('password', '')
+    if not token or not password:
+        return jsonify({'error': 'Données manquantes'}), 400
+    tokens = SESSION.get('reset_tokens', {})
+    token_data = tokens.get(token)
+    if not token_data:
+        return jsonify({'error': 'Lien invalide ou expiré'}), 400
+    expires = datetime.fromisoformat(token_data['expires'])
+    if datetime.now() > expires:
+        return jsonify({'error': 'Lien expiré'}), 400
+    email = token_data['email']
+    store = UserStore()
+    user = store.get_user_by_email(email)
+    if not user:
+        return jsonify({'error': 'Utilisateur introuvable'}), 404
+    store.update_password(user['id'], password)
+    del SESSION['reset_tokens'][token]
+    return jsonify({'message': 'Mot de passe modifié avec succès'})
+
 @app.route('/api/auth/register', methods=['POST'])
 def api_register():
     """Inscription d'un nouvel utilisateur."""
