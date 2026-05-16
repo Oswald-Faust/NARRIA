@@ -139,7 +139,27 @@ def register_page():
     if session.get('user_id'):
         return redirect(url_for('home'))
     return render_template('register.html')
+@app.route('/forgot-password', methods=['GET'])
+def forgot_password_page():
+    """Affiche la page de mot de passe oublié."""
+    if not _auth_enabled():
+        return redirect(url_for('home'))
+    return render_template('forgot_password.html')
 
+
+@app.route('/api/auth/forgot-password', methods=['POST'])
+def api_forgot_password():
+    """Envoie un email de réinitialisation de mot de passe."""
+    data = request.get_json()
+    email = data.get('email', '').strip().lower()
+    if not email:
+        return jsonify({'error': 'Email requis'}), 400
+    user = UserStore().get_user_by_email(email)
+    if user:
+        token = secrets.token_urlsafe(32)
+        SESSION['reset_tokens'] = SESSION.get('reset_tokens', {})
+        SESSION['reset_tokens'][token] = {'email': email, 'expires': (datetime.now() + timedelta(hours=1)).isoformat()}
+    return jsonify({'message': 'Si cet email existe, un lien a été envoyé.'})
 
 @app.route('/api/auth/register', methods=['POST'])
 def api_register():
