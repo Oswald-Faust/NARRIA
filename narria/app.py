@@ -218,7 +218,7 @@ def api_reset_password():
     user = store.get_user_by_email(email)
     if not user:
         return jsonify({'error': 'Utilisateur introuvable'}), 404
-    store.update_password(user['id'], password)
+    store.change_password(user['id'], password)
     del SESSION['reset_tokens'][token]
     return jsonify({'message': 'Mot de passe modifié avec succès'})
 
