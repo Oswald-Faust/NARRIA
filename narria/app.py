@@ -154,6 +154,7 @@ def api_forgot_password():
     import smtplib
     from email.mime.text import MIMEText
     from email.mime.multipart import MIMEMultipart
+    from narria.auth.users import UserStore
     data = request.get_json()
     email = data.get('email', '').strip().lower()
     if not email:
