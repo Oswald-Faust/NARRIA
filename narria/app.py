@@ -165,8 +165,9 @@ def api_forgot_password():
     user = UserStore().get_user_by_email(email)
     if user:
         token = secrets.token_urlsafe(32)
-        SESSION['reset_tokens'] = SESSION.get('reset_tokens', {})
-        SESSION['reset_tokens'][token] = {'email': email, 'expires': (datetime.now() + timedelta(hours=1)).isoformat()}
+        os.makedirs("/data/reset_tokens", exist_ok=True)
+        with open(f"/data/reset_tokens/{token}.json", "w") as f:
+            json.dump({'email': email, 'expires': (datetime.now() + timedelta(hours=1)).isoformat()}, f)
         reset_link = f"https://narria.tech/reset-password?token={token}"
         gmail = os.environ.get('GMAIL_ADDRESS')
         gmail_pwd = os.environ.get('GMAIL_PASSWORD')
@@ -206,10 +207,11 @@ def api_reset_password():
     password = data.get('password', '')
     if not token or not password:
         return jsonify({'error': 'Données manquantes'}), 400
-    tokens = SESSION.get('reset_tokens', {})
-    token_data = tokens.get(token)
-    if not token_data:
+    token_path = f"/data/reset_tokens/{token}.json"
+    if not os.path.exists(token_path):
         return jsonify({'error': 'Lien invalide ou expiré'}), 400
+    with open(token_path) as f:
+        token_data = json.load(f)
     expires = datetime.fromisoformat(token_data['expires'])
     if datetime.now() > expires:
         return jsonify({'error': 'Lien expiré'}), 400
@@ -219,7 +221,7 @@ def api_reset_password():
     if not user:
         return jsonify({'error': 'Utilisateur introuvable'}), 404
     store.change_password(user['id'], password)
-    del SESSION['reset_tokens'][token]
+    os.remove(token_path)
     return jsonify({'message': 'Mot de passe modifié avec succès'})
 
 @app.route('/api/auth/register', methods=['POST'])
