@@ -150,6 +150,9 @@ def forgot_password_page():
 @app.route('/api/auth/forgot-password', methods=['POST'])
 def api_forgot_password():
     """Envoie un email de réinitialisation de mot de passe."""
+    import smtplib
+    from email.mime.text import MIMEText
+    from email.mime.multipart import MIMEMultipart
     data = request.get_json()
     email = data.get('email', '').strip().lower()
     if not email:
@@ -159,8 +162,25 @@ def api_forgot_password():
         token = secrets.token_urlsafe(32)
         SESSION['reset_tokens'] = SESSION.get('reset_tokens', {})
         SESSION['reset_tokens'][token] = {'email': email, 'expires': (datetime.now() + timedelta(hours=1)).isoformat()}
+        reset_link = f"https://narria.tech/reset-password?token={token}"
+        gmail = os.environ.get('GMAIL_ADDRESS')
+        gmail_pwd = os.environ.get('GMAIL_PASSWORD')
+        msg = MIMEMultipart()
+        msg['From'] = gmail
+        msg['To'] = email
+        msg['Subject'] = 'Réinitialisation de votre mot de passe NARR\'IA'
+        body = f"""Bonjour,\n\nCliquez sur ce lien pour réinitialiser votre mot de passe :\n{reset_link}\n\nCe lien expire dans 1 heure.\n\nL'équipe NARR'IA"""
+        msg.attach(MIMEText(body, 'plain'))
+        try:
+            server = smtplib.SMTP('smtp.gmail.com', 587)
+            server.starttls()
+            server.login(gmail, gmail_pwd)
+            server.sendmail(gmail, email, msg.as_string())
+            server.quit()
+        except Exception as e:
+            print(f"[NARR'IA] Erreur envoi email : {e}")
     return jsonify({'message': 'Si cet email existe, un lien a été envoyé.'})
-
+    
 @app.route('/api/auth/register', methods=['POST'])
 def api_register():
     """Inscription d'un nouvel utilisateur."""
