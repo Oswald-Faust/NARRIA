@@ -197,6 +197,10 @@ def reset_password_page():
 @app.route('/api/auth/reset-password', methods=['POST'])
 def api_reset_password():
     """Réinitialise le mot de passe avec le token reçu par email."""
+    import os
+    import secrets
+    from datetime import datetime, timedelta
+    from narria.auth.users import UserStore
     data = request.get_json()
     token = data.get('token', '')
     password = data.get('password', '')
