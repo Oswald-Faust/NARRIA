@@ -141,6 +141,26 @@ body {
   font-weight: bold;
 }
 
+/* ─── Override pour le sommaire latéral (nouvelle grammaire) ─── */
+/* Les .tab du sommaire latéral n'ont pas de fond au survol, juste un
+   soulignement gold sur le libellé. Cette règle annule l'héritage des
+   .tab horizontaux historiques. */
+.narria-sommaire .tab,
+.narria-sommaire .tab:hover,
+.narria-sommaire .tab.active {
+  background: transparent !important;
+  border-bottom: none !important;
+}
+.narria-sommaire .tab:hover {
+  color: #FFFFFF !important;
+}
+.narria-sommaire .tab:hover .sommaire-libelle {
+  text-decoration: underline;
+  text-decoration-color: #C55A11;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+}
+
 /* ─── Main content ─── */
 main {
   max-width: 1100px;
@@ -1168,7 +1188,10 @@ input[type="password"]:focus {
    JUSTIFICATION DES PARAGRAPHES (esthétique académique)
    ═══════════════════════════════════════════════════════ */
 
-/* Justifier les paragraphes de prose dans le contenu principal */
+/* Alignement uniforme : fer à gauche partout, sans coupure de mots.
+   Décision typographique pour l'écran : la justification automatique
+   sans contrôle humain produit soit des espaces trop grands, soit des
+   coupures de mots maladroites. Le fer à gauche reste lisible et propre. */
 .tab-content p,
 .section-lead,
 .lead,
@@ -1176,9 +1199,9 @@ input[type="password"]:focus {
 .llm-summary blockquote,
 blockquote,
 .node-detail p {
-  text-align: justify;
-  text-justify: inter-word;
-  hyphens: auto;
+  text-align: left;
+  hyphens: none;
+  -webkit-hyphens: none;
 }
 
 /* Mais conserver un alignement à gauche pour les éléments structurels */
@@ -1202,3 +1225,17 @@ blockquote,
 button, .badge, .function-tag {
   text-align: center;
 }
+
+
+/* Historique : titres d'œuvres en italique, auteurs en romain */
+.history-table .history-title {
+  font-style: italic;
+  font-weight: 500;
+  color: var(--narria-encre, #1A1A1A);
+}
+.history-table .history-author {
+  font-style: normal;
+  color: var(--narria-discret, #6B6354);
+  font-size: 0.9em;
+}
+

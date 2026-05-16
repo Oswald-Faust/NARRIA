@@ -1,379 +1,401 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Créer un compte — NARR'IA</title>
-    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo.png') }}">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Inscription — NARR'IA</title>
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo.png') }}">
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
-    <style>
-        :root {
-            --narria-bleu: #1F4E79;
-            --narria-gold: #C55A11;
-            --narria-ivoire: #FBFAF6;
-            --narria-papier: #FFFFFF;
-            --narria-tranche-clair: #C9B98A;
-            --narria-encre: #1A1A1A;
-            --narria-texte: #4A4438;
-            --narria-discret: #6B6354;
-            --narria-tres-discret: #8C8473;
-            --narria-filet: #E8E4D8;
-            --narria-erreur-fond: #FCE4D6;
-            --narria-erreur-texte: #8B2400;
-            --police-erudite: 'EB Garamond', 'Garamond', Georgia, serif;
-        }
-        * { box-sizing: border-box; }
-        html, body { margin: 0; padding: 0; }
-        body {
-            font-family: var(--police-erudite);
-            background: var(--narria-ivoire);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 1.5rem;
-            color: var(--narria-encre);
-        }
-        .auth-shell {
-            width: 100%;
-            max-width: 560px;
-            background: var(--narria-papier);
-            display: grid;
-            grid-template-columns: 84px 1fr;
-            box-shadow: 0 1px 0 var(--narria-filet);
-            border: 0.5px solid var(--narria-filet);
-        }
+  <style>
+    :root {
+      --narria-bleu: #1F4E79;
+      --narria-bleu-clair: #2E5F8E;
+      --narria-gold: #C55A11;
+      --narria-creme: #EAE0C5;
+      --narria-ivoire: #EFE7CE;
+      --narria-papier: #F2EBD5;
+      --narria-tranche-clair: #C9B98A;
+      --narria-encre: #1A1A1A;
+      --narria-texte: #4A4438;
+      --narria-discret: #6B6354;
+      --narria-tres-discret: #8C8473;
+      --narria-filet: #C9BEA0;
+      --narria-erreur-fond: #FCE4D6;
+      --narria-erreur-texte: #8B2400;
+      --narria-succes-fond: #E8F2E4;
+      --narria-succes-texte: #2D5016;
+      --police-erudite: 'EB Garamond', 'Garamond', Georgia, serif;
+      --police-fonctionnelle: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; min-height: 100vh; }
+    body {
+      font-family: var(--police-fonctionnelle);
+      background: var(--narria-ivoire);
+      color: var(--narria-encre);
+      font-size: 15px;
+      line-height: 1.55;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
 
-        /* Tranche bleue à gauche */
-        .auth-tranche {
-            background: var(--narria-bleu);
-            padding: 2.5rem 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: space-between;
-        }
-        .tranche-haut, .tranche-bas {
-            writing-mode: vertical-rl;
-            transform: rotate(180deg);
-            font-family: var(--police-erudite);
-            font-size: 11px;
-            letter-spacing: 0.32em;
-            color: var(--narria-tranche-clair);
-            text-transform: uppercase;
-        }
-        .tranche-bas { font-size: 10px; letter-spacing: 0.28em; }
-        .tranche-marque {
-            font-family: var(--police-erudite);
-            font-size: 48px;
-            color: var(--narria-papier);
-            font-weight: 400;
-            line-height: 1;
-        }
+    .narria-header {
+      background: var(--narria-papier);
+      border-bottom: 0.5px solid var(--narria-filet);
+      padding: 1.2rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 0.9rem;
+    }
+    .brand-logo { width: 44px; height: 44px; flex-shrink: 0; }
+    .brand-text h1 {
+      font-family: var(--police-erudite);
+      font-size: 24px;
+      color: var(--narria-bleu);
+      font-weight: 400;
+      margin: 0;
+      line-height: 1;
+    }
+    .brand-text h1 .accent { color: var(--narria-gold); }
+    .brand-text .subtitle {
+      font-family: var(--police-erudite);
+      font-size: 12px;
+      color: var(--narria-texte);
+      font-style: italic;
+      font-weight: 600;
+      margin: 0.15rem 0 0;
+    }
 
-        /* Corps de la page */
-        .auth-corps {
-            padding: 2.6rem 2.5rem 2rem;
-        }
-        .paragraph-numero {
-            font-family: var(--police-erudite);
-            font-size: 11px;
-            letter-spacing: 0.25em;
-            color: var(--narria-gold);
-            text-transform: uppercase;
-            margin-bottom: 0.4rem;
-        }
-        h1 {
-            font-family: var(--police-erudite);
-            font-size: 32px;
-            color: var(--narria-bleu);
-            font-weight: 400;
-            margin: 0 0 0.3rem 0;
-            line-height: 1.05;
-        }
-        .sous-titre {
-            font-size: 13px;
-            color: var(--narria-texte);
-            font-style: italic;
-            line-height: 1.5;
-            margin-bottom: 1.8rem;
-        }
+    main {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1rem;
+    }
+    .auth-card {
+      background: var(--narria-papier);
+      border: 0.5px solid var(--narria-filet);
+      max-width: 460px;
+      width: 100%;
+      padding: 2.5rem 2.2rem;
+    }
+    .auth-card-header {
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      margin-bottom: 0.5rem;
+    }
+    .auth-icone {
+      width: 22px; height: 22px;
+      stroke: var(--narria-gold);
+      fill: none;
+      stroke-width: 1.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .auth-marqueur {
+      font-family: var(--police-fonctionnelle);
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      color: var(--narria-gold);
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+    .auth-card h2 {
+      font-family: var(--police-erudite);
+      font-size: 28px;
+      color: var(--narria-bleu);
+      font-weight: 400;
+      margin: 0 0 0.5rem;
+      line-height: 1.15;
+    }
+    .auth-card .lead {
+      font-family: var(--police-fonctionnelle);
+      font-size: 14px;
+      color: var(--narria-texte);
+      line-height: 1.6;
+      margin: 0 0 1.8rem;
+    }
 
-        /* Formulaire — champs */
-        .champ {
-            margin-bottom: 1.3rem;
-        }
-        .champ-mdp { margin-bottom: 1rem; }
-        label {
-            display: block;
-            font-size: 11px;
-            color: var(--narria-discret);
-            letter-spacing: 0.12em;
-            text-transform: uppercase;
-            margin-bottom: 0.4rem;
-        }
-        .marque-requis {
-            color: var(--narria-gold);
-            font-style: normal;
-            margin-left: 0.15em;
-        }
-        input[type="email"], input[type="password"], input[type="text"] {
-            width: 100%;
-            padding: 0.65rem 0;
-            border: none;
-            border-bottom: 1px solid var(--narria-bleu);
-            background: transparent;
-            font-family: var(--police-erudite);
-            font-size: 15px;
-            color: var(--narria-encre);
-            outline: none;
-            transition: border-color 0.2s;
-        }
-        input:focus { border-bottom-color: var(--narria-gold); }
-        small.indication {
-            display: block;
-            margin-top: 0.4rem;
-            font-size: 12px;
-            color: var(--narria-tres-discret);
-            font-style: italic;
-        }
+    .form-field { margin-bottom: 1.2rem; }
+    label {
+      font-family: var(--police-fonctionnelle);
+      display: block;
+      font-size: 11px;
+      color: var(--narria-discret);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 0.4rem;
+      font-weight: 500;
+    }
+    label .required { color: var(--narria-gold); margin-left: 2px; }
+    input[type="text"], input[type="email"], input[type="password"] {
+      width: 100%;
+      padding: 0.6rem 0;
+      border: none;
+      border-bottom: 1px solid var(--narria-bleu);
+      background: transparent;
+      font-family: var(--police-fonctionnelle);
+      font-size: 14.5px;
+      color: var(--narria-encre);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    input:focus { border-bottom-color: var(--narria-gold); }
+    .password-wrapper { position: relative; }
+    .password-wrapper input { padding-right: 2rem; }
+    .toggle-password {
+      position: absolute;
+      right: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      padding: 0.3rem;
+      color: var(--narria-discret);
+    }
+    .toggle-password svg {
+      width: 18px; height: 18px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 1.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .toggle-password:hover { color: var(--narria-bleu); }
+    .field-hint {
+      font-family: var(--police-fonctionnelle);
+      font-size: 11.5px;
+      color: var(--narria-discret);
+      margin-top: 0.3rem;
+      font-style: italic;
+    }
 
-        /* Champ mot de passe avec œil */
-        .mdp-wrap { position: relative; }
-        .mdp-wrap input { padding-right: 2.4rem; }
-        .oeil-btn {
-            position: absolute;
-            right: 0;
-            top: 50%;
-            transform: translateY(-50%);
-            background: transparent;
-            border: none;
-            padding: 4px 6px;
-            cursor: pointer;
-            color: var(--narria-discret);
-            display: flex;
-            align-items: center;
-        }
-        .oeil-btn:hover { color: var(--narria-bleu); }
-        .oeil-btn svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 1.5; }
+    .btn {
+      background: var(--narria-bleu);
+      color: var(--narria-papier);
+      border: 0.5px solid var(--narria-bleu);
+      padding: 0.7rem 1.5rem;
+      font-family: var(--police-fonctionnelle);
+      font-size: 13.5px;
+      letter-spacing: 0.04em;
+      font-weight: 500;
+      cursor: pointer;
+      width: 100%;
+      transition: background 0.15s;
+      margin-top: 0.5rem;
+    }
+    .btn:hover { background: var(--narria-bleu-clair); }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
-        /* Bouton principal */
-        button.principal {
-            width: 100%;
-            margin-top: 0.8rem;
-            padding: 0.85rem;
-            background: var(--narria-bleu);
-            color: var(--narria-papier);
-            border: none;
-            font-family: var(--police-erudite);
-            font-size: 14px;
-            letter-spacing: 0.15em;
-            text-transform: uppercase;
-            cursor: pointer;
-            font-weight: 500;
-            transition: background 0.2s;
-        }
-        button.principal:hover { background: #2E5F8E; }
-        button.principal:disabled { background: var(--narria-discret); cursor: not-allowed; }
+    .auth-footer {
+      margin-top: 1.5rem;
+      padding-top: 1.2rem;
+      border-top: 0.5px solid var(--narria-filet);
+      text-align: center;
+      font-family: var(--police-fonctionnelle);
+      font-size: 13px;
+      color: var(--narria-texte);
+    }
+    .auth-footer a {
+      color: var(--narria-gold);
+      text-decoration: none;
+      border-bottom: 0.5px solid var(--narria-gold);
+      font-weight: 500;
+    }
+    .auth-footer a:hover { color: var(--narria-bleu); border-bottom-color: var(--narria-bleu); }
 
-        /* Bloc retour à la connexion */
-        .bloc-retour {
-            margin-top: 1.8rem;
-            padding-top: 1.4rem;
-            border-top: 0.5px solid var(--narria-filet);
-        }
-        .bloc-retour p {
-            font-family: var(--police-erudite);
-            font-size: 14px;
-            color: var(--narria-texte);
-            line-height: 1.6;
-            margin: 0;
-        }
-        .bloc-retour a {
-            color: var(--narria-gold);
-            text-decoration: none;
-            border-bottom: 0.5px solid var(--narria-gold);
-        }
+    .alert-error, .alert-success {
+      padding: 0.8rem 1rem;
+      font-family: var(--police-fonctionnelle);
+      font-size: 13.5px;
+      margin-bottom: 1.5rem;
+      border-left: 3px solid;
+    }
+    .alert-error {
+      background: var(--narria-erreur-fond);
+      color: var(--narria-erreur-texte);
+      border-left-color: var(--narria-erreur-texte);
+    }
+    .alert-success {
+      background: var(--narria-succes-fond);
+      color: var(--narria-succes-texte);
+      border-left-color: var(--narria-succes-texte);
+    }
 
-        /* Signature */
-        .signature {
-            margin-top: 2rem;
-            padding-top: 1rem;
-            border-top: 0.5px solid var(--narria-filet);
-            text-align: center;
-            font-family: var(--police-erudite);
-            font-size: 11px;
-            color: var(--narria-tres-discret);
-            letter-spacing: 0.15em;
-            font-style: italic;
-        }
+    .narria-pied {
+      padding: 1.4rem 2rem;
+      border-top: 0.5px solid var(--narria-filet);
+      background: var(--narria-papier);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.8rem;
+    }
+    .narria-pied img { width: 28px; height: 28px; flex-shrink: 0; }
+    .narria-pied .pied-text {
+      font-family: var(--police-fonctionnelle);
+      font-size: 12px;
+      color: var(--narria-tres-discret);
+      letter-spacing: 0.12em;
+      font-weight: 700;
+    }
 
-        /* Message d'erreur */
-        .erreur-msg {
-            background: var(--narria-erreur-fond);
-            color: var(--narria-erreur-texte);
-            padding: 0.75rem 1rem;
-            border-left: 3px solid var(--narria-gold);
-            margin-bottom: 1.3rem;
-            font-size: 14px;
-            font-style: italic;
-            display: none;
-        }
-        .erreur-msg.show { display: block; }
-
-        /* Mobile */
-        @media (max-width: 560px) {
-            .auth-shell {
-                grid-template-columns: 1fr;
-            }
-            .auth-tranche {
-                padding: 1.5rem 1rem;
-                flex-direction: row;
-                justify-content: center;
-                gap: 1.5rem;
-            }
-            .tranche-haut, .tranche-bas {
-                writing-mode: horizontal-tb;
-                transform: none;
-                font-size: 9px;
-            }
-            .tranche-marque { font-size: 32px; }
-            .auth-corps { padding: 2rem 1.6rem 1.6rem; }
-            h1 { font-size: 26px; }
-        }
-    </style>
+    @media (max-width: 600px) {
+      .narria-header { padding: 0.9rem 1rem; }
+      .brand-logo { width: 36px; height: 36px; }
+      .brand-text h1 { font-size: 21px; }
+      .brand-text .subtitle { font-size: 11px; }
+      main { padding: 1.2rem 0.8rem; }
+      .auth-card { padding: 1.8rem 1.4rem; }
+      .auth-card h2 { font-size: 24px; }
+    }
+  </style>
 </head>
 <body>
-    <div class="auth-shell">
-        <aside class="auth-tranche" aria-hidden="true">
-            <div class="tranche-haut">Narratologie computationnelle</div>
-            <div class="tranche-marque">N</div>
-            <div class="tranche-bas">narria.tech · 2026</div>
-        </aside>
 
-        <main class="auth-corps">
-            <div class="paragraph-numero">§ I — Demander un compte</div>
-            <h1>Inscription</h1>
-            <div class="sous-titre">à la plateforme de narratologie<br>computationnelle Narr'ia</div>
-
-            <div id="error" class="erreur-msg" role="alert"></div>
-
-            <form id="registerForm" novalidate>
-                <div class="champ">
-                    <label for="full_name">Nom et prénom<span class="marque-requis">*</span></label>
-                    <input type="text" id="full_name" name="full_name" required
-                           placeholder="Prénom Nom" autocomplete="name">
-                </div>
-
-                <div class="champ">
-                    <label for="affiliation">Affiliation institutionnelle<span class="marque-requis">*</span></label>
-                    <input type="text" id="affiliation" name="affiliation" required
-                           placeholder="Université, laboratoire, centre de recherche"
-                           autocomplete="organization">
-                </div>
-
-                <div class="champ">
-                    <label for="email">Courriel<span class="marque-requis">*</span></label>
-                    <input type="email" id="email" name="email" required autocomplete="email"
-                           placeholder="prenom.nom@institution.fr">
-                    <small class="indication">Préférez votre adresse institutionnelle.</small>
-                </div>
-
-                <div class="champ champ-mdp">
-                    <label for="password">Mot de passe<span class="marque-requis">*</span></label>
-                    <div class="mdp-wrap">
-                        <input type="password" id="password" name="password" required minlength="8"
-                               autocomplete="new-password" placeholder="••••••••">
-                        <button type="button" id="pwdToggle" class="oeil-btn"
-                                aria-label="Afficher le mot de passe">
-                            <svg id="oeilOuvert" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/>
-                                <circle cx="12" cy="12" r="3"/>
-                            </svg>
-                            <svg id="oeilFerme" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" style="display:none;" aria-hidden="true">
-                                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
-                                <line x1="1" y1="1" x2="23" y2="23"/>
-                            </svg>
-                        </button>
-                    </div>
-                    <small class="indication">Huit caractères au minimum.</small>
-                </div>
-
-                <button type="submit" id="submitBtn" class="principal">Créer mon compte</button>
-            </form>
-
-            <div class="bloc-retour">
-                <div class="paragraph-numero">§ II — Retour à la connexion</div>
-                <p>Déjà inscrit&nbsp;? <a href="{{ url_for('login_page') }}">Se connecter</a>.</p>
-            </div>
-
-            <div class="signature">Adéchinan David Adékambi</div>
-        </main>
+  <header class="narria-header">
+    <img class="brand-logo" src="{{ url_for('static', filename='img/logo.png') }}" alt="">
+    <div class="brand-text">
+      <h1>Narr<span class="accent">'</span>ia</h1>
+      <p class="subtitle">Narratologie computationnelle du plagiat d'intrigue</p>
     </div>
+  </header>
 
-    <script>
-        // Affichage / masquage du mot de passe
-        (function() {
-            var btn = document.getElementById('pwdToggle');
-            var inp = document.getElementById('password');
-            var ouvert = document.getElementById('oeilOuvert');
-            var ferme = document.getElementById('oeilFerme');
-            btn.addEventListener('click', function() {
-                if (inp.type === 'password') {
-                    inp.type = 'text';
-                    ouvert.style.display = 'none';
-                    ferme.style.display = '';
-                    btn.setAttribute('aria-label', 'Masquer le mot de passe');
-                } else {
-                    inp.type = 'password';
-                    ouvert.style.display = '';
-                    ferme.style.display = 'none';
-                    btn.setAttribute('aria-label', 'Afficher le mot de passe');
-                }
-            });
-        })();
+  <main>
+    <div class="auth-card">
+      <div class="auth-card-header">
+        <svg class="auth-icone" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+        <span class="auth-marqueur">Inscription</span>
+      </div>
+      <h2>Créer un compte</h2>
+      <p class="lead">Renseignez les informations ci-dessous pour rejoindre la plateforme.</p>
 
-        // Logique de soumission — identique au comportement précédent
-        const form = document.getElementById('registerForm');
-        const errorBox = document.getElementById('error');
-        const submitBtn = document.getElementById('submitBtn');
+      <div id="errorBox" class="alert-error" style="display:none"></div>
+      <div id="successBox" class="alert-success" style="display:none"></div>
 
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            errorBox.classList.remove('show');
-            submitBtn.disabled = true;
-            submitBtn.textContent = 'Création…';
+      <div class="form-field">
+        <label for="fullname">Nom complet <span class="required">*</span></label>
+        <input type="text" id="fullname" name="fullname" autocomplete="name" required>
+      </div>
 
-            try {
-                const res = await fetch('/api/auth/register', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        full_name: document.getElementById('full_name').value,
-                        affiliation: document.getElementById('affiliation').value,
-                        email: document.getElementById('email').value,
-                        password: document.getElementById('password').value,
-                    })
-                });
-                const data = await res.json();
-                if (res.ok && data.success) {
-                    window.location.href = '/';
-                } else {
-                    errorBox.textContent = data.error || 'Erreur lors de la création du compte';
-                    errorBox.classList.add('show');
-                }
-            } catch (err) {
-                errorBox.textContent = 'Erreur réseau : ' + err.message;
-                errorBox.classList.add('show');
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'Créer mon compte';
-            }
+      <div class="form-field">
+        <label for="email">Adresse courriel <span class="required">*</span></label>
+        <input type="email" id="email" name="email" autocomplete="email" required>
+        <p class="field-hint">Préférez votre adresse institutionnelle si vous en avez une.</p>
+      </div>
+
+      <div class="form-field">
+        <label for="affiliation">Affiliation institutionnelle <span class="required">*</span></label>
+        <input type="text" id="affiliation" name="affiliation" autocomplete="organization" required>
+        <p class="field-hint">Université, laboratoire, maison d'édition, organisme de recherche.</p>
+      </div>
+
+      <div class="form-field">
+        <label for="password">Mot de passe <span class="required">*</span></label>
+        <div class="password-wrapper">
+          <input type="password" id="password" name="password" autocomplete="new-password" required minlength="8">
+          <button type="button" class="toggle-password" id="togglePassword" aria-label="Afficher le mot de passe">
+            <svg id="eyeIcon" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+        <p class="field-hint">Au moins huit caractères.</p>
+      </div>
+
+      <button type="button" class="btn" id="registerBtn">Créer mon compte</button>
+
+      <div class="auth-footer">
+        Vous avez déjà un compte ?
+        <a href="/login">Se connecter</a>
+      </div>
+    </div>
+  </main>
+
+  <footer class="narria-pied">
+    <img src="{{ url_for('static', filename='img/logo.png') }}" alt="">
+    <span class="pied-text">NARR'IA · 2026</span>
+  </footer>
+
+  <script>
+    const togglePassword = document.getElementById('togglePassword');
+    const passwordInput = document.getElementById('password');
+    const eyeIcon = document.getElementById('eyeIcon');
+    togglePassword.addEventListener('click', () => {
+      const isPwd = passwordInput.type === 'password';
+      passwordInput.type = isPwd ? 'text' : 'password';
+      eyeIcon.innerHTML = isPwd
+        ? '<path d="M17.94 17.94A10.06 10.06 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>'
+        : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+    });
+
+    const errorBox = document.getElementById('errorBox');
+    const successBox = document.getElementById('successBox');
+    const registerBtn = document.getElementById('registerBtn');
+
+    async function submitRegister() {
+      errorBox.style.display = 'none';
+      successBox.style.display = 'none';
+      const fullname = document.getElementById('fullname').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const affiliation = document.getElementById('affiliation').value.trim();
+      const password = passwordInput.value;
+
+      if (!fullname || !email || !affiliation || !password) {
+        errorBox.textContent = 'Tous les champs sont obligatoires.';
+        errorBox.style.display = 'block';
+        return;
+      }
+      if (password.length < 8) {
+        errorBox.textContent = 'Le mot de passe doit comporter au moins huit caractères.';
+        errorBox.style.display = 'block';
+        return;
+      }
+
+      registerBtn.disabled = true;
+      registerBtn.textContent = 'Création en cours…';
+      try {
+        const res = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            full_name: fullname,
+            email: email,
+            affiliation: affiliation,
+            password: password
+          })
         });
-    </script>
+        const data = await res.json();
+        if (!res.ok) {
+          errorBox.textContent = data.error || 'Erreur lors de la création du compte.';
+          errorBox.style.display = 'block';
+          registerBtn.disabled = false;
+          registerBtn.textContent = 'Créer mon compte';
+          return;
+        }
+        successBox.textContent = 'Compte créé. Redirection vers la connexion…';
+        successBox.style.display = 'block';
+        setTimeout(() => { window.location.href = '/login'; }, 1500);
+      } catch (err) {
+        errorBox.textContent = 'Erreur de réseau. Réessayez.';
+        errorBox.style.display = 'block';
+        registerBtn.disabled = false;
+        registerBtn.textContent = 'Créer mon compte';
+      }
+    }
+
+    registerBtn.addEventListener('click', submitRegister);
+    document.querySelectorAll('input').forEach(input => {
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); submitRegister(); }
+      });
+    });
+  </script>
 </body>
 </html>

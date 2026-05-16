@@ -8,7 +8,7 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="{{ url_for('static', filename='css/narria.css') }}">
 
@@ -17,28 +17,30 @@
       --narria-bleu: #1F4E79;
       --narria-bleu-clair: #2E5F8E;
       --narria-gold: #C55A11;
-      --narria-ivoire: #FBFAF6;
-      --narria-papier: #FFFFFF;
+      --narria-creme: #EAE0C5;
+      --narria-ivoire: #EFE7CE;
+      --narria-papier: #F2EBD5;
       --narria-tranche-clair: #C9B98A;
       --narria-encre: #1A1A1A;
       --narria-texte: #4A4438;
       --narria-discret: #6B6354;
       --narria-tres-discret: #8C8473;
-      --narria-filet: #E8E4D8;
+      --narria-filet: #C9BEA0;
       --narria-erreur-fond: #FCE4D6;
       --narria-erreur-texte: #8B2400;
       --narria-info-fond: #EEF4FA;
       --narria-succes-fond: #E8F2E4;
       --police-erudite: 'EB Garamond', 'Garamond', Georgia, serif;
+      --police-fonctionnelle: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
     }
     * { box-sizing: border-box; }
     html, body { margin: 0; padding: 0; }
     body {
-      font-family: var(--police-erudite);
+      font-family: var(--police-fonctionnelle);
       background: var(--narria-ivoire);
       color: var(--narria-encre);
       min-height: 100vh;
-      font-size: 16px;
+      font-size: 15px;
       line-height: 1.55;
     }
 
@@ -69,19 +71,24 @@
       font-size: 13px;
       color: var(--narria-texte);
       font-style: italic;
+      font-weight: 600;
       margin: 0.15rem 0 0;
     }
     .meta {
       display: flex;
       align-items: center;
       gap: 1rem;
-      font-family: var(--police-erudite);
+      font-family: var(--police-fonctionnelle);
       font-size: 12px;
       color: var(--narria-discret);
+      font-weight: 600;
     }
     .version {
-      letter-spacing: 0.08em;
+      font-family: var(--police-erudite);
+      font-size: 13px;
+      letter-spacing: 0.04em;
       font-style: italic;
+      font-weight: 600;
     }
     .mode-indicator {
       display: inline-flex;
@@ -89,9 +96,10 @@
       gap: 0.4rem;
       padding: 0.2rem 0.6rem;
       border: 0.5px solid var(--narria-filet);
-      font-size: 11px;
+      font-size: 10.5px;
       letter-spacing: 0.12em;
       text-transform: uppercase;
+      font-weight: 700;
     }
     .mode-dot {
       width: 8px;
@@ -109,14 +117,18 @@
       border-left: 0.5px solid var(--narria-filet);
     }
     .user-name {
+      font-family: var(--police-erudite);
       font-style: italic;
       color: var(--narria-texte);
+      font-size: 14px;
+      font-weight: 600;
     }
     .quota-badge {
       font-size: 11px;
       padding: 0.15rem 0.45rem;
       border: 0.5px solid var(--narria-filet);
-      letter-spacing: 0.05em;
+      letter-spacing: 0.03em;
+      font-weight: 700;
     }
     .quota-badge.warning { color: var(--narria-gold); border-color: var(--narria-gold); }
     .quota-badge.danger {
@@ -125,14 +137,15 @@
       background: var(--narria-erreur-fond);
     }
     .user-link {
-      color: var(--narria-papier);
+      font-family: var(--police-fonctionnelle);
+      color: #FFFFFF;
       background: var(--narria-bleu);
       padding: 0.3rem 0.8rem;
       text-decoration: none;
-      font-style: italic;
-      font-size: 13px;
+      font-size: 12.5px;
       border: 0.5px solid var(--narria-bleu);
       transition: background 0.15s;
+      font-weight: 500;
     }
     .user-link:hover { background: var(--narria-bleu-clair); }
 
@@ -155,15 +168,16 @@
       min-height: 100vh;
     }
     .sommaire-titre {
-      font-family: var(--police-erudite);
-      font-size: 11px;
+      font-family: var(--police-fonctionnelle);
+      font-size: 10.5px;
       color: var(--narria-tranche-clair);
-      letter-spacing: 0.3em;
+      letter-spacing: 0.28em;
       text-transform: uppercase;
       margin-bottom: 1.4rem;
       padding-right: 1.5rem;
       border-bottom: 0.5px solid rgba(201,185,138,0.3);
       padding-bottom: 0.7rem;
+      font-weight: 500;
     }
     .sommaire-liste {
       list-style: none;
@@ -175,36 +189,46 @@
     }
     .sommaire-item button {
       display: flex;
-      align-items: baseline;
-      gap: 0.8rem;
+      align-items: center;
+      gap: 0.75rem;
       width: 100%;
       background: transparent;
       border: none;
-      padding: 0.55rem 1.5rem 0.55rem 0;
+      padding: 0.55rem 1.2rem 0.55rem 0;
       text-align: left;
       cursor: pointer;
-      font-family: var(--police-erudite);
+      font-family: var(--police-fonctionnelle);
       color: rgba(255,255,255,0.78);
-      font-size: 15px;
+      font-size: 14px;
       transition: color 0.15s;
       border-right: 2px solid transparent;
     }
     .sommaire-item button:hover {
-      color: var(--narria-papier);
+      color: #FFFFFF;
+    }
+    .sommaire-item button:hover span.sommaire-libelle {
+      text-decoration: underline;
+      text-decoration-color: var(--narria-gold);
+      text-decoration-thickness: 1px;
+      text-underline-offset: 4px;
     }
     .sommaire-item button.active {
-      color: var(--narria-papier);
+      color: #FFFFFF;
       border-right-color: var(--narria-gold);
+      font-weight: 500;
     }
-    .sommaire-romaine {
-      font-family: var(--police-erudite);
-      font-size: 11px;
-      color: var(--narria-tranche-clair);
-      letter-spacing: 0.2em;
-      min-width: 28px;
-      font-style: italic;
+    .sommaire-icone {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+      stroke: rgba(255,255,255,0.7);
+      fill: none;
+      stroke-width: 1.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
     }
-    .sommaire-item button.active .sommaire-romaine { color: var(--narria-gold); }
+    .sommaire-item button.active .sommaire-icone { stroke: var(--narria-gold); }
+    .sommaire-item button:hover .sommaire-icone { stroke: #FFFFFF; }
 
     /* Pied du sommaire */
     .sommaire-pied {
@@ -228,14 +252,32 @@
     .tab-content.active { display: block; }
 
     /* ═══ ÉLÉMENTS TYPOGRAPHIQUES COMMUNS ═══ */
-    .paragraph-numero {
-      font-family: var(--police-erudite);
-      font-size: 11px;
-      letter-spacing: 0.25em;
-      color: var(--narria-gold);
-      text-transform: uppercase;
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
       margin-bottom: 0.5rem;
     }
+    .section-icone-titre {
+      width: 22px;
+      height: 22px;
+      stroke: var(--narria-gold);
+      fill: none;
+      stroke-width: 1.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      flex-shrink: 0;
+    }
+    .section-marqueur {
+      font-family: var(--police-fonctionnelle);
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      color: var(--narria-gold);
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+    /* Ancien marqueur (encore présent pour compatibilité) — désormais caché */
+    .paragraph-numero { display: none; }
     h2 {
       font-family: var(--police-erudite);
       font-size: 34px;
@@ -253,23 +295,64 @@
       line-height: 1.25;
     }
     h4 {
-      font-family: var(--police-erudite);
-      font-size: 17px;
-      color: var(--narria-texte);
-      font-weight: 500;
+      font-family: var(--police-fonctionnelle);
+      font-size: 13px;
+      color: var(--narria-discret);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
       margin: 1.2rem 0 0.5rem;
-      letter-spacing: 0.02em;
     }
     .section-lead {
-      font-family: var(--police-erudite);
-      font-size: 16px;
+      font-family: var(--police-fonctionnelle);
+      font-size: 15.5px;
       color: var(--narria-texte);
-      font-style: italic;
-      line-height: 1.65;
+      line-height: 1.7;
       margin: 0 0 2rem;
-      max-width: 720px;
+      max-width: 100%;
+      text-align: left;
+      font-weight: 400;
     }
-    p { line-height: 1.65; }
+    p {
+      font-family: var(--police-fonctionnelle);
+      font-size: 14.5px;
+      line-height: 1.65;
+      color: var(--narria-texte);
+      text-align: left;
+      hyphens: none;
+      -webkit-hyphens: none;
+    }
+    /* À propos : Inter (grammaire validée), pas de coupure de mots */
+    .about-content p,
+    .about-content li {
+      font-family: var(--police-fonctionnelle);
+      font-size: 14.5px;
+      line-height: 1.7;
+      text-align: left;
+      hyphens: none;
+      -webkit-hyphens: none;
+    }
+    .about-content li { margin-bottom: 0.4rem; }
+    .about-content em {
+      font-style: italic;
+      font-weight: 400;
+    }
+    /* Mention de licence en gras, centrée */
+    .licence-mention {
+      text-align: center !important;
+      font-weight: 700 !important;
+      margin-top: 1rem !important;
+      padding: 0.8rem 0;
+      letter-spacing: 0.02em;
+    }
+    /* L'avertissement éthique passe en Inter pour la lecture immédiate */
+    .info-box p {
+      font-family: var(--police-fonctionnelle);
+      font-size: 14.5px;
+      line-height: 1.7;
+      text-align: left;
+      font-weight: 400;
+    }
     a { color: var(--narria-gold); text-decoration: none; border-bottom: 0.5px solid var(--narria-gold); }
     a:hover { color: var(--narria-bleu); border-bottom-color: var(--narria-bleu); }
     strong { font-weight: 500; }
@@ -308,17 +391,35 @@
       border-color: var(--narria-bleu);
       background: var(--narria-ivoire);
     }
-    .card .card-roman {
-      font-family: var(--police-erudite);
-      font-size: 13px;
-      color: var(--narria-gold);
-      letter-spacing: 0.2em;
-      font-style: italic;
+    .card .card-icone {
+      width: 28px;
+      height: 28px;
+      stroke: var(--narria-bleu);
+      fill: none;
+      stroke-width: 1.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .compare-col h3 {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .compare-icone {
+      width: 20px;
+      height: 20px;
+      stroke: var(--narria-gold);
+      fill: none;
+      stroke-width: 1.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      flex-shrink: 0;
     }
     .card h3 { margin: 0; font-size: 19px; }
     .card p {
+      font-family: var(--police-fonctionnelle);
       margin: 0;
-      font-size: 14px;
+      font-size: 13.5px;
       color: var(--narria-texte);
       line-height: 1.5;
     }
@@ -329,11 +430,11 @@
       border: none;
       color: var(--narria-gold);
       padding: 0;
-      font-family: var(--police-erudite);
-      font-size: 14px;
+      font-family: var(--police-fonctionnelle);
+      font-size: 13px;
       cursor: pointer;
       border-bottom: 0.5px solid var(--narria-gold);
-      font-style: italic;
+      font-weight: 500;
     }
 
     /* Avertissement éthique */
@@ -344,16 +445,17 @@
       margin: 1.6rem 0;
     }
     .info-box h4 {
-      margin: 0 0 0.5rem;
+      font-family: var(--police-fonctionnelle);
+      margin: 0 0 0.6rem;
       color: var(--narria-gold);
-      font-size: 14px;
-      letter-spacing: 0.15em;
+      font-size: 11.5px;
+      letter-spacing: 0.16em;
       text-transform: uppercase;
-      font-weight: 500;
+      font-weight: 600;
     }
     .info-box p {
       margin: 0;
-      font-size: 14.5px;
+      font-size: 15px;
       line-height: 1.6;
       color: var(--narria-texte);
     }
@@ -372,12 +474,14 @@
       margin-bottom: 1.3rem;
     }
     label {
+      font-family: var(--police-fonctionnelle);
       display: block;
       font-size: 11px;
       color: var(--narria-discret);
       letter-spacing: 0.12em;
       text-transform: uppercase;
       margin-bottom: 0.4rem;
+      font-weight: 500;
     }
     input[type="text"], input[type="email"], input[type="password"], textarea {
       width: 100%;
@@ -385,8 +489,8 @@
       border: none;
       border-bottom: 1px solid var(--narria-bleu);
       background: transparent;
-      font-family: var(--police-erudite);
-      font-size: 15px;
+      font-family: var(--police-fonctionnelle);
+      font-size: 14.5px;
       color: var(--narria-encre);
       outline: none;
       transition: border-color 0.2s;
@@ -407,20 +511,21 @@
       padding: 1.2rem 1rem;
       text-align: center;
       margin: 0.6rem 0;
-      font-family: var(--police-erudite);
-      font-size: 14px;
+      font-family: var(--police-fonctionnelle);
+      font-size: 13.5px;
       color: var(--narria-texte);
       background: var(--narria-ivoire);
       transition: background 0.15s;
     }
     .upload-dropzone:hover { background: #F4F0E2; }
-    .upload-dropzone-compact { padding: 0.8rem; font-size: 13px; }
+    .upload-dropzone-compact { padding: 0.8rem; font-size: 12.5px; }
     .upload-marker {
       font-family: var(--police-erudite);
-      font-size: 11px;
+      font-size: 11.5px;
       color: var(--narria-gold);
-      letter-spacing: 0.18em;
+      letter-spacing: 0.16em;
       text-transform: uppercase;
+      font-style: italic;
       display: block;
       margin-bottom: 0.3rem;
     }
@@ -431,11 +536,12 @@
       color: var(--narria-bleu);
       border: 0.5px solid var(--narria-bleu);
       padding: 0.6rem 1.2rem;
-      font-family: var(--police-erudite);
-      font-size: 14px;
-      letter-spacing: 0.1em;
+      font-family: var(--police-fonctionnelle);
+      font-size: 13px;
+      letter-spacing: 0.04em;
       cursor: pointer;
       transition: background 0.15s, color 0.15s;
+      font-weight: 500;
     }
     .btn:hover { background: var(--narria-bleu); color: var(--narria-papier); }
     .btn-primary {
@@ -443,7 +549,7 @@
       color: var(--narria-papier);
     }
     .btn-primary:hover { background: var(--narria-bleu-clair); }
-    .btn-large { padding: 0.85rem 1.6rem; font-size: 15px; }
+    .btn-large { padding: 0.85rem 1.6rem; font-size: 14px; letter-spacing: 0.08em; }
     .btn-danger {
       color: var(--narria-erreur-texte);
       border-color: var(--narria-erreur-texte);
@@ -460,7 +566,7 @@
       background: transparent;
       border: none;
       color: var(--narria-gold);
-      font-family: var(--police-erudite);
+      font-family: var(--police-fonctionnelle);
       font-size: 14px;
       cursor: pointer;
       padding: 0;
@@ -603,33 +709,95 @@
       color: var(--narria-texte);
     }
 
-    /* ═══ SIGNATURE EN PIED ═══ */
+    /* ═══ PIED DE PAGE MINIMALISTE ═══ */
     .narria-pied {
       max-width: 1280px;
       margin: 0 auto;
-      padding: 1.4rem 3.5rem 1.6rem;
+      padding: 1.4rem 3.5rem;
       border-top: 0.5px solid var(--narria-filet);
       background: var(--narria-papier);
-      text-align: center;
-      font-family: var(--police-erudite);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.8rem;
+    }
+    .narria-pied img {
+      width: 28px;
+      height: 28px;
+      flex-shrink: 0;
+    }
+    .narria-pied .pied-text {
+      font-family: var(--police-fonctionnelle);
       font-size: 12px;
       color: var(--narria-tres-discret);
       letter-spacing: 0.12em;
-      font-style: italic;
+      font-weight: 700;
+    }
+
+    /* ═══ BOUTON MENU MOBILE ═══ */
+    .mobile-menu-btn {
+      display: none;
+      background: var(--narria-bleu);
+      color: var(--narria-papier);
+      border: none;
+      padding: 0.55rem 0.9rem;
+      cursor: pointer;
+      border-radius: 3px;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: var(--police-fonctionnelle);
+      font-size: 13px;
+      font-weight: 500;
+    }
+    .mobile-menu-btn svg {
+      width: 16px; height: 16px;
+      stroke: currentColor; fill: none;
+      stroke-width: 1.8; stroke-linecap: round;
     }
 
     /* ═══ ADAPTATION MOBILE ═══ */
     @media (max-width: 860px) {
+      .narria-header {
+        padding: 0.9rem 1rem;
+        gap: 0.7rem;
+      }
+      .brand { gap: 0.6rem; }
+      .brand-logo { width: 36px; height: 36px; }
+      .brand-text h1 { font-size: 22px; }
+      .brand-text .subtitle { font-size: 11px; }
+      .meta { font-size: 11px; gap: 0.5rem; flex-wrap: wrap; }
+      .version { font-size: 12px; }
+      .mode-indicator { font-size: 9.5px; padding: 0.15rem 0.45rem; }
+      .user-zone { padding-left: 0; border-left: none; gap: 0.5rem; flex-wrap: wrap; }
+      .user-name { font-size: 13px; }
+      .quota-badge { font-size: 10.5px; }
+
+      .mobile-menu-btn {
+        display: inline-flex;
+        margin: 0.8rem 1rem 0;
+      }
+
       .narria-body { grid-template-columns: 1fr; }
       .narria-sommaire {
-        position: static;
+        display: none;
+        position: relative;
         min-height: auto;
-        padding: 1.5rem 1.5rem 1.5rem 1.5rem;
+        padding: 1rem 1rem 1rem 1.2rem;
       }
+      .narria-sommaire.open { display: block; }
+      .sommaire-titre { font-size: 9px; margin-bottom: 0.8rem; padding-bottom: 0.5rem; }
+      .sommaire-item button { font-size: 14px; padding: 0.5rem 0; }
       .sommaire-pied { display: none; }
-      .narria-contenu { padding: 2rem 1.5rem; }
-      .narria-header { padding: 1.2rem 1.5rem; }
+
+      .narria-contenu { padding: 1.5rem 1rem 2rem; }
+      h2 { font-size: 26px; }
+      .section-lead { font-size: 15px; }
+      .info-box p { font-size: 14.5px; }
+      .cards { grid-template-columns: 1fr; gap: 1rem; margin: 1.5rem 0; }
+      .card { padding: 1.2rem 1rem; }
+
       .form-row, .compare-grid { grid-template-columns: 1fr; }
+      .narria-pied { padding: 1.2rem 1rem; }
     }
   </style>
 </head>
@@ -659,33 +827,60 @@
     </div>
   </header>
 
+  <!-- ═══ BOUTON MENU MOBILE (visible seulement en petite largeur) ═══ -->
+  <button class="mobile-menu-btn" id="mobileMenuBtn" type="button" aria-label="Ouvrir le menu">
+    <svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    <span>Sections</span>
+  </button>
+
   <!-- ═══ CORPS : SOMMAIRE + CONTENU ═══ -->
   <div class="narria-body">
 
     <!-- Sommaire latéral (« table des matières ») -->
-    <nav class="narria-sommaire" aria-label="Sommaire">
+    <nav class="narria-sommaire" id="sommaire" aria-label="Sommaire">
       <div class="sommaire-titre">Table des sections</div>
       <ul class="sommaire-liste">
         <li class="sommaire-item">
-          <button class="tab active" data-tab="home"><span class="sommaire-romaine">I</span> Accueil</button>
+          <button class="tab active" data-tab="home">
+            <svg class="sommaire-icone" viewBox="0 0 24 24"><path d="M3 12l9-9 9 9"/><path d="M5 10v10h14V10"/></svg>
+            <span class="sommaire-libelle">Accueil</span>
+          </button>
         </li>
         <li class="sommaire-item">
-          <button class="tab" data-tab="analyze"><span class="sommaire-romaine">II</span> Analyser un texte</button>
+          <button class="tab" data-tab="analyze">
+            <svg class="sommaire-icone" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
+            <span class="sommaire-libelle">Analyser un texte</span>
+          </button>
         </li>
         <li class="sommaire-item">
-          <button class="tab" data-tab="compare"><span class="sommaire-romaine">III</span> Comparer deux textes</button>
+          <button class="tab" data-tab="compare">
+            <svg class="sommaire-icone" viewBox="0 0 24 24"><rect x="3" y="3" width="9" height="14" rx="1"/><rect x="12" y="7" width="9" height="14" rx="1"/></svg>
+            <span class="sommaire-libelle">Comparer deux textes</span>
+          </button>
         </li>
         <li class="sommaire-item">
-          <button class="tab" data-tab="history"><span class="sommaire-romaine">IV</span> Historique</button>
+          <button class="tab" data-tab="history">
+            <svg class="sommaire-icone" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>
+            <span class="sommaire-libelle">Historique</span>
+          </button>
         </li>
         <li class="sommaire-item">
-          <button class="tab" data-tab="repertoire"><span class="sommaire-romaine">V</span> Répertoire</button>
+          <button class="tab" data-tab="repertoire">
+            <svg class="sommaire-icone" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+            <span class="sommaire-libelle">Répertoire</span>
+          </button>
         </li>
         <li class="sommaire-item">
-          <button class="tab" data-tab="config"><span class="sommaire-romaine">VI</span> Configuration</button>
+          <button class="tab" data-tab="config">
+            <svg class="sommaire-icone" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h0a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h0a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            <span class="sommaire-libelle">Configuration</span>
+          </button>
         </li>
         <li class="sommaire-item">
-          <button class="tab" data-tab="about"><span class="sommaire-romaine">VII</span> À propos</button>
+          <button class="tab" data-tab="about">
+            <svg class="sommaire-icone" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="8"/><polyline points="11 12 12 12 12 16 13 16"/></svg>
+            <span class="sommaire-libelle">À propos</span>
+          </button>
         </li>
       </ul>
       <div class="sommaire-pied">narria.tech · 2026</div>
@@ -697,7 +892,10 @@
       <!-- ═══ § I — ACCUEIL ═══ -->
       <section class="tab-content active" id="tab-home">
         <div class="hero">
-          <div class="paragraph-numero">§ I — Accueil</div>
+          <div class="section-header">
+            <svg class="section-icone-titre" viewBox="0 0 24 24"><path d="M3 12l9-9 9 9"/><path d="M5 10v10h14V10"/></svg>
+            <span class="section-marqueur">Accueil</span>
+          </div>
           <h2>Bienvenue dans Narr'ia</h2>
           <p class="section-lead">
             NARR'IA détecte, quantifie et qualifie le vol d'intrigue dans les œuvres
@@ -709,19 +907,19 @@
 
         <div class="cards">
           <div class="card" onclick="switchTab('analyze')">
-            <div class="card-roman">— I —</div>
+            <svg class="card-icone" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
             <h3>Analyser un texte</h3>
             <p>Extraire la structure narrative d'une œuvre unique et obtenir son graphe.</p>
             <button class="btn-card" type="button">Commencer →</button>
           </div>
           <div class="card" onclick="switchTab('compare')">
-            <div class="card-roman">— II —</div>
+            <svg class="card-icone" viewBox="0 0 24 24"><rect x="3" y="3" width="9" height="14" rx="1"/><rect x="12" y="7" width="9" height="14" rx="1"/></svg>
             <h3>Comparer deux textes</h3>
             <p>Confronter les structures de deux œuvres et détecter les correspondances.</p>
             <button class="btn-card" type="button">Commencer →</button>
           </div>
           <div class="card" onclick="switchTab('repertoire')">
-            <div class="card-roman">— III —</div>
+            <svg class="card-icone" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
             <h3>Explorer le répertoire</h3>
             <p>Consulter les 53 fonctions narratives qui structurent le système.</p>
             <button class="btn-card" type="button">Consulter →</button>
@@ -742,7 +940,10 @@
 
       <!-- ═══ § II — ANALYSER UN TEXTE ═══ -->
       <section class="tab-content" id="tab-analyze">
-        <div class="paragraph-numero">§ II — Analyser un texte</div>
+        <div class="section-header">
+          <svg class="section-icone-titre" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
+          <span class="section-marqueur">Analyser un texte</span>
+        </div>
         <h2>Analyser un texte</h2>
         <p class="section-lead">
           Soumettez une œuvre. NARR'IA en extraira la structure narrative profonde et
@@ -787,7 +988,10 @@
 
       <!-- ═══ § III — COMPARER DEUX TEXTES ═══ -->
       <section class="tab-content" id="tab-compare">
-        <div class="paragraph-numero">§ III — Comparer deux textes</div>
+        <div class="section-header">
+          <svg class="section-icone-titre" viewBox="0 0 24 24"><rect x="3" y="3" width="9" height="14" rx="1"/><rect x="12" y="7" width="9" height="14" rx="1"/></svg>
+          <span class="section-marqueur">Comparer deux textes</span>
+        </div>
         <h2>Comparer deux textes</h2>
         <p class="section-lead">
           Confrontez les structures narratives profondes de deux œuvres pour détecter
@@ -797,7 +1001,10 @@
 
         <div class="compare-grid">
           <div class="compare-col">
-            <h3>— I — Œuvre de référence</h3>
+            <h3>
+              <svg class="compare-icone" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+              Œuvre de référence
+            </h3>
             <form id="ref-form" class="narria-form compact">
               <input type="text" id="ref-title" required placeholder="Titre">
               <input type="text" id="ref-author" required placeholder="Auteur">
@@ -814,7 +1021,10 @@
           </div>
 
           <div class="compare-col">
-            <h3>— II — Œuvre candidate</h3>
+            <h3>
+              <svg class="compare-icone" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><line x1="9" y1="10" x2="15" y2="10"/></svg>
+              Œuvre candidate
+            </h3>
             <form id="cand-form" class="narria-form compact">
               <input type="text" id="cand-title" required placeholder="Titre">
               <input type="text" id="cand-author" required placeholder="Auteur">
@@ -849,7 +1059,10 @@
 
       <!-- ═══ § IV — HISTORIQUE ═══ -->
       <section class="tab-content" id="tab-history">
-        <div class="paragraph-numero">§ IV — Historique</div>
+        <div class="section-header">
+          <svg class="section-icone-titre" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>
+          <span class="section-marqueur">Historique</span>
+        </div>
         <h2>Historique des analyses</h2>
         <p class="section-lead">
           Cet historique conserve toutes les analyses et comparaisons que vous avez
@@ -875,7 +1088,10 @@
 
       <!-- ═══ § V — RÉPERTOIRE ═══ -->
       <section class="tab-content" id="tab-repertoire">
-        <div class="paragraph-numero">§ V — Répertoire des fonctions</div>
+        <div class="section-header">
+          <svg class="section-icone-titre" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          <span class="section-marqueur">Répertoire des fonctions</span>
+        </div>
         <h2>Répertoire des fonctions narratives</h2>
         <p class="section-lead">
           Le répertoire NARR'IA comprend 53 fonctions narratives distribuées en 7
@@ -890,7 +1106,10 @@
 
       <!-- ═══ § VI — CONFIGURATION ═══ -->
       <section class="tab-content" id="tab-config">
-        <div class="paragraph-numero">§ VI — Configuration</div>
+        <div class="section-header">
+          <svg class="section-icone-titre" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h0a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h0a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          <span class="section-marqueur">Configuration</span>
+        </div>
         <h2>Configuration</h2>
         <p class="section-lead">
           NARR'IA fonctionne en deux modes : <strong>local</strong> (heuristiques par
@@ -960,7 +1179,10 @@
 
       <!-- ═══ § VII — À PROPOS ═══ -->
       <section class="tab-content" id="tab-about">
-        <div class="paragraph-numero">§ VII — À propos</div>
+        <div class="section-header">
+          <svg class="section-icone-titre" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="8"/><polyline points="11 12 12 12 12 16 13 16"/></svg>
+          <span class="section-marqueur">À propos</span>
+        </div>
         <h2>À propos de NARR'IA</h2>
         <div class="about-content">
           <p>
@@ -985,15 +1207,15 @@
           <p>
             La théorisation complète de NARR'IA fait l'objet d'un ouvrage actuellement
             en cours de révision en vue de sa soumission à un éditeur :<br>
-            <em>Adéchinan David Adékambi,
-            <strong>NARR'IA — Vers une narratologie computationnelle du plagiat d'intrigue</strong>
-            (manuscrit en cours de finalisation).</em>
+            Adéchinan David Adékambi,
+            <em>NARR'IA — Vers une narratologie computationnelle du plagiat d'intrigue</em>
+            (manuscrit en cours de finalisation).
           </p>
           <p>
             Cet ouvrage prolonge un essai antérieur déjà publié :<br>
-            <em>Adéchinan David Adékambi,
-            <strong>Vol d'intrigue dans le champ du récit fictionnel : Comment cerner scientifiquement le plagiat d'intrigue en littérature</strong>,
-            Collection « Approches littéraires » dirigée par Jérôme Martin, Paris, L'Harmattan, 2025.</em>
+            Adéchinan David Adékambi,
+            <em>Vol d'intrigue dans le champ du récit fictionnel : Comment cerner scientifiquement le plagiat d'intrigue en littérature</em>,
+            Paris, L'Harmattan, 2025.
           </p>
 
           <h3>Principes éthiques</h3>
@@ -1005,16 +1227,17 @@
           </ul>
 
           <h3>Licence</h3>
-          <p>MIT License — © 2026 Adéchinan David Adékambi.</p>
+          <p class="licence-mention">MIT License — © 2026 Adéchinan David Adékambi.</p>
         </div>
       </section>
 
     </main>
   </div>
 
-  <!-- ═══ SIGNATURE EN PIED ═══ -->
+  <!-- ═══ PIED DE PAGE MINIMALISTE ═══ -->
   <footer class="narria-pied">
-    Adéchinan David Adékambi
+    <img src="{{ url_for('static', filename='img/logo.png') }}" alt="">
+    <span class="pied-text">NARR'IA · 2026</span>
   </footer>
 
   <script src="/static/js/narria.js"></script>
@@ -1059,6 +1282,22 @@
     } catch (err) {
       console.error('Erreur chargement zone utilisateur:', err);
     }
+  })();
+
+  // ─── Toggle du menu mobile ───
+  (function setupMobileMenu() {
+    const btn = document.getElementById('mobileMenuBtn');
+    const sommaire = document.getElementById('sommaire');
+    if (!btn || !sommaire) return;
+    btn.addEventListener('click', () => {
+      sommaire.classList.toggle('open');
+    });
+    // Ferme automatiquement le menu après clic sur une entrée
+    sommaire.querySelectorAll('.sommaire-item button').forEach(b => {
+      b.addEventListener('click', () => {
+        if (window.innerWidth <= 860) sommaire.classList.remove('open');
+      });
+    });
   })();
   </script>
 </body>

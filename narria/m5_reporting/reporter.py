@@ -245,9 +245,7 @@ code {{ background: #FCE4D6; padding: 0.1rem 0.4rem; border-radius: 2px; font-si
 </div>
 
 <div class="footer">
-    <p>Rapport généré par NARR'IA v{__version__} — Système de narratologie computationnelle</p>
-    <p>© 2026 Adéchinan David Adékambi · Département de Lettres Modernes, Université de Kindia · République de Guinée</p>
-    <p>Ouvrage de référence : <em>NARR'IA — Vers une narratologie computationnelle du plagiat d'intrigue</em> (en cours de finalisation)</p>
+    <p>NARR'IA · narria.tech · 2026</p>
 </div>
 
 </body>

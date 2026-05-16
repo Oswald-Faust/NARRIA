@@ -991,7 +991,7 @@ function renderAnalysesList(el, analyses) {
         
         html += `<tr>
             <td>${escapeHtml(a.date_human || '?')}</td>
-            <td><strong>${escapeHtml(a.title || '?')}</strong></td>
+            <td><em class="history-title">${escapeHtml(a.title || '?')}</em></td>
             <td>${escapeHtml(a.author || '?')}</td>
             <td>${modeBadge}</td>
             <td>${a.n_nodes || 0}</td>
@@ -1027,8 +1027,8 @@ function renderComparisonsList(el, comparisons) {
         
         html += `<tr>
             <td>${escapeHtml(c.date_human || '?')}</td>
-            <td><strong>${escapeHtml(c.ref_title || '?')}</strong><br><small>${escapeHtml(c.ref_author || '')}</small></td>
-            <td><strong>${escapeHtml(c.cand_title || '?')}</strong><br><small>${escapeHtml(c.cand_author || '')}</small></td>
+            <td><em class="history-title">${escapeHtml(c.ref_title || '?')}</em><br><span class="history-author">${escapeHtml(c.ref_author || '')}</span></td>
+            <td><em class="history-title">${escapeHtml(c.cand_title || '?')}</em><br><span class="history-author">${escapeHtml(c.cand_author || '')}</span></td>
             <td>${sns}</td>
             <td>${srj}</td>
             <td>${escapeHtml(c.modality || '?')}</td>

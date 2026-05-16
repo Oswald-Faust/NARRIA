@@ -36,16 +36,21 @@ MODEL_CONTEXT_LIMIT = 200_000  # Claude Sonnet 4.5
 #   - System prompt narratologique : ~3 000 tokens
 #   - Instructions utilisateur (titre, auteur, format demandé) : ~500 tokens
 #   - Sortie attendue (max_tokens dans l'API) : 16 000 tokens
-#   - Marge de sécurité contre les sous-estimations : 10 000 tokens
-SAFETY_MARGIN = 30_000
+#   - Marge de sécurité contre les sous-estimations : 40 000 tokens
+# La marge a été augmentée à 60 000 tokens après avoir constaté que l'estimation
+# (1 token ≈ 4 caractères × 1,05) sous-estime fortement les textes anciens,
+# les traductions classiques (Apulée, Homère…) et les œuvres avec beaucoup de
+# noms propres latins/grecs ou de vocabulaire rare, où Claude tokenise plus
+# finement que la moyenne du français contemporain.
+SAFETY_MARGIN = 60_000
 
 # Seuil au-delà duquel le découpage devient obligatoire
 # (texte seul, hors prompt et sortie)
-CHUNK_THRESHOLD = MODEL_CONTEXT_LIMIT - SAFETY_MARGIN  # = 170_000 tokens
+CHUNK_THRESHOLD = MODEL_CONTEXT_LIMIT - SAFETY_MARGIN  # = 140_000 tokens
 
 # Taille cible d'un bloc lors du découpage
 # Plus petite que le seuil pour permettre les variations dans l'estimation
-TARGET_CHUNK_TOKENS = 100_000  # ~ 75 000 mots
+TARGET_CHUNK_TOKENS = 90_000  # ~ 65 000 mots — réduit pour les textes anciens
 
 # Recouvrement entre blocs consécutifs
 # Suffisant pour préserver les actants et la continuité narrative
@@ -70,12 +75,21 @@ class TextChunk:
 
 
 def estimate_tokens(text: str) -> int:
-    """Estime grossièrement le nombre de tokens d'un texte français."""
+    """Estime grossièrement le nombre de tokens d'un texte français.
+
+    Pondération conservatrice (1,20 au lieu de 1,05) après avoir constaté que
+    les textes anciens, les traductions classiques et les œuvres avec beaucoup
+    de noms propres latins/grecs (Apulée, Homère, hagiographies, etc.) sont
+    tokenisés plus finement par Claude que la moyenne du français contemporain.
+    Mieux vaut surestimer et déclencher le découpage à temps que sous-estimer
+    et déclencher un rejet 400 de l'API.
+    """
     if not text:
         return 0
-    # Approximation : 1 token ≈ 4 caractères en français
-    # Pondération conservatrice pour ne pas sous-estimer
-    return int(len(text) / CHARS_PER_TOKEN * 1.05)
+    # Approximation : 1 token ≈ 4 caractères en français contemporain
+    # Multiplicateur 1,20 pour absorber les textes anciens et les noms propres
+    # tokenisés caractère par caractère.
+    return int(len(text) / CHARS_PER_TOKEN * 1.20)
 
 
 def needs_chunking(text: str) -> bool:
