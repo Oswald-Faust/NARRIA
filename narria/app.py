@@ -152,6 +152,7 @@ def forgot_password_page():
 def api_forgot_password():
     """Envoie un email de réinitialisation de mot de passe."""
     import smtplib
+    import secrets
     from email.mime.text import MIMEText
     from email.mime.multipart import MIMEMultipart
     from narria.auth.users import UserStore
