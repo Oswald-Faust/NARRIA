@@ -169,19 +169,25 @@ def api_forgot_password():
         with open(f"/data/reset_tokens/{token}.json", "w") as f:
             json.dump({'email': email, 'expires': (datetime.now() + timedelta(hours=1)).isoformat()}, f)
         reset_link = f"https://narria.tech/reset-password?token={token}"
-        gmail = os.environ.get('GMAIL_ADDRESS')
-        gmail_pwd = os.environ.get('GMAIL_PASSWORD')
+        # Envoi via Brevo (anciennement Sendinblue) — relais SMTP professionnel
+        smtp_host = os.environ.get('BREVO_SMTP_HOST', 'smtp-relay.brevo.com')
+        smtp_port = int(os.environ.get('BREVO_SMTP_PORT', '587'))
+        smtp_login = os.environ.get('BREVO_SMTP_LOGIN')
+        smtp_password = os.environ.get('BREVO_SMTP_PASSWORD')
+        sender_email = os.environ.get('NARRIA_SENDER_EMAIL', 'noreply@narria.tech')
+        sender_name = os.environ.get('NARRIA_SENDER_NAME', "NARR'IA")
         msg = MIMEMultipart()
-        msg['From'] = gmail
+        msg['From'] = f"{sender_name} <{sender_email}>"
         msg['To'] = email
+        msg['Reply-To'] = 'contact@narria.tech'
         msg['Subject'] = 'Réinitialisation de votre mot de passe NARR\'IA'
         body = f"""Bonjour,\n\nCliquez sur ce lien pour réinitialiser votre mot de passe :\n{reset_link}\n\nCe lien expire dans 1 heure.\n\nL'équipe NARR'IA"""
         msg.attach(MIMEText(body, 'plain'))
         try:
-            server = smtplib.SMTP('smtp.gmail.com', 587)
+            server = smtplib.SMTP(smtp_host, smtp_port)
             server.starttls()
-            server.login(gmail, gmail_pwd)
-            server.sendmail(gmail, email, msg.as_string())
+            server.login(smtp_login, smtp_password)
+            server.sendmail(sender_email, email, msg.as_string())
             server.quit()
         except Exception as e:
             print(f"[NARR'IA] Erreur envoi email : {e}")
