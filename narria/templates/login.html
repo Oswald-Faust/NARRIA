@@ -168,6 +168,24 @@
     }
     .toggle-password:hover { color: var(--narria-bleu); }
 
+    /* Lien discret « Mot de passe oublié » sous le champ mot de passe */
+    .forgot-link-row {
+      text-align: right;
+      margin-top: 0.4rem;
+      margin-bottom: 1.8rem;
+    }
+    .forgot-link-row a {
+      font-family: var(--police-fonctionnelle);
+      font-size: 12.5px;
+      color: var(--narria-gold);
+      text-decoration: none;
+      border-bottom: 0.5px solid transparent;
+      transition: border-color 0.15s;
+    }
+    .forgot-link-row a:hover {
+      border-bottom-color: var(--narria-gold);
+    }
+
     .btn {
       background: var(--narria-bleu);
       color: var(--narria-papier);
@@ -266,7 +284,7 @@
         <input type="email" id="email" name="email" autocomplete="email" required>
       </div>
 
-      <div class="form-field">
+      <div class="form-field" style="margin-bottom: 0.4rem;">
         <label for="password">Mot de passe</label>
         <div class="password-wrapper">
           <input type="password" id="password" name="password" autocomplete="current-password" required>
@@ -276,10 +294,10 @@
         </div>
       </div>
 
-      <div class="auth-footer" style="margin-bottom:10px;">
-      <a href="/forgot-password">Mot de passe oublié ?</a>
+      <div class="forgot-link-row">
+        <a href="/forgot-password">Mot de passe oublié ?</a>
       </div>
-      
+
       <button type="button" class="btn" id="loginBtn">Se connecter</button>
 
       <div class="auth-footer">
