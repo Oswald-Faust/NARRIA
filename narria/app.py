@@ -24,6 +24,10 @@ import threading
 import webbrowser
 from datetime import datetime
 from pathlib import Path
+import pathlib
+import logging
+
+_logger = logging.getLogger('narria')
 
 try:
     from flask import (Flask, render_template, request, jsonify, send_file,
@@ -71,6 +75,41 @@ history = AnalysisHistory()
 reporter = ReportGenerator()
 narria_config = get_config()
 file_extractor = FileExtractor(clean_text=True)
+
+
+# ─── Sécurité : chemins de tokens de réinitialisation ───────────────
+# Protège contre les attaques de type "path traversal" : un attaquant
+# qui tenterait d'envoyer un token contenant des caractères comme
+# ../../etc/passwd ne pourra pas sortir du dossier /data/reset_tokens/.
+RESET_TOKENS_DIR = pathlib.Path("/data/reset_tokens").resolve()
+
+def _safe_token_path(token: str) -> pathlib.Path:
+    """Construit un chemin sécurisé pour le fichier d'un token de réinitialisation.
+
+    Valide que le token ne contient que des caractères URL-safe (ce que
+    secrets.token_urlsafe produit) et que le chemin final reste bien
+    confiné dans RESET_TOKENS_DIR.
+    """
+    if not re.fullmatch(r'[A-Za-z0-9_\-]{20,64}', token):
+        raise ValueError("Token invalide")
+    path = (RESET_TOKENS_DIR / f"{token}.json").resolve()
+    if not str(path).startswith(str(RESET_TOKENS_DIR)):
+        raise ValueError("Tentative de path traversal détectée")
+    return path
+
+
+# ─── Sécurité : gestion des erreurs serveur ─────────────────────────
+# Journalise l'erreur complète côté serveur (logs Render), mais ne
+# renvoie qu'un message générique au client. Évite de révéler la
+# structure interne du serveur (chemins, modules, versions) à un
+# attaquant potentiel via les tracebacks Python.
+def _error_response(e: Exception, user_message: str, status: int = 500):
+    """Journalise l'erreur serveur et retourne un message générique au client."""
+    _logger.exception(user_message)
+    if app.debug:
+        import traceback as _tb
+        return jsonify({'error': str(e), 'traceback': _tb.format_exc()}), status
+    return jsonify({'error': user_message}), status
 
 
 def get_active_extractor():
@@ -165,9 +204,12 @@ def api_forgot_password():
     user = UserStore().get_user_by_email(email)
     if user:
         token = secrets.token_urlsafe(32)
-        os.makedirs("/data/reset_tokens", exist_ok=True)
-        with open(f"/data/reset_tokens/{token}.json", "w") as f:
-            json.dump({'email': email, 'expires': (datetime.now() + timedelta(hours=1)).isoformat()}, f)
+        RESET_TOKENS_DIR.mkdir(parents=True, exist_ok=True)
+        token_file = _safe_token_path(token)
+        token_file.write_text(
+            json.dumps({'email': email, 'expires': (datetime.now() + timedelta(hours=1)).isoformat()}),
+            encoding='utf-8'
+        )
         reset_link = f"https://narria.tech/reset-password?token={token}"
         # Envoi via Brevo (anciennement Sendinblue) — relais SMTP professionnel
         smtp_host = os.environ.get('BREVO_SMTP_HOST', 'smtp-relay.brevo.com')
@@ -213,11 +255,13 @@ def api_reset_password():
     password = data.get('password', '')
     if not token or not password:
         return jsonify({'error': 'Données manquantes'}), 400
-    token_path = f"/data/reset_tokens/{token}.json"
-    if not os.path.exists(token_path):
+    try:
+        token_file = _safe_token_path(token)
+    except ValueError:
         return jsonify({'error': 'Lien invalide ou expiré'}), 400
-    with open(token_path) as f:
-        token_data = json.load(f)
+    if not token_file.exists():
+        return jsonify({'error': 'Lien invalide ou expiré'}), 400
+    token_data = json.loads(token_file.read_text(encoding='utf-8'))
     expires = datetime.fromisoformat(token_data['expires'])
     if datetime.now() > expires:
         return jsonify({'error': 'Lien expiré'}), 400
@@ -227,7 +271,7 @@ def api_reset_password():
     if not user:
         return jsonify({'error': 'Utilisateur introuvable'}), 404
     store.change_password(user['id'], password)
-    os.remove(token_path)
+    token_file.unlink()
     return jsonify({'message': 'Mot de passe modifié avec succès'})
 
 @app.route('/api/auth/register', methods=['POST'])
@@ -545,11 +589,7 @@ def api_upload_file():
         return jsonify(result.to_dict())
     
     except Exception as e:
-        import traceback
-        return jsonify({
-            'error': f"Erreur lors du traitement : {str(e)}",
-            'traceback': traceback.format_exc(),
-        }), 500
+        return _error_response(e, "Erreur lors du traitement du fichier. Veuillez réessayer.")
     finally:
         # Clean up temp file
         try:
@@ -701,11 +741,7 @@ def api_analyze_text():
         
         return jsonify(response_data)
     except Exception as e:
-        import traceback
-        return jsonify({
-            'error': f"Erreur d'analyse : {str(e)}",
-            'traceback': traceback.format_exc()
-        }), 500
+        return _error_response(e, "Erreur lors de l'analyse. Veuillez réessayer.")
 
 
 @app.route('/api/compare', methods=['POST'])
@@ -839,11 +875,7 @@ def api_compare():
         
         return jsonify(response_payload)
     except Exception as e:
-        import traceback
-        return jsonify({
-            'error': f"Erreur de comparaison : {str(e)}",
-            'traceback': traceback.format_exc()
-        }), 500
+        return _error_response(e, "Erreur lors de la comparaison. Veuillez réessayer.")
 
 
 @app.route('/api/generate-report/<analysis_id>', methods=['POST'])
@@ -923,11 +955,7 @@ def api_generate_report(analysis_id):
             'report_url': f'/reports/{report_path.name}',
         })
     except Exception as e:
-        import traceback
-        return jsonify({
-            'error': f"Erreur de génération : {str(e)}",
-            'traceback': traceback.format_exc()
-        }), 500
+        return _error_response(e, "Erreur lors de la génération du rapport. Veuillez réessayer.")
 
 
 @app.route('/reports/<path:filename>')
