@@ -192,6 +192,7 @@ def api_forgot_password():
     """Envoie un email de réinitialisation de mot de passe."""
     import requests as http_requests
     import json
+    from narria.auth.users import UserStore
     data = request.get_json()
     email = data.get('email', '').strip().lower()
     if not email:
