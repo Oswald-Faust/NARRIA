@@ -103,6 +103,23 @@ except ImportError:
     _limiter = _FakeLimiter()
     print("[NARR'IA] flask-limiter non installe - rate limiting desactive", flush=True)
 
+# ─── Sécurité : validation MIME des fichiers uploadés (M1) ──────────
+# Mapping extension -> liste des types MIME réels autorisés.
+# python-magic lit la "signature magique" en début de fichier pour
+# détecter le type réel, indépendamment de l'extension. Cela bloque
+# par exemple un .exe renommé en .pdf, ou tout fichier dont le contenu
+# ne correspond pas à l'extension annoncée.
+# Note : les .docx, .odt et .epub sont des archives ZIP — leur MIME
+# peut être détecté comme 'application/zip' selon la version de libmagic.
+_ALLOWED_MIMES = {
+    '.pdf':  ['application/pdf'],
+    '.docx': ['application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+              'application/zip'],
+    '.txt':  ['text/plain', 'application/octet-stream'],
+    '.odt':  ['application/vnd.oasis.opendocument.text', 'application/zip'],
+    '.epub': ['application/epub+zip', 'application/zip'],
+}
+
 # ─── Initialisation des modules ─────────────────────────────────────
 segmenter = NarrativeSegmenter()
 local_extractor = GraphExtractor()
@@ -628,7 +645,22 @@ def api_upload_file():
     try:
         uploaded.save(temp.name)
         temp.close()
-        
+
+        # Validation du type MIME réel (défense en profondeur — M1)
+        # Si python-magic n'est pas installé, on se rabat silencieusement
+        # sur la validation par extension seule (cas Windows local).
+        try:
+            import magic as _magic
+            detected_mime = _magic.from_file(temp.name, mime=True)
+            allowed_mimes = _ALLOWED_MIMES.get(suffix, [])
+            if allowed_mimes and detected_mime not in allowed_mimes:
+                return jsonify({
+                    'error': f'Le contenu du fichier ne correspond pas à son extension '
+                             f'(type détecté : {detected_mime})'
+                }), 400
+        except ImportError:
+            pass  # python-magic non installé : validation par extension uniquement
+
         # Extract text
         try:
             result = file_extractor.extract(temp.name)
