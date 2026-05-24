@@ -121,6 +121,32 @@ _ALLOWED_MIMES = {
     '.epub': ['application/epub+zip', 'application/zip'],
 }
 
+
+# ─── Sécurité : en-têtes HTTP globaux (BONUS) ───────────────────────
+# Ajoute des en-têtes de sécurité standards à TOUTES les réponses.
+# Utilise setdefault() pour ne pas écraser les en-têtes spécifiques
+# déjà posés ailleurs (par exemple par serve_report pour les rapports,
+# qui pose un Referrer-Policy: no-referrer plus strict et une CSP dédiée).
+@app.after_request
+def _set_security_headers(response):
+    """Ajoute des en-têtes de sécurité HTTP à toutes les réponses."""
+    # Empêche le navigateur de deviner le type MIME (anti-XSS)
+    response.headers.setdefault('X-Content-Type-Options', 'nosniff')
+    # Empêche l'inclusion dans des iframes (anti-clickjacking)
+    response.headers.setdefault('X-Frame-Options', 'SAMEORIGIN')
+    # Contrôle les informations envoyées dans le Referer
+    response.headers.setdefault('Referrer-Policy', 'strict-origin-when-cross-origin')
+    # Supprime la signature serveur (réduit la surface d'attaque ciblée)
+    response.headers.setdefault('X-Powered-By', '')
+    # En production HTTPS : HSTS (force HTTPS pour 1 an)
+    if os.environ.get('NARRIA_ENV', '').lower() == 'production':
+        response.headers.setdefault(
+            'Strict-Transport-Security',
+            'max-age=31536000; includeSubDomains'
+        )
+    return response
+
+
 # ─── Initialisation des modules ─────────────────────────────────────
 segmenter = NarrativeSegmenter()
 local_extractor = GraphExtractor()
