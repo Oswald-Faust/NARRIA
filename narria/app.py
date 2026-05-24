@@ -189,12 +189,15 @@ def forgot_password_page():
 
 @app.route('/api/auth/forgot-password', methods=['POST'])
 def api_forgot_password():
-    """Envoie un email de réinitialisation de mot de passe."""
-    import requests as http_requests
+    """Envoie un email de réinitialisation de mot de passe via SMTP Brevo."""
+    import smtplib
     import json
     import os
     import secrets
+    import traceback
     from datetime import datetime, timedelta
+    from email.mime.text import MIMEText
+    from email.mime.multipart import MIMEMultipart
     from narria.auth.users import UserStore
     data = request.get_json()
     email = data.get('email', '').strip().lower()
@@ -202,27 +205,38 @@ def api_forgot_password():
         return jsonify({'error': 'Email requis'}), 400
     user = UserStore().get_user_by_email(email)
     if user:
-        token = secrets.token_urlsafe(32)
-        RESET_TOKENS_DIR.mkdir(parents=True, exist_ok=True)
-        token_file = _safe_token_path(token)
-        token_file.write_text(
-            json.dumps({'email': email, 'expires': (datetime.now() + timedelta(hours=1)).isoformat()}),
-            encoding='utf-8'
-        )
-        reset_link = f"https://narria.tech/reset-password?token={token}"
-        brevo_api_key = os.environ.get('BREVO_API_KEY')
-        resp = http_requests.post(
-            'https://api.brevo.com/v3/smtp/email',
-            headers={'api-key': brevo_api_key, 'Content-Type': 'application/json'},
-            json={
-                'sender': {'name': "NARR'IA", 'email': 'noreply@narria.tech'},
-                'to': [{'email': email}],
-                'subject': "Réinitialisation de votre mot de passe NARR'IA",
-                'textContent': f"Bonjour,\n\nCliquez sur ce lien :\n{reset_link}\n\nCe lien expire dans 1 heure.\n\nL'équipe NARR'IA"
-            }
-        )
-        if resp.status_code != 201:
-            print(f"[NARR'IA] Erreur Brevo : {resp.text}")
+        try:
+            token = secrets.token_urlsafe(32)
+            RESET_TOKENS_DIR.mkdir(parents=True, exist_ok=True)
+            token_file = _safe_token_path(token)
+            token_file.write_text(
+                json.dumps({'email': email, 'expires': (datetime.now() + timedelta(hours=1)).isoformat()}),
+                encoding='utf-8'
+            )
+            reset_link = f"https://narria.tech/reset-password?token={token}"
+            print(f"[NARRIA-DEBUG] Token cree, debut SMTP pour {email}", flush=True)
+            smtp_host = os.environ.get('BREVO_SMTP_HOST', 'smtp-relay.brevo.com')
+            smtp_port = int(os.environ.get('BREVO_SMTP_PORT', '587'))
+            smtp_login = os.environ.get('BREVO_SMTP_LOGIN')
+            smtp_password = os.environ.get('BREVO_SMTP_PASSWORD')
+            sender_email = os.environ.get('NARRIA_SENDER_EMAIL', 'noreply@narria.tech')
+            print(f"[NARRIA-DEBUG] Login present: {bool(smtp_login)}, pwd present: {bool(smtp_password)}", flush=True)
+            msg = MIMEMultipart()
+            msg['From'] = sender_email
+            msg['To'] = email
+            msg['Subject'] = "Reinitialisation de votre mot de passe NARR IA"
+            body = f"Bonjour,\n\nCliquez sur ce lien pour reinitialiser votre mot de passe :\n{reset_link}\n\nCe lien expire dans 1 heure.\n\nL equipe NARR IA"
+            msg.attach(MIMEText(body, 'plain'))
+            print(f"[NARRIA-DEBUG] Message construit, connexion SMTP", flush=True)
+            server = smtplib.SMTP(smtp_host, smtp_port, timeout=20)
+            server.starttls()
+            server.login(smtp_login, smtp_password)
+            server.sendmail(sender_email, email, msg.as_string())
+            server.quit()
+            print(f"[NARRIA-DEBUG] Mail envoye avec succes a {email}", flush=True)
+        except Exception as e:
+            print(f"[NARRIA-DEBUG] EXCEPTION {type(e).__name__}: {e}", flush=True)
+            print(f"[NARRIA-DEBUG] Traceback:\n{traceback.format_exc()}", flush=True)
     return jsonify({'message': 'Si cet email existe, un lien a été envoyé.'})
 
 @app.route('/reset-password', methods=['GET'])
