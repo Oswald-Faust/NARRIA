@@ -31,7 +31,7 @@ _logger = logging.getLogger('narria')
 
 try:
     from flask import (Flask, render_template, request, jsonify, send_file,
-                       session, redirect, url_for, g)
+                       session, redirect, url_for, g, Response)
 except ImportError:
     print("ERREUR : Flask n'est pas installé.")
     print("Exécutez d'abord : ./install.sh (Linux/macOS) ou install.bat (Windows)")
@@ -517,6 +517,53 @@ def api_auth_me():
 def home():
     """Alias vers /"""
     return redirect(url_for('index'))
+
+
+# ─── SEO : sitemap.xml et robots.txt ────────────────────────────────
+@app.route('/sitemap.xml')
+def sitemap():
+    """Sitemap XML pour les moteurs de recherche (Google, Bing, etc.)."""
+    from datetime import datetime
+
+    # Pages publiques à indexer, avec priorités relatives
+    pages = [
+        {'loc': '/',                'priority': '1.0', 'changefreq': 'weekly'},
+        {'loc': '/register',        'priority': '0.7', 'changefreq': 'monthly'},
+        {'loc': '/login',           'priority': '0.5', 'changefreq': 'monthly'},
+        {'loc': '/forgot-password', 'priority': '0.3', 'changefreq': 'yearly'},
+    ]
+
+    today = datetime.now().strftime('%Y-%m-%d')
+    base_url = 'https://narria.tech'
+
+    xml_lines = ['<?xml version="1.0" encoding="UTF-8"?>',
+                 '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
+    for page in pages:
+        xml_lines.append('  <url>')
+        xml_lines.append(f'    <loc>{base_url}{page["loc"]}</loc>')
+        xml_lines.append(f'    <lastmod>{today}</lastmod>')
+        xml_lines.append(f'    <changefreq>{page["changefreq"]}</changefreq>')
+        xml_lines.append(f'    <priority>{page["priority"]}</priority>')
+        xml_lines.append('  </url>')
+    xml_lines.append('</urlset>')
+
+    return Response('\n'.join(xml_lines), mimetype='application/xml')
+
+
+@app.route('/robots.txt')
+def robots_txt():
+    """Robots.txt : indique aux moteurs ce qui peut être indexé."""
+    content = (
+        "User-agent: *\n"
+        "Allow: /\n"
+        "Disallow: /api/\n"
+        "Disallow: /admin\n"
+        "Disallow: /reports/\n"
+        "Disallow: /reset-password\n"
+        "\n"
+        "Sitemap: https://narria.tech/sitemap.xml\n"
+    )
+    return Response(content, mimetype='text/plain')
 
 
 # ═══════════════════════════════════════════════════════════════════
