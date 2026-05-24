@@ -115,7 +115,7 @@ function renderAnalysisResults(data, container) {
         <div class="tension-profile">${tensionBars}</div>
         
         <h4>Actants identifiés</h4>
-        <p>${data.actants.join(' · ') || '<em>Aucun actant identifié</em>'}</p>
+        <p>${data.actants.map(a => escapeHtml(a)).join(' · ') || '<em>Aucun actant identifié</em>'}</p>
         
         <div class="info-box">
             <h4>ℹ Interprétation</h4>
@@ -254,8 +254,8 @@ function renderComparisonResults(data) {
                 ${data.correspondences.map((c, i) => `
                     <tr>
                         <td>${i + 1}</td>
-                        <td><code>${c.ref_node}</code> (${c.ref_function})</td>
-                        <td><code>${c.cand_node}</code> (${c.cand_function})</td>
+                        <td><code>${escapeHtml(c.ref_node)}</code> (${escapeHtml(c.ref_function)})</td>
+                        <td><code>${escapeHtml(c.cand_node)}</code> (${escapeHtml(c.cand_function)})</td>
                         <td>${(c.similarity * 100).toFixed(1)}%</td>
                     </tr>
                 `).join('')}
@@ -266,7 +266,7 @@ function renderComparisonResults(data) {
     const warnings = data.warnings && data.warnings.length
         ? `<div class="verdict-box warning">
                 <h4>⚠ Avertissements</h4>
-                <ul>${data.warnings.map(w => `<li>${w}</li>`).join('')}</ul>
+                <ul>${data.warnings.map(w => `<li>${escapeHtml(w)}</li>`).join('')}</ul>
            </div>`
         : '';
     
@@ -295,14 +295,14 @@ function renderComparisonResults(data) {
             <div class="result-card">
                 <div class="result-label">SRJ — Risque juridique</div>
                 <div class="result-value">${data.srj}</div>
-                <div class="result-detail"><strong>${data.srj_level}</strong></div>
+                <div class="result-detail"><strong>${escapeHtml(data.srj_level)}</strong></div>
             </div>
         </div>
         
         <div class="verdict-box">
             <h4>Verdict NARR'IA</h4>
-            <p><strong>Modalité détectée :</strong> ${data.modality || 'Aucune modalité spécifique'}</p>
-            <p><strong>Interprétation :</strong> ${data.verdict}</p>
+            <p><strong>Modalité détectée :</strong> ${escapeHtml(data.modality || 'Aucune modalité spécifique')}</p>
+            <p><strong>Interprétation :</strong> ${escapeHtml(data.verdict)}</p>
         </div>
         
         ${warnings}
