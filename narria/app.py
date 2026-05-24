@@ -22,7 +22,7 @@ import json
 import re
 import threading
 import webbrowser
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 import pathlib
 import logging
@@ -65,6 +65,19 @@ app = Flask(
 import secrets as _secrets
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY') or _secrets.token_hex(32)
 app.config['MAX_CONTENT_LENGTH'] = 300 * 1024 * 1024  # 300 MB max upload (for very large works)
+
+# ─── Sécurité : durcissement des cookies de session ─────────────────
+# HTTPONLY  : empêche JavaScript de lire le cookie (anti-vol par XSS)
+# SAMESITE  : 'Lax' bloque les requêtes cross-origin (protection CSRF de base)
+# LIFETIME  : limite la durée de vie d'une session à 7 jours
+# REFRESH   : réinitialise la durée à chaque requête (utilisateur actif jamais déconnecté)
+# SECURE    : exige HTTPS pour transmettre le cookie (activé seulement en production)
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)
+app.config['SESSION_REFRESH_EACH_REQUEST'] = True
+if os.environ.get('NARRIA_ENV', '').lower() == 'production':
+    app.config['SESSION_COOKIE_SECURE'] = True
 
 # ─── Initialisation des modules ─────────────────────────────────────
 segmenter = NarrativeSegmenter()
