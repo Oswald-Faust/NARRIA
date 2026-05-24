@@ -52,6 +52,7 @@ from narria.llm.claude_client import (
     PRICE_INPUT_PER_MTOK, PRICE_OUTPUT_PER_MTOK,
 )
 from narria.io.file_extractor import FileExtractor
+from narria.auth.decorators import login_required as _login_required, admin_required as _admin_required
 
 # ─── Configuration Flask ────────────────────────────────────────────
 BASE_DIR = Path(__file__).parent
@@ -501,23 +502,13 @@ def admin_page():
 
 
 @app.route('/api/admin/users', methods=['GET'])
+@_admin_required
 def api_admin_list_users():
     """Liste tous les utilisateurs avec leur consommation."""
-    if not _auth_enabled():
-        return jsonify({'error': 'Auth non activée'}), 400
-    
-    user_id = session.get('user_id')
-    if not user_id:
-        return jsonify({'error': 'Auth requise'}), 401
-    
     from narria.auth.users import UserStore
     from narria.auth.quotas import QuotaManager
-    
+
     store = UserStore()
-    me = store.get_user_by_id(user_id)
-    if not me or not me['is_admin']:
-        return jsonify({'error': 'Privilèges admin requis'}), 403
-    
     quota = QuotaManager()
     users = store.list_users()
     
@@ -550,21 +541,12 @@ def api_admin_list_users():
 
 
 @app.route('/api/admin/user/<int:user_id>/quota', methods=['POST'])
+@_admin_required
 def api_admin_set_quota(user_id):
     """Modifie le quota d'un utilisateur."""
-    if not _auth_enabled():
-        return jsonify({'error': 'Auth non activée'}), 400
-    
-    me_id = session.get('user_id')
-    if not me_id:
-        return jsonify({'error': 'Auth requise'}), 401
-    
     from narria.auth.users import UserStore
     store = UserStore()
-    me = store.get_user_by_id(me_id)
-    if not me or not me['is_admin']:
-        return jsonify({'error': 'Privilèges admin requis'}), 403
-    
+
     data = request.get_json() or {}
     daily = int(data.get('quota_daily', 5))
     monthly = int(data.get('quota_monthly', 50))
@@ -577,26 +559,17 @@ def api_admin_set_quota(user_id):
 
 
 @app.route('/api/admin/user/<int:user_id>/active', methods=['POST'])
+@_admin_required
 def api_admin_set_active(user_id):
     """Active/désactive un compte."""
-    if not _auth_enabled():
-        return jsonify({'error': 'Auth non activée'}), 400
-    
-    me_id = session.get('user_id')
-    if not me_id:
-        return jsonify({'error': 'Auth requise'}), 401
-    
     from narria.auth.users import UserStore
     store = UserStore()
-    me = store.get_user_by_id(me_id)
-    if not me or not me['is_admin']:
-        return jsonify({'error': 'Privilèges admin requis'}), 403
-    
+
     data = request.get_json() or {}
     active = bool(data.get('active', True))
-    
+
     # On ne peut pas désactiver son propre compte
-    if user_id == me_id and not active:
+    if user_id == g.user['id'] and not active:
         return jsonify({'error': 'Impossible de désactiver votre propre compte'}), 400
     
     store.set_active(user_id, active)
