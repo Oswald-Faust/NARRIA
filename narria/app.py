@@ -224,9 +224,9 @@ def api_forgot_password():
             msg = MIMEMultipart()
             msg['From'] = sender_email
             msg['To'] = email
-            msg['Subject'] = "Reinitialisation de votre mot de passe NARR IA"
-            body = f"Bonjour,\n\nCliquez sur ce lien pour reinitialiser votre mot de passe :\n{reset_link}\n\nCe lien expire dans 1 heure.\n\nL equipe NARR IA"
-            msg.attach(MIMEText(body, 'plain'))
+            msg['Subject'] = "Réinitialisation de votre mot de passe NARR'IA"
+            body = f"Bonjour,\n\nCliquez sur ce lien pour réinitialiser votre mot de passe :\n{reset_link}\n\nCe lien expire dans 1 heure.\n\nL'équipe NARR'IA"
+            msg.attach(MIMEText(body, 'plain', 'utf-8'))
             print(f"[NARRIA-DEBUG] Message construit, connexion SMTP", flush=True)
             server = smtplib.SMTP(smtp_host, smtp_port, timeout=20)
             server.starttls()
