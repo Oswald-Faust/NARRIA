@@ -79,6 +79,30 @@ app.config['SESSION_REFRESH_EACH_REQUEST'] = True
 if os.environ.get('NARRIA_ENV', '').lower() == 'production':
     app.config['SESSION_COOKIE_SECURE'] = True
 
+# ─── Sécurité : rate limiting sur les endpoints d'authentification ──
+# Empêche les attaques par brute-force en limitant le nombre de requêtes
+# autorisées par adresse IP sur les routes sensibles (login, register,
+# forgot-password, reset-password). Si flask-limiter n'est pas installé,
+# un _FakeLimiter inactif est utilisé pour permettre l'exécution en
+# environnement minimal (par ex. tests locaux sans dépendances complètes).
+try:
+    from flask_limiter import Limiter
+    from flask_limiter.util import get_remote_address
+    _limiter = Limiter(
+        app=app,
+        key_func=get_remote_address,
+        default_limits=[],
+        storage_uri="memory://",
+    )
+    _RATE_LIMIT_AVAILABLE = True
+except ImportError:
+    _RATE_LIMIT_AVAILABLE = False
+    class _FakeLimiter:
+        def limit(self, *a, **kw):
+            return lambda f: f
+    _limiter = _FakeLimiter()
+    print("[NARR'IA] flask-limiter non installe - rate limiting desactive", flush=True)
+
 # ─── Initialisation des modules ─────────────────────────────────────
 segmenter = NarrativeSegmenter()
 local_extractor = GraphExtractor()
@@ -201,6 +225,7 @@ def forgot_password_page():
 
 
 @app.route('/api/auth/forgot-password', methods=['POST'])
+@_limiter.limit("5 per hour")
 def api_forgot_password():
     """Envoie un email de réinitialisation de mot de passe via SMTP Brevo."""
     import smtplib
@@ -261,6 +286,7 @@ def reset_password_page():
 
 
 @app.route('/api/auth/reset-password', methods=['POST'])
+@_limiter.limit("5 per minute")
 def api_reset_password():
     """Réinitialise le mot de passe avec le token reçu par email."""
     import os
@@ -292,6 +318,7 @@ def api_reset_password():
     return jsonify({'message': 'Mot de passe modifié avec succès'})
 
 @app.route('/api/auth/register', methods=['POST'])
+@_limiter.limit("5 per minute")
 def api_register():
     """Inscription d'un nouvel utilisateur."""
     if not _auth_enabled():
@@ -336,6 +363,7 @@ def api_register():
 
 
 @app.route('/api/auth/login', methods=['POST'])
+@_limiter.limit("10 per minute")
 def api_login():
     """Connexion d'un utilisateur."""
     if not _auth_enabled():
