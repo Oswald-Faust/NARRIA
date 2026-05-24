@@ -1005,9 +1005,32 @@ def api_generate_report(analysis_id):
 
 @app.route('/reports/<path:filename>')
 def serve_report(filename):
-    """Sert les rapports HTML générés."""
-    reports_dir = BASE_DIR / 'reports'
-    return send_file(reports_dir / filename)
+    """Sert les rapports HTML générés, avec protection path traversal et en-têtes CSP."""
+    reports_dir = (BASE_DIR / 'reports').resolve()
+    requested = (reports_dir / filename).resolve()
+
+    # Protection contre le path traversal
+    if not str(requested).startswith(str(reports_dir)):
+        return jsonify({'error': 'Accès refusé'}), 403
+
+    if not requested.exists():
+        return jsonify({'error': 'Rapport introuvable'}), 404
+
+    response = send_file(requested)
+
+    # En-têtes de sécurité pour les rapports HTML
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['X-Frame-Options'] = 'SAMEORIGIN'
+    response.headers['Referrer-Policy'] = 'no-referrer'
+    # CSP strict : pas de scripts, ressources limitées au domaine
+    response.headers['Content-Security-Policy'] = (
+        "default-src 'self'; "
+        "script-src 'none'; "
+        "style-src 'self' 'unsafe-inline'; "
+        "img-src 'self' data:; "
+        "font-src 'self';"
+    )
+    return response
 
 
 @app.route('/api/samples')
