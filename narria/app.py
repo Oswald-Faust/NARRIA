@@ -232,7 +232,6 @@ def api_forgot_password():
     import json
     import os
     import secrets
-    import traceback
     from datetime import datetime, timedelta
     from email.mime.text import MIMEText
     from email.mime.multipart import MIMEMultipart
@@ -243,38 +242,54 @@ def api_forgot_password():
         return jsonify({'error': 'Email requis'}), 400
     user = UserStore().get_user_by_email(email)
     if user:
+        # Création du token de réinitialisation (sécurisée contre path traversal — C1)
+        token = secrets.token_urlsafe(32)
+        RESET_TOKENS_DIR.mkdir(parents=True, exist_ok=True)
+        token_file = _safe_token_path(token)
+        token_file.write_text(
+            json.dumps({'email': email, 'expires': (datetime.now() + timedelta(hours=1)).isoformat()}),
+            encoding='utf-8'
+        )
+        reset_link = f"https://narria.tech/reset-password?token={token}"
+
+        # Récupération et validation des credentials Brevo SMTP (E4)
+        smtp_host = os.environ.get('BREVO_SMTP_HOST', 'smtp-relay.brevo.com')
+        smtp_port = int(os.environ.get('BREVO_SMTP_PORT', '587'))
+        smtp_login = os.environ.get('BREVO_SMTP_LOGIN')
+        smtp_password = os.environ.get('BREVO_SMTP_PASSWORD')
+        sender_email = os.environ.get('NARRIA_SENDER_EMAIL', 'noreply@narria.tech')
+        if not smtp_login or not smtp_password:
+            _logger.error("[NARR'IA] BREVO_SMTP_LOGIN ou BREVO_SMTP_PASSWORD non configure")
+            # Retourner le même message qu'en cas de succès (pas de fuite d'info)
+            return jsonify({'message': 'Si cet email existe, un lien a été envoyé.'})
+
+        # Construction du message
+        msg = MIMEMultipart()
+        msg['From'] = sender_email
+        msg['To'] = email
+        msg['Subject'] = "Réinitialisation de votre mot de passe NARR'IA"
+        body = (
+            f"Bonjour,\n\n"
+            f"Cliquez sur ce lien pour réinitialiser votre mot de passe :\n{reset_link}\n\n"
+            f"Ce lien expire dans 1 heure.\n\n"
+            f"L'équipe NARR'IA"
+        )
+        msg.attach(MIMEText(body, 'plain', 'utf-8'))
+
+        # Envoi SMTP via context manager (fermeture automatique de la connexion)
         try:
-            token = secrets.token_urlsafe(32)
-            RESET_TOKENS_DIR.mkdir(parents=True, exist_ok=True)
-            token_file = _safe_token_path(token)
-            token_file.write_text(
-                json.dumps({'email': email, 'expires': (datetime.now() + timedelta(hours=1)).isoformat()}),
-                encoding='utf-8'
-            )
-            reset_link = f"https://narria.tech/reset-password?token={token}"
-            print(f"[NARRIA-DEBUG] Token cree, debut SMTP pour {email}", flush=True)
-            smtp_host = os.environ.get('BREVO_SMTP_HOST', 'smtp-relay.brevo.com')
-            smtp_port = int(os.environ.get('BREVO_SMTP_PORT', '587'))
-            smtp_login = os.environ.get('BREVO_SMTP_LOGIN')
-            smtp_password = os.environ.get('BREVO_SMTP_PASSWORD')
-            sender_email = os.environ.get('NARRIA_SENDER_EMAIL', 'noreply@narria.tech')
-            print(f"[NARRIA-DEBUG] Login present: {bool(smtp_login)}, pwd present: {bool(smtp_password)}", flush=True)
-            msg = MIMEMultipart()
-            msg['From'] = sender_email
-            msg['To'] = email
-            msg['Subject'] = "Réinitialisation de votre mot de passe NARR'IA"
-            body = f"Bonjour,\n\nCliquez sur ce lien pour réinitialiser votre mot de passe :\n{reset_link}\n\nCe lien expire dans 1 heure.\n\nL'équipe NARR'IA"
-            msg.attach(MIMEText(body, 'plain', 'utf-8'))
-            print(f"[NARRIA-DEBUG] Message construit, connexion SMTP", flush=True)
-            server = smtplib.SMTP(smtp_host, smtp_port, timeout=20)
-            server.starttls()
-            server.login(smtp_login, smtp_password)
-            server.sendmail(sender_email, email, msg.as_string())
-            server.quit()
-            print(f"[NARRIA-DEBUG] Mail envoye avec succes a {email}", flush=True)
-        except Exception as e:
-            print(f"[NARRIA-DEBUG] EXCEPTION {type(e).__name__}: {e}", flush=True)
-            print(f"[NARRIA-DEBUG] Traceback:\n{traceback.format_exc()}", flush=True)
+            with smtplib.SMTP(smtp_host, smtp_port, timeout=20) as server:
+                server.starttls()
+                server.login(smtp_login, smtp_password)
+                server.sendmail(sender_email, email, msg.as_string())
+            _logger.info("[NARR'IA] Mail de reinitialisation envoye")
+        except smtplib.SMTPAuthenticationError:
+            _logger.error("[NARR'IA] Echec authentification SMTP Brevo — verifiez BREVO_SMTP_LOGIN/BREVO_SMTP_PASSWORD")
+        except smtplib.SMTPException:
+            _logger.exception("[NARR'IA] Erreur SMTP lors de l'envoi du mail de reset")
+        except Exception:
+            _logger.exception("[NARR'IA] Erreur inattendue lors de l'envoi du mail de reset")
+    # Toujours retourner le même message (pas de fuite sur l'existence de l'email)
     return jsonify({'message': 'Si cet email existe, un lien a été envoyé.'})
 
 @app.route('/reset-password', methods=['GET'])
