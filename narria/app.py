@@ -86,12 +86,26 @@ if os.environ.get('NARRIA_ENV', '').lower() == 'production':
 # forgot-password, reset-password). Si flask-limiter n'est pas installé,
 # un _FakeLimiter inactif est utilisé pour permettre l'exécution en
 # environnement minimal (par ex. tests locaux sans dépendances complètes).
+#
+# Récupération de l'IP réelle du client : derrière Cloudflare ou un proxy,
+# request.remote_addr donne l'IP du proxy, pas celle du visiteur. On lit
+# donc en priorité l'en-tête CF-Connecting-IP (Cloudflare) puis
+# X-Forwarded-For (proxies génériques), avec fallback sur remote_addr.
+def _get_client_ip():
+    """Récupère l'IP réelle du client, en tenant compte de Cloudflare et autres proxies."""
+    cf_ip = request.headers.get('CF-Connecting-IP')
+    if cf_ip:
+        return cf_ip
+    forwarded = request.headers.get('X-Forwarded-For')
+    if forwarded:
+        return forwarded.split(',')[0].strip()
+    return request.remote_addr or '127.0.0.1'
+
 try:
     from flask_limiter import Limiter
-    from flask_limiter.util import get_remote_address
     _limiter = Limiter(
         app=app,
-        key_func=get_remote_address,
+        key_func=_get_client_ip,
         default_limits=[],
         storage_uri="memory://",
     )
