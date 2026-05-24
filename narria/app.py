@@ -215,7 +215,7 @@ def api_forgot_password():
             'https://api.brevo.com/v3/smtp/email',
             headers={'api-key': brevo_api_key, 'Content-Type': 'application/json'},
             json={
-                'sender': {'name': "NARR'IA", 'email': 'narriaplatform@gmail.com'},
+                'sender': {'name': "NARR'IA", 'email': 'noreply@narria.tech'},
                 'to': [{'email': email}],
                 'subject': "Réinitialisation de votre mot de passe NARR'IA",
                 'textContent': f"Bonjour,\n\nCliquez sur ce lien :\n{reset_link}\n\nCe lien expire dans 1 heure.\n\nL'équipe NARR'IA"
