@@ -42,7 +42,7 @@ export default function AccueilPage() {
           <span className="inline-block rounded-full bg-white/15 px-3 py-1 text-xs font-semibold text-white">
             Narratologie computationnelle
           </span>
-          <h1 className="mt-4 font-heading text-3xl font-bold text-white">
+          <h1 className="mt-4 font-display text-4xl font-semibold tracking-wide text-white">
             Bienvenue sur NARR&apos;IA
           </h1>
           <p className="mt-3 text-sm text-white/80">

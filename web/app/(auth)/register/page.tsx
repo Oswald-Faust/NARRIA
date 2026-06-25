@@ -53,7 +53,7 @@ export default function RegisterPage() {
       }
       subtitle="Rejoignez des auteurs qui font confiance à NARR'IA pour analyser et défendre leurs œuvres."
     >
-      <h2 className="font-heading text-3xl font-bold">Créer un compte</h2>
+      <h2 className="font-display text-4xl font-semibold tracking-wide">Créer un compte</h2>
       <p className="mt-2 text-sm text-muted">
         Rejoignez NARR&apos;IA et protégez vos œuvres.
       </p>

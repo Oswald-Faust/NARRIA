@@ -1,8 +1,28 @@
 @import "tailwindcss";
 
-/* ── NARR'IA — Design tokens (d'après la page UI System du Figma) ───────── */
-@theme {
-  /* Palette de marque */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ── Variables de thème (light par défaut, override sous .dark) ────────── */
+:root {
+  --background: #f5f3fb;
+  --surface: #ffffff;
+  --surface-2: #f1ecf9;
+  --border-color: #e7e1f2;
+  --foreground: #1b1430;
+  --muted: #6c6c80;
+}
+.dark {
+  --background: #14101f;
+  --surface: #1d1830;
+  --surface-2: #261f3d;
+  --border-color: #332a4d;
+  --foreground: #f4f2fb;
+  --muted: #a89fc4;
+}
+
+/* ── Tokens Tailwind (inline → référencent les variables ci-dessus) ─────── */
+@theme inline {
+  /* Palette de marque (fixe dans les deux thèmes) */
   --color-dark-purple: #0f3039;
   --color-purple: #843b90;
   --color-pink: #da3861;
@@ -13,43 +33,46 @@
   --color-grey: #bfbfbf;
   --color-light-grey: #f9f9f9;
 
-  /* Rôles sémantiques (thème dark dominant) */
-  --color-background: #14101f;
-  --color-surface: #1d1830;
-  --color-surface-2: #261f3d;
-  --color-border: #332a4d;
-  --color-foreground: #f4f2fb;
-  --color-muted: #a89fc4;
   --color-primary: #843b90;
   --color-primary-foreground: #ffffff;
   --color-accent: #da3861;
   --color-accent-foreground: #ffffff;
 
+  /* Rôles sémantiques — bascule light/dark */
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-border: var(--border-color);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+
   /* Typographie */
+  --font-display: var(--font-koba), var(--font-quicksand), system-ui, sans-serif;
   --font-heading: var(--font-quicksand), ui-sans-serif, system-ui, sans-serif;
   --font-body: var(--font-kantumruy), ui-sans-serif, system-ui, sans-serif;
 
-  /* Rayons */
   --radius-card: 16px;
-  --radius-pill: 9999px;
 }
 
-/* Dégradé violet des bandeaux de section (Analyser / Comparer / Répertoire) */
 @layer utilities {
   .bg-gradient-narria {
-    background-image: linear-gradient(120deg, #5a2a8f 0%, #843b90 45%, #b8417e 100%);
+    background-image: linear-gradient(120deg, #2b1650 0%, #3a1d63 40%, #5a2a8f 100%);
   }
   .text-gradient-narria {
-    background-image: linear-gradient(120deg, #c68cc4 0%, #fc92a4 100%);
+    background-image: linear-gradient(120deg, #843b90 0%, #da3861 100%);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
   }
+  /* Dégradé fixe de la sidebar (sombre dans les deux thèmes) */
+  .bg-sidebar {
+    background-image: linear-gradient(180deg, #3a1d63 0%, #2b1650 55%, #1a0e35 100%);
+  }
 }
 
 body {
-  background: var(--color-background);
-  color: var(--color-foreground);
+  background: var(--background);
+  color: var(--foreground);
   font-family: var(--font-body);
 }
 

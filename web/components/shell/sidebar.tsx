@@ -3,25 +3,18 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  Home,
-  MessageSquareText,
-  ScanText,
-  GitCompareArrows,
-  History,
-  FolderKanban,
-  BookMarked,
-  Settings,
-  Info,
+  Home, MessageSquareText, ScanText, GitCompareArrows, History,
+  FolderKanban, BookMarked, Settings, Info,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const MAIN_NAV = [
   { href: "/accueil", label: "Accueil", icon: Home },
-  { href: "/chat", label: "NARR'IA Chat", icon: MessageSquareText },
+  { href: "/chat", label: "NARR'IA Chat", icon: MessageSquareText, badge: "IA" },
   { href: "/analyser", label: "Analyser un texte", icon: ScanText },
   { href: "/comparer", label: "Comparer deux textes", icon: GitCompareArrows },
   { href: "/historique", label: "Historique", icon: History },
-  { href: "/projets", label: "Projets", icon: FolderKanban },
+  { href: "/projets", label: "Projet", icon: FolderKanban },
 ];
 
 const BOTTOM_NAV = [
@@ -30,86 +23,108 @@ const BOTTOM_NAV = [
   { href: "/aide", label: "À propos", icon: Info },
 ];
 
+const RECENTS = [
+  "Aide-moi à structurer l'arc narratif…",
+  "Quels droits protègent un scénario ?",
+  "Comment construire une intrigue…",
+  "Explique la différence entre…",
+  "Génère un registre de dépôt…",
+];
+
 function NavLink({
-  href,
-  label,
-  icon: Icon,
-  active,
+  href, label, icon: Icon, badge, active, collapsed,
 }: {
-  href: string;
-  label: string;
-  icon: typeof Home;
-  active: boolean;
+  href: string; label: string; icon: typeof Home; badge?: string;
+  active: boolean; collapsed: boolean;
 }) {
   return (
     <Link
       href={href}
+      title={collapsed ? label : undefined}
       className={cn(
-        "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
-        active
-          ? "bg-accent text-white shadow-sm"
-          : "text-white/70 hover:bg-white/10 hover:text-white",
+        "group flex items-center rounded-xl text-sm font-medium transition-colors",
+        collapsed ? "h-11 w-11 justify-center" : "gap-3 px-3 py-2.5",
+        active ? "bg-accent text-white shadow-sm" : "text-white/70 hover:bg-white/10 hover:text-white",
       )}
     >
       <Icon className="h-[18px] w-[18px] shrink-0" />
-      <span className="truncate">{label}</span>
+      {!collapsed && (
+        <>
+          <span className="truncate">{label}</span>
+          {badge && (
+            <span className="ml-auto rounded-full bg-soft-pink/30 px-2 py-0.5 text-[10px] font-bold text-soft-pink">
+              {badge}
+            </span>
+          )}
+        </>
+      )}
     </Link>
   );
 }
 
-export function Sidebar() {
+export function Sidebar({ collapsed }: { collapsed: boolean }) {
   const pathname = usePathname();
-  const isActive = (href: string) =>
-    pathname === href || pathname.startsWith(href + "/");
+  const isActive = (href: string) => pathname === href || pathname.startsWith(href + "/");
 
   return (
-    <aside className="flex h-full w-64 shrink-0 flex-col bg-gradient-to-b from-[#3a1d63] via-[#2b1650] to-[#1a0e35] px-4 py-5">
+    <aside
+      className={cn(
+        "bg-sidebar flex h-full shrink-0 flex-col py-5 transition-[width] duration-200",
+        collapsed ? "w-20 items-center px-3" : "w-64 px-4",
+      )}
+    >
       {/* Logo */}
-      <Link href="/accueil" className="mb-6 flex items-center gap-2 px-2">
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary font-heading text-lg font-bold text-white">
+      <Link href="/accueil" className={cn("mb-6 flex items-center gap-2", collapsed ? "justify-center" : "px-2")}>
+        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary font-display text-lg font-bold text-white">
           n
         </div>
-        <span className="font-heading text-xl font-bold text-white">
-          narr&apos;ia
-        </span>
+        {!collapsed && <span className="font-display text-xl font-semibold text-white">narr&apos;ia</span>}
       </Link>
 
       {/* Nav principale */}
-      <nav className="space-y-1">
+      <nav className={cn("space-y-1", collapsed && "flex flex-col items-center")}>
         {MAIN_NAV.map((item) => (
-          <NavLink key={item.href} {...item} active={isActive(item.href)} />
+          <NavLink key={item.href} {...item} active={isActive(item.href)} collapsed={collapsed} />
         ))}
       </nav>
 
       {/* Récents */}
-      <div className="mt-6 px-3">
-        <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-white/40">
-          Récents
-        </p>
-        <ul className="space-y-1.5 text-xs text-white/50">
-          <li className="truncate">Roméo et Juliette — analyse</li>
-          <li className="truncate">Les Amants de Conakry — comparaison</li>
-          <li className="truncate">Protection plagiat — chat</li>
-        </ul>
-      </div>
+      {!collapsed && (
+        <div className="mt-6 px-3">
+          <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-white/40">Récents</p>
+          <ul className="space-y-2 border-l border-white/15 pl-3 text-xs text-white/55">
+            {RECENTS.map((r) => (
+              <li key={r} className="truncate hover:text-white/80">{r}</li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {/* Bas de sidebar */}
-      <nav className="mt-auto space-y-1 border-t border-white/10 pt-4">
-        {BOTTOM_NAV.map((item) => (
-          <NavLink key={item.href} {...item} active={isActive(item.href)} />
-        ))}
-        <div className="mt-3 flex items-center gap-3 rounded-xl bg-white/5 px-3 py-2.5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-soft-pink/30 text-sm font-bold text-soft-pink">
+      <div className={cn("mt-auto pt-4", collapsed ? "flex w-full flex-col items-center" : "")}>
+        {!collapsed && (
+          <span className="mb-2 ml-3 inline-block rounded-full bg-purple/40 px-2.5 py-0.5 text-[10px] font-bold text-soft-purple">
+            PRO
+          </span>
+        )}
+        <nav className={cn("space-y-1", collapsed && "flex flex-col items-center")}>
+          {BOTTOM_NAV.map((item) => (
+            <NavLink key={item.href} {...item} active={isActive(item.href)} collapsed={collapsed} />
+          ))}
+        </nav>
+
+        <div className={cn("mt-3 flex items-center rounded-xl bg-white/5", collapsed ? "h-11 w-11 justify-center" : "gap-3 px-3 py-2.5")}>
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-soft-pink/30 text-sm font-bold text-soft-pink">
             D
           </div>
-          <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-white">
-              ADEKAMBI David
-            </p>
-            <p className="truncate text-xs text-white/50">Membre PRO</p>
-          </div>
+          {!collapsed && (
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold text-white">ADEKAMBI David</p>
+              <p className="truncate text-xs text-white/50">adekambidavid@gmail.com</p>
+            </div>
+          )}
         </div>
-      </nav>
+      </div>
     </aside>
   );
 }

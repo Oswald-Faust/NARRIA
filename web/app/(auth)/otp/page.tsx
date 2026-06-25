@@ -49,7 +49,7 @@ function OtpForm() {
 
   return (
     <>
-      <h2 className="font-heading text-3xl font-bold">Vérification</h2>
+      <h2 className="font-display text-4xl font-semibold tracking-wide">Vérification</h2>
       <p className="mt-2 text-sm text-muted">
         Entrez le code à 5 chiffres envoyé à{" "}
         <span className="text-foreground">{email || "votre e-mail"}</span>.

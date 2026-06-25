@@ -32,7 +32,7 @@ export function GradientHeader({
           </div>
         ) : null}
         <div>
-          <h2 className="font-heading text-2xl font-bold">{title}</h2>
+          <h2 className="font-display text-3xl font-semibold tracking-wide">{title}</h2>
           {subtitle ? (
             <p className="mt-1 max-w-2xl text-sm text-white/80">{subtitle}</p>
           ) : null}

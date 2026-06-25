@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
-import { Quicksand, Kantumruy_Pro } from "next/font/google";
+import { Quicksand, Kantumruy_Pro, Fredoka } from "next/font/google";
 import "./globals.css";
+import { Providers } from "@/components/providers";
 
 const quicksand = Quicksand({
   variable: "--font-quicksand",
@@ -12,6 +13,15 @@ const kantumruy = Kantumruy_Pro({
   variable: "--font-kantumruy",
   subsets: ["latin"],
   weight: ["300", "400", "500", "600", "700"],
+});
+
+// Police d'affichage des gros titres (héros). Approximation de « KOBA » du Figma :
+// pour un rendu pixel-perfect, remplacer cet import par next/font/local pointant
+// vers le fichier KOBA.woff2 officiel (variable CSS --font-koba inchangée).
+const koba = Fredoka({
+  variable: "--font-koba",
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
 });
 
 export const metadata: Metadata = {
@@ -28,10 +38,11 @@ export default function RootLayout({
   return (
     <html
       lang="fr"
-      className={`${quicksand.variable} ${kantumruy.variable} h-full antialiased dark`}
+      suppressHydrationWarning
+      className={`${quicksand.variable} ${kantumruy.variable} ${koba.variable} h-full antialiased`}
     >
       <body className="min-h-full bg-background font-body text-foreground">
-        {children}
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

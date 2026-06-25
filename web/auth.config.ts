@@ -21,6 +21,8 @@ export const authConfig = {
         nextUrl.pathname.startsWith("/repertoire") ||
         nextUrl.pathname.startsWith("/projets") ||
         nextUrl.pathname.startsWith("/dashboard") ||
+        nextUrl.pathname.startsWith("/aide") ||
+        nextUrl.pathname.startsWith("/configuration") ||
         nextUrl.pathname.startsWith("/profil");
       if (isAppArea) return isLoggedIn;
       return true;

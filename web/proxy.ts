@@ -14,6 +14,8 @@ export const config = {
     "/repertoire/:path*",
     "/projets/:path*",
     "/dashboard/:path*",
+    "/aide/:path*",
+    "/configuration/:path*",
     "/profil/:path*",
   ],
 };

@@ -45,7 +45,7 @@ export default function LoginPage() {
       }
       subtitle="Structurez, comparez et protégez vos œuvres grâce à l'IA."
     >
-      <h2 className="font-heading text-3xl font-bold">Bon retour 👋</h2>
+      <h2 className="font-display text-4xl font-semibold tracking-wide">Bon retour 👋</h2>
       <p className="mt-2 text-sm text-muted">
         Connectez-vous à votre espace NARR&apos;IA.
       </p>
