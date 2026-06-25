@@ -7,6 +7,7 @@ import {
   FolderKanban, BookMarked, Settings, Info,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { LogoFull, LogoMark } from "@/components/brand/logo";
 
 const MAIN_NAV = [
   { href: "/accueil", label: "Accueil", icon: Home },
@@ -74,11 +75,12 @@ export function Sidebar({ collapsed }: { collapsed: boolean }) {
       )}
     >
       {/* Logo */}
-      <Link href="/accueil" className={cn("mb-6 flex items-center gap-2", collapsed ? "justify-center" : "px-2")}>
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary font-display text-lg font-bold text-white">
-          n
-        </div>
-        {!collapsed && <span className="font-display text-xl font-semibold text-white">narr&apos;ia</span>}
+      <Link href="/accueil" className={cn("mb-6 flex items-center", collapsed ? "justify-center" : "px-2")}>
+        {collapsed ? (
+          <LogoMark className="h-10" />
+        ) : (
+          <LogoFull className="h-9" priority />
+        )}
       </Link>
 
       {/* Nav principale */}
