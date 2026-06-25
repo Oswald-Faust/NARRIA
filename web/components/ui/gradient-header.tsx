@@ -21,24 +21,24 @@ export function GradientHeader({
   return (
     <div
       className={cn(
-        "bg-gradient-narria flex items-center justify-between gap-4 rounded-[var(--radius-card)] px-7 py-6 text-white",
+        "bg-gradient-narria flex flex-col gap-4 rounded-[var(--radius-card)] px-5 py-5 text-white sm:flex-row sm:items-center sm:justify-between sm:px-7 sm:py-6",
         className,
       )}
     >
       <div className="flex items-center gap-4">
         {icon ? (
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white/15 sm:h-12 sm:w-12">
             {icon}
           </div>
         ) : null}
         <div>
-          <h2 className="font-display text-3xl font-semibold tracking-wide">{title}</h2>
+          <h2 className="font-display text-2xl font-semibold tracking-wide sm:text-3xl">{title}</h2>
           {subtitle ? (
             <p className="mt-1 max-w-2xl text-sm text-white/80">{subtitle}</p>
           ) : null}
         </div>
       </div>
-      {action}
+      {action ? <div className="shrink-0">{action}</div> : null}
     </div>
   );
 }

@@ -45,14 +45,14 @@ export default function HistoriquePage() {
         ))}
       </div>
 
-      <Card className="overflow-hidden p-0">
+      <Card className="overflow-x-auto p-0">
         {loading ? (
           <p className="p-6 text-muted">Chargement…</p>
         ) : tab === "analyses" ? (
           analyses.length === 0 ? (
             <p className="p-6 text-muted">Aucune analyse pour le moment.</p>
           ) : (
-            <table className="w-full text-left text-sm">
+            <table className="w-full min-w-[640px] text-left text-sm">
               <thead className="border-b border-border text-xs uppercase tracking-wide text-muted">
                 <tr><th className="px-5 py-3">Date</th><th className="px-5 py-3">Titre</th><th className="px-5 py-3">Auteur</th><th className="px-5 py-3">Mode</th><th className="px-5 py-3">Nœuds</th></tr>
               </thead>

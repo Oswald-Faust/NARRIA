@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import {
-  ScanText, GitCompareArrows, BookMarked, ArrowRight, TriangleAlert,
+  ScanText, GitCompareArrows, BookMarked, ArrowRight, TriangleAlert, Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardTitle, CardDescription } from "@/components/ui/card";
@@ -38,13 +38,32 @@ const ACTIONS = [
 export default function AccueilPage() {
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-8">
-      {/* ── Haut : bandeau de bienvenue (Hero Banner.png, texte incrusté) ─ */}
-      <Image
-        src={heroBanner}
-        alt="Bienvenue sur NARR'IA — Détectez, quantifiez et qualifiez le vol d'intrigue."
-        priority
-        className="h-auto w-full rounded-[var(--radius-card)]"
-      />
+      {/* ── Haut : bandeau de bienvenue (Hero Banner.png en fond + texte KOBA) ─ */}
+      <section className="relative overflow-hidden rounded-[var(--radius-card)]">
+        <Image
+          src={heroBanner}
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover object-right"
+        />
+        {/* Voile : masque le texte incrusté à gauche, révèle le motif réseau à droite */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[#1b0c36] via-[#1f0e3d] via-65% to-transparent" />
+        <div className="relative px-6 py-8 sm:px-9 sm:py-10">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold text-white">
+            <Sparkles className="h-3.5 w-3.5" /> Narratologie computationnelle
+          </span>
+          <h1 className="mt-4 font-display text-3xl font-semibold tracking-wide text-white sm:text-4xl">
+            Bienvenue sur NARR&apos;IA
+          </h1>
+          <p className="mt-3 max-w-2xl text-sm leading-7 text-white/85 sm:text-base">
+            Détectez, quantifiez et qualifiez le vol d&apos;intrigue. NARR&apos;IA analyse la
+            structure narrative profonde de vos œuvres, indépendamment de leur réalisation
+            linguistique de surface.
+          </p>
+        </div>
+      </section>
 
       {/* ── Milieu : emblème ──────────────────────────────────────────── */}
       <section className="relative flex items-center justify-center py-6">

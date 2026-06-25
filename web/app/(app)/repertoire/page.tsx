@@ -69,7 +69,8 @@ export default function RepertoirePage() {
       </div>
 
       <Card className="overflow-hidden p-0">
-        <table className="w-full text-left text-sm">
+        <div className="overflow-x-auto">
+        <table className="w-full min-w-[640px] text-left text-sm">
           <thead className="border-b border-border text-xs uppercase tracking-wide text-muted">
             <tr>
               <th className="px-5 py-3">Code</th>
@@ -89,6 +90,7 @@ export default function RepertoirePage() {
             ))}
           </tbody>
         </table>
+        </div>
       </Card>
     </div>
   );
