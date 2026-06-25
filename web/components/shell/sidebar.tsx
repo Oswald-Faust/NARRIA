@@ -79,7 +79,7 @@ export function Sidebar({ collapsed }: { collapsed: boolean }) {
         {collapsed ? (
           <LogoMark className="h-11" />
         ) : (
-          <LogoFull className="h-[52px]" priority />
+          <LogoFull className="h-[52px]" priority white />
         )}
       </Link>
 

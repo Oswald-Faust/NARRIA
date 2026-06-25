@@ -1,10 +1,12 @@
 import Link from "next/link";
+import Image from "next/image";
 import {
-  ScanText, GitCompareArrows, BookMarked, ArrowRight, TriangleAlert, Sparkles,
+  ScanText, GitCompareArrows, BookMarked, ArrowRight, TriangleAlert,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardTitle, CardDescription } from "@/components/ui/card";
 import { LogoEmblem } from "@/components/brand/logo";
+import heroBanner from "@/assets/Hero Banner.png";
 
 const ACTIONS = [
   {
@@ -36,26 +38,13 @@ const ACTIONS = [
 export default function AccueilPage() {
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-8">
-      {/* ── Haut : bandeau de bienvenue ───────────────────────────────── */}
-      <section className="bg-gradient-narria relative overflow-hidden rounded-[var(--radius-card)] px-8 py-7">
-        <div className="absolute -right-16 -top-16 h-64 w-64 rounded-full bg-soft-pink/20 blur-3xl" />
-        <div className="absolute bottom-0 right-1/4 h-40 w-40 rounded-full bg-purple/30 blur-3xl" />
-        <div className="relative z-10">
-          <div className="flex flex-wrap items-center gap-3">
-            <h1 className="font-display text-3xl font-semibold tracking-wide text-white">
-              Bienvenue sur NARR&apos;IA
-            </h1>
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold text-white">
-              <Sparkles className="h-3.5 w-3.5" /> Narratologie computationnelle
-            </span>
-          </div>
-          <p className="mt-3 max-w-3xl text-sm text-white/80">
-            Détectez, quantifiez et qualifiez le vol d&apos;intrigue. NARR&apos;IA analyse la
-            structure narrative profonde de vos œuvres, indépendamment de leur réalisation
-            linguistique de surface.
-          </p>
-        </div>
-      </section>
+      {/* ── Haut : bandeau de bienvenue (Hero Banner.png, texte incrusté) ─ */}
+      <Image
+        src={heroBanner}
+        alt="Bienvenue sur NARR'IA — Détectez, quantifiez et qualifiez le vol d'intrigue."
+        priority
+        className="h-auto w-full rounded-[var(--radius-card)]"
+      />
 
       {/* ── Milieu : emblème ──────────────────────────────────────────── */}
       <section className="relative flex items-center justify-center py-6">

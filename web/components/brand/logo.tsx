@@ -1,13 +1,27 @@
 import Image from "next/image";
 import fullLogo from "@/assets/narria-full-logo.png";
+import fullLogoWhite from "@/assets/narria-full-logo-white.png";
 import mark from "@/assets/narria-simple-logo.png";
 import fullMark from "@/assets/narria-full.png";
 import { cn } from "@/lib/utils";
 
-/** Logo complet horizontal (icône + mot « narr'ia »). */
-export function LogoFull({ className, priority }: { className?: string; priority?: boolean }) {
+/** Logo complet horizontal (icône + mot « narr'ia »). `white` pour fonds sombres. */
+export function LogoFull({
+  className,
+  priority,
+  white,
+}: {
+  className?: string;
+  priority?: boolean;
+  white?: boolean;
+}) {
   return (
-    <Image src={fullLogo} alt="NARR'IA" priority={priority} className={cn("h-auto w-auto", className)} />
+    <Image
+      src={white ? fullLogoWhite : fullLogo}
+      alt="NARR'IA"
+      priority={priority}
+      className={cn("h-auto w-auto", className)}
+    />
   );
 }
 
