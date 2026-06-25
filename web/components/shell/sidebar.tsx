@@ -75,11 +75,11 @@ export function Sidebar({ collapsed }: { collapsed: boolean }) {
       )}
     >
       {/* Logo */}
-      <Link href="/accueil" className={cn("mb-6 flex items-center", collapsed ? "justify-center" : "px-2")}>
+      <Link href="/accueil" className={cn("mb-6 flex items-center", collapsed ? "justify-center" : "px-1")}>
         {collapsed ? (
-          <LogoMark className="h-10" />
+          <LogoMark className="h-11" />
         ) : (
-          <LogoFull className="h-9" priority />
+          <LogoFull className="h-[52px]" priority />
         )}
       </Link>
 
