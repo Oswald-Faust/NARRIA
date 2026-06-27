@@ -16,8 +16,11 @@ import {
   FUNCTION_REPERTOIRE,
 } from "@/lib/engine";
 
-/** Modèle de chat — Claude Sonnet 4.6 (équilibre qualité/latence). */
-export const chatModel = anthropic("claude-sonnet-4-6");
+/** Identifiant du modèle de chat — Claude Sonnet 4.6 (équilibre qualité/latence). */
+export const CHAT_MODEL_ID = "claude-sonnet-4-6";
+
+/** Modèle de chat instancié pour l'AI SDK. */
+export const chatModel = anthropic(CHAT_MODEL_ID);
 
 /** Nombre maximal d'allers-retours outils par tour (boucle agentique). */
 export const MAX_STEPS = 6;

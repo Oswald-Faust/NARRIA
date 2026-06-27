@@ -5,6 +5,7 @@ import {
   Search, Rocket, ScanText, GitCompareArrows, ShieldCheck, ChevronDown, LifeBuoy,
 } from "lucide-react";
 import { Card, CardTitle, CardDescription } from "@/components/ui/card";
+import { koba } from "@/lib/fonts";
 import { cn } from "@/lib/utils";
 
 const CATEGORIES = [
@@ -58,7 +59,7 @@ export default function AidePage() {
     <div className="mx-auto max-w-6xl space-y-8">
       {/* Hero + recherche */}
       <section className="bg-gradient-narria rounded-[var(--radius-card)] px-8 py-9">
-        <h1 className="font-display text-3xl font-semibold tracking-wide text-white">
+        <h1 className={`${koba.className} text-3xl font-semibold tracking-wide text-white`}>
           Comment pouvons-nous vous aider ?
         </h1>
         <div className="relative mt-5 max-w-2xl">

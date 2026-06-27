@@ -3,6 +3,7 @@ import { auth } from "@/auth";
 import { connectDB } from "@/lib/db/mongoose";
 import { Comparison } from "@/lib/db/models/comparison";
 import { analyzeHeuristic, compare } from "@/lib/engine";
+import { createNotification } from "@/lib/notifications";
 
 export async function POST(req: Request) {
   const session = await auth();
@@ -43,6 +44,18 @@ export async function POST(req: Request) {
     verdict: result.verdict,
     correspondences: result.correspondences,
     warnings: result.warnings,
+  });
+
+  const pct = Math.round((result.sns ?? 0) * 100);
+  const high = result.srjLevel === "Critique" || result.srjLevel === "Élevé";
+  await createNotification({
+    ownerId: session.user.id,
+    type: high ? "ip" : "comparison",
+    title: high
+      ? `Similarité élevée détectée — ${refTitle} / ${candTitle}`
+      : `Comparaison terminée — ${refTitle} / ${candTitle}`,
+    body: `Indice de similarité narrative : ${pct} %. Niveau de risque : ${result.srjLevel}.`,
+    href: "/historique",
   });
 
   return NextResponse.json({ id: String(doc._id), refTitle, candTitle, ...result });

@@ -7,6 +7,8 @@ import { User, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
+import { SocialAuth } from "@/components/auth/social-auth";
+import { koba } from "@/lib/fonts";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -53,7 +55,7 @@ export default function RegisterPage() {
       }
       subtitle="Rejoignez des auteurs qui font confiance à NARR'IA pour analyser et défendre leurs œuvres."
     >
-      <h2 className="font-display text-4xl font-semibold tracking-wide">Créer un compte</h2>
+      <h2 className={`${koba.className} text-4xl font-semibold tracking-wide`}>Créer un compte</h2>
       <p className="mt-2 text-sm text-muted">
         Rejoignez NARR&apos;IA et protégez vos œuvres.
       </p>
@@ -124,6 +126,8 @@ export default function RegisterPage() {
           {loading ? "Création…" : "Créer mon compte"}
         </Button>
       </form>
+
+      <SocialAuth />
 
       <p className="mt-6 text-center text-sm text-muted">
         Déjà un compte ?{" "}

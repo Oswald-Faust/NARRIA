@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useChat } from "@ai-sdk/react";
 import type { UIMessage } from "ai";
 import { Sparkles, Plus, TriangleAlert } from "lucide-react";
@@ -8,34 +9,92 @@ import { ChatMessage, AssistantAvatar } from "@/components/chat/chat-message";
 import { Composer } from "@/components/chat/composer";
 import { EmptyState } from "@/components/chat/empty-state";
 
-const STORAGE_KEY = "narria.chat.messages";
+function titleFromMessages(messages: UIMessage[]) {
+  const firstUser = messages.find((message) => message.role === "user");
+  const text = firstUser?.parts
+    ?.filter((part) => part.type === "text")
+    .map((part) => (part as { text: string }).text)
+    .join(" ")
+    .trim() ?? "";
+
+  const normalized = text.replace(/\s+/g, " ");
+  if (!normalized) return "Nouvelle conversation";
+  return normalized.length > 48 ? `${normalized.slice(0, 48).trimEnd()}…` : normalized;
+}
 
 export default function ChatPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const conversationId = searchParams.get("c");
   const [input, setInput] = useState("");
-  const hydratedRef = useRef(false);
+  const [loadedTitle, setLoadedTitle] = useState("Nouvelle conversation");
+  const [loadingConversation, setLoadingConversation] = useState(false);
+  const hydratedConversationRef = useRef<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const { messages, sendMessage, status, stop, regenerate, error, setMessages } =
     useChat();
 
-  // Restaure la conversation persistée (localStorage) après hydratation.
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) setMessages(JSON.parse(raw) as UIMessage[]);
-    } catch {
-      /* ignore */
+    if (!conversationId) {
+      setMessages([]);
+      hydratedConversationRef.current = "new";
+      window.setTimeout(() => {
+        setLoadingConversation(false);
+      }, 0);
+      window.setTimeout(() => {
+        setLoadedTitle("Nouvelle conversation");
+      }, 0);
+      return;
     }
-    hydratedRef.current = true;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
-  // Persiste à chaque changement (une fois hydraté). La suppression est gérée
-  // explicitement par « Nouveau chat » pour ne pas écraser au montage.
+    let active = true;
+    window.setTimeout(() => {
+      if (active) setLoadingConversation(true);
+    }, 0);
+
+    fetch(`/api/chat/conversations/${conversationId}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (!active) return;
+        setMessages((data?.conversation?.messages ?? []) as UIMessage[]);
+        setLoadedTitle(data?.conversation?.title ?? "Nouvelle conversation");
+        setLoadingConversation(false);
+        hydratedConversationRef.current = conversationId;
+      })
+      .catch(() => {
+        if (!active) return;
+        setMessages([]);
+        setLoadedTitle("Nouvelle conversation");
+        setLoadingConversation(false);
+      });
+
+    return () => {
+      active = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [conversationId]);
+
   useEffect(() => {
-    if (!hydratedRef.current || messages.length === 0) return;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
-  }, [messages]);
+    if (!conversationId || hydratedConversationRef.current !== conversationId) return;
+    if (status !== "ready") return;
+
+    const nextTitle = titleFromMessages(messages);
+
+    const timer = window.setTimeout(() => {
+      fetch(`/api/chat/conversations/${conversationId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages, title: nextTitle }),
+      })
+        .then(() => {
+          window.dispatchEvent(new Event("chat:updated"));
+        })
+        .catch(() => {});
+    }, 250);
+
+    return () => window.clearTimeout(timer);
+  }, [conversationId, messages, status]);
 
   // Défilement automatique vers le bas.
   useEffect(() => {
@@ -43,10 +102,35 @@ export default function ChatPage() {
   }, [messages, status]);
 
   const busy = status === "submitted" || status === "streaming";
+  const displayTitle = messages.length > 0 ? titleFromMessages(messages) : loadedTitle;
 
-  function submit(text: string) {
+  async function ensureConversation(seed: string) {
+    if (conversationId) return conversationId;
+
+    const res = await fetch("/api/chat/conversations", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title: seed }),
+    });
+    const data = await res.json().catch(() => null);
+    const id = data?.conversation?.id as string | undefined;
+    if (!res.ok || !id) throw new Error(data?.error || "Création de conversation impossible");
+
+    setLoadedTitle(data.conversation.title ?? "Nouvelle conversation");
+    hydratedConversationRef.current = id;
+    router.replace(`/chat?c=${id}`);
+    window.dispatchEvent(new Event("chat:updated"));
+    return id;
+  }
+
+  async function submit(text: string) {
     const t = text.trim();
     if (!t || busy) return;
+    try {
+      await ensureConversation(t);
+    } catch {
+      return;
+    }
     sendMessage({ text: t });
     setInput("");
   }
@@ -55,7 +139,9 @@ export default function ChatPage() {
     stop();
     setMessages([]);
     setInput("");
-    localStorage.removeItem(STORAGE_KEY);
+    setLoadedTitle("Nouvelle conversation");
+    hydratedConversationRef.current = "new";
+    router.push("/chat");
   }
 
   const isEmpty = messages.length === 0;
@@ -64,10 +150,13 @@ export default function ChatPage() {
     <div className="mx-auto flex h-full max-w-3xl flex-col">
       {/* En-tête de conversation */}
       <div className="flex items-center justify-between pb-3">
-        <span className="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-3 py-1.5 text-xs font-medium text-foreground">
-          <Sparkles className="h-3.5 w-3.5 text-soft-purple" />
-          NARR&apos;IA Chat
-        </span>
+        <div className="space-y-2">
+          <span className="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-3 py-1.5 text-xs font-medium text-foreground">
+            <Sparkles className="h-3.5 w-3.5 text-soft-purple" />
+            NARR&apos;IA Chat
+          </span>
+          <p className="text-sm font-semibold text-foreground">{displayTitle}</p>
+        </div>
         <button
           onClick={newChat}
           className="inline-flex items-center gap-1.5 rounded-full bg-primary px-3.5 py-1.5 text-xs font-semibold text-primary-foreground transition-colors hover:bg-purple/85"
@@ -78,7 +167,11 @@ export default function ChatPage() {
 
       {/* Fil de discussion */}
       <div className="flex flex-1 flex-col">
-        {isEmpty ? (
+        {loadingConversation ? (
+          <div className="rounded-2xl border border-border bg-surface px-4 py-6 text-sm text-muted">
+            Chargement de la conversation…
+          </div>
+        ) : isEmpty ? (
           <EmptyState onPick={submit} />
         ) : (
           <div className="space-y-6 pb-4">

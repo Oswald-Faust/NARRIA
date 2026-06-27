@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { Button } from "@/components/ui/button";
+import { koba } from "@/lib/fonts";
 
 function OtpForm() {
   const router = useRouter();
@@ -49,7 +50,7 @@ function OtpForm() {
 
   return (
     <>
-      <h2 className="font-display text-4xl font-semibold tracking-wide">Vérification</h2>
+      <h2 className={`${koba.className} text-4xl font-semibold tracking-wide`}>Vérification</h2>
       <p className="mt-2 text-sm text-muted">
         Entrez le code à 5 chiffres envoyé à{" "}
         <span className="text-foreground">{email || "votre e-mail"}</span>.

@@ -27,11 +27,22 @@ export async function connectDB(): Promise<typeof mongoose> {
   }
 
   if (!cached.promise) {
-    cached.promise = mongoose.connect(MONGODB_URI, {
-      bufferCommands: false,
-    });
+    cached.promise = mongoose
+      .connect(MONGODB_URI, { bufferCommands: false })
+      .catch((err) => {
+        // Ne pas mémoriser une promesse rejetée : sinon toute connexion
+        // future échouerait à l'identique (ex. IP whitelistée après coup)
+        // jusqu'au redémarrage du process. On réinitialise pour retenter.
+        cached.promise = null;
+        throw err;
+      });
   }
 
-  cached.conn = await cached.promise;
+  try {
+    cached.conn = await cached.promise;
+  } catch (err) {
+    cached.promise = null;
+    throw err;
+  }
   return cached.conn;
 }

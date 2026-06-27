@@ -70,13 +70,21 @@
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-body);
+@layer base {
+  body {
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-body);
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-weight: 700;
+  }
+  h1 {
+    font-family: var(--font-koba), var(--font-quicksand), system-ui, sans-serif;
+  }
 }
 
-h1, h2, h3, h4, h5, h6 {
+/* Police par défaut des titres hors h1. */
+:where(h2, h3, h4, h5, h6) {
   font-family: var(--font-heading);
-  font-weight: 700;
 }

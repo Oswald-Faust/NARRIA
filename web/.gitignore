@@ -39,3 +39,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Archives de police redondantes (source KOBA déjà dans fonts/)
+*.zip
+kobaregular-*/

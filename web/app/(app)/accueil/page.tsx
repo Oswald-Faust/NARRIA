@@ -1,12 +1,13 @@
 import Link from "next/link";
 import Image from "next/image";
 import {
-  ScanText, GitCompareArrows, BookMarked, ArrowRight, TriangleAlert, Sparkles,
+  ScanText, GitCompareArrows, BookMarked, ArrowRight, TriangleAlert,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardTitle, CardDescription } from "@/components/ui/card";
 import { LogoEmblem } from "@/components/brand/logo";
 import heroBanner from "@/assets/Hero Banner.png";
+import { koba } from "@/lib/fonts";
 
 const ACTIONS = [
   {
@@ -50,14 +51,11 @@ export default function AccueilPage() {
         />
         {/* Voile : masque le texte incrusté à gauche, révèle le motif réseau à droite */}
         <div className="absolute inset-0 bg-gradient-to-r from-[#1b0c36] via-[#1f0e3d] via-65% to-transparent" />
-        <div className="relative px-6 py-8 sm:px-9 sm:py-10">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold text-white">
-            <Sparkles className="h-3.5 w-3.5" /> Narratologie computationnelle
-          </span>
-          <h1 className="mt-4 font-display text-3xl font-semibold tracking-wide text-white sm:text-4xl">
+        <div className="relative px-6 py-6 sm:px-10 sm:py-7">
+          <h1 className={`${koba.className} text-2xl font-semibold tracking-wide text-white sm:text-3xl`}>
             Bienvenue sur NARR&apos;IA
           </h1>
-          <p className="mt-3 max-w-2xl text-sm leading-7 text-white/85 sm:text-base">
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-white/85">
             Détectez, quantifiez et qualifiez le vol d&apos;intrigue. NARR&apos;IA analyse la
             structure narrative profonde de vos œuvres, indépendamment de leur réalisation
             linguistique de surface.
@@ -89,8 +87,12 @@ export default function AccueilPage() {
             </div>
             <CardTitle className={dark ? "text-white" : ""}>{title}</CardTitle>
             <CardDescription className={dark ? "flex-1 text-white/60" : "flex-1"}>{desc}</CardDescription>
-            <Link href={href} className="mt-5">
-              <Button variant={dark ? "primary" : "purple"} size="sm" className="w-full">
+            <Link href={href} className="mt-5 inline-flex self-start">
+              <Button
+                variant={dark ? "outline" : "purple"}
+                size="xs"
+                className={dark ? "border-white/15 bg-white/8 text-white hover:bg-white/14" : ""}
+              >
                 {cta} <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>

@@ -23,6 +23,7 @@ export const authConfig = {
         nextUrl.pathname.startsWith("/dashboard") ||
         nextUrl.pathname.startsWith("/aide") ||
         nextUrl.pathname.startsWith("/configuration") ||
+        nextUrl.pathname.startsWith("/admin") ||
         nextUrl.pathname.startsWith("/profil");
       if (isAppArea) return isLoggedIn;
       return true;

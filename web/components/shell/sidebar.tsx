@@ -4,10 +4,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Home, MessageSquareText, ScanText, GitCompareArrows, History,
-  FolderKanban, BookMarked, Settings, Info,
+  FolderKanban, BookMarked, Settings, Info, ShieldCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LogoFull, LogoMark } from "@/components/brand/logo";
+import type { ShellUser } from "./types";
+import { RecentConversations } from "./recent-conversations";
 
 const MAIN_NAV = [
   { href: "/accueil", label: "Accueil", icon: Home },
@@ -24,24 +26,18 @@ const BOTTOM_NAV = [
   { href: "/aide", label: "À propos", icon: Info },
 ];
 
-const RECENTS = [
-  "Aide-moi à structurer l'arc narratif…",
-  "Quels droits protègent un scénario ?",
-  "Comment construire une intrigue…",
-  "Explique la différence entre…",
-  "Génère un registre de dépôt…",
-];
-
 function NavLink({
-  href, label, icon: Icon, badge, active, collapsed,
+  href, label, icon: Icon, badge, active, collapsed, onNavigate,
 }: {
   href: string; label: string; icon: typeof Home; badge?: string;
   active: boolean; collapsed: boolean;
+  onNavigate?: () => void;
 }) {
   return (
     <Link
       href={href}
       title={collapsed ? label : undefined}
+      onClick={onNavigate}
       className={cn(
         "group flex items-center rounded-xl text-sm font-medium transition-colors",
         collapsed ? "h-11 w-11 justify-center" : "gap-3 px-3 py-2.5",
@@ -63,7 +59,15 @@ function NavLink({
   );
 }
 
-export function Sidebar({ collapsed }: { collapsed: boolean }) {
+export function Sidebar({
+  collapsed,
+  user,
+  onNavigate,
+}: {
+  collapsed: boolean;
+  user: ShellUser;
+  onNavigate?: () => void;
+}) {
   const pathname = usePathname();
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + "/");
 
@@ -86,19 +90,31 @@ export function Sidebar({ collapsed }: { collapsed: boolean }) {
       {/* Nav principale */}
       <nav className={cn("space-y-1", collapsed && "flex flex-col items-center")}>
         {MAIN_NAV.map((item) => (
-          <NavLink key={item.href} {...item} active={isActive(item.href)} collapsed={collapsed} />
+          <NavLink key={item.href} {...item} active={isActive(item.href)} collapsed={collapsed} onNavigate={onNavigate} />
         ))}
       </nav>
 
-      {/* Récents */}
-      {!collapsed && (
-        <div className="mt-6 px-3">
-          <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-white/40">Récents</p>
-          <ul className="space-y-2 border-l border-white/15 pl-3 text-xs text-white/55">
-            {RECENTS.map((r) => (
-              <li key={r} className="truncate hover:text-white/80">{r}</li>
-            ))}
-          </ul>
+      <RecentConversations collapsed={collapsed} onNavigate={onNavigate} />
+
+      {/* Espace administrateur — visible uniquement pour les admins */}
+      {user.role === "admin" && (
+        <div className={cn("mt-5", collapsed ? "flex flex-col items-center" : "")}>
+          {!collapsed && (
+            <p className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-wide text-white/40">
+              Administration
+            </p>
+          )}
+          <nav className={cn("space-y-1", collapsed && "flex flex-col items-center")}>
+            <NavLink
+              href="/admin"
+              label="Dashboard admin"
+              icon={ShieldCheck}
+              badge="ADMIN"
+              active={isActive("/admin")}
+              collapsed={collapsed}
+              onNavigate={onNavigate}
+            />
+          </nav>
         </div>
       )}
 
@@ -111,21 +127,28 @@ export function Sidebar({ collapsed }: { collapsed: boolean }) {
         )}
         <nav className={cn("space-y-1", collapsed && "flex flex-col items-center")}>
           {BOTTOM_NAV.map((item) => (
-            <NavLink key={item.href} {...item} active={isActive(item.href)} collapsed={collapsed} />
+            <NavLink key={item.href} {...item} active={isActive(item.href)} collapsed={collapsed} onNavigate={onNavigate} />
           ))}
         </nav>
 
-        <div className={cn("mt-3 flex items-center rounded-xl bg-white/5", collapsed ? "h-11 w-11 justify-center" : "gap-3 px-3 py-2.5")}>
+        <Link
+          href="/profil"
+          onClick={onNavigate}
+          className={cn(
+            "mt-3 flex items-center rounded-xl bg-white/5 transition-colors hover:bg-white/10",
+            collapsed ? "h-11 w-11 justify-center" : "gap-3 px-3 py-2.5",
+          )}
+        >
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-soft-pink/30 text-sm font-bold text-soft-pink">
-            D
+            {user.initial}
           </div>
           {!collapsed && (
             <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-white">ADEKAMBI David</p>
-              <p className="truncate text-xs text-white/50">adekambidavid@gmail.com</p>
+              <p className="truncate text-sm font-semibold text-white">{user.name}</p>
+              <p className="truncate text-xs text-white/50">{user.email}</p>
             </div>
           )}
-        </div>
+        </Link>
       </div>
     </aside>
   );

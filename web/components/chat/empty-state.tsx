@@ -2,6 +2,7 @@
 
 import { ShieldCheck, BookOpen, Workflow } from "lucide-react";
 import { LogoEmblem } from "@/components/brand/logo";
+import { koba } from "@/lib/fonts";
 
 const SUGGESTIONS = [
   {
@@ -33,7 +34,7 @@ export function EmptyState({ onPick }: { onPick: (prompt: string) => void }) {
         <LogoEmblem className="relative h-24 w-24 drop-shadow-xl" />
       </div>
 
-      <h1 className="text-center font-display text-2xl font-semibold tracking-wide text-foreground sm:text-3xl">
+      <h1 className={`${koba.className} text-center text-2xl font-semibold tracking-wide text-foreground sm:text-3xl`}>
         Votre Expert conversationnel en Narratologie et Littérature
       </h1>
       <p className="mt-3 max-w-xl text-center text-sm text-muted">

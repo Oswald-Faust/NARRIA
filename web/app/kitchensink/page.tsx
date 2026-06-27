@@ -12,7 +12,7 @@ export default function KitchenSinkPage() {
   return (
     <main className="mx-auto max-w-5xl space-y-10 px-6 py-12">
       <div>
-        <h1 className="font-heading text-4xl font-bold">
+        <h1 className="font-display text-4xl font-bold">
           NARR&apos;IA — <span className="text-gradient-narria">Design system</span>
         </h1>
         <p className="mt-2 text-muted">

@@ -3,6 +3,7 @@ import { auth } from "@/auth";
 import { connectDB } from "@/lib/db/mongoose";
 import { Analysis } from "@/lib/db/models/analysis";
 import { analyzeHeuristic, functionSequence } from "@/lib/engine";
+import { createNotification } from "@/lib/notifications";
 
 export async function POST(req: Request) {
   const session = await auth();
@@ -34,6 +35,14 @@ export async function POST(req: Request) {
     wordCount,
     nNodes: graph.nodes.length,
     graph,
+  });
+
+  await createNotification({
+    ownerId: session.user.id,
+    type: "analysis",
+    title: `Analyse terminée — « ${title} »`,
+    body: `L'analyse narrative de votre œuvre est prête. ${graph.nodes.length} nœuds narratifs détectés.`,
+    href: "/historique",
   });
 
   return NextResponse.json({

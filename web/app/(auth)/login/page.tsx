@@ -8,6 +8,8 @@ import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
+import { SocialAuth } from "@/components/auth/social-auth";
+import { koba } from "@/lib/fonts";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -45,7 +47,7 @@ export default function LoginPage() {
       }
       subtitle="Structurez, comparez et protégez vos œuvres grâce à l'IA."
     >
-      <h2 className="font-display text-4xl font-semibold tracking-wide">Bon retour 👋</h2>
+      <h2 className={`${koba.className} text-4xl font-semibold tracking-wide`}>Bon retour 👋</h2>
       <p className="mt-2 text-sm text-muted">
         Connectez-vous à votre espace NARR&apos;IA.
       </p>
@@ -97,6 +99,8 @@ export default function LoginPage() {
           {loading ? "Connexion…" : "Accéder à NARR'IA"}
         </Button>
       </form>
+
+      <SocialAuth />
 
       <p className="mt-6 text-center text-sm text-muted">
         Pas encore de compte ?{" "}

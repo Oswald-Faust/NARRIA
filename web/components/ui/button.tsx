@@ -23,6 +23,7 @@ const buttonVariants = cva(
         ghost: "bg-transparent text-foreground hover:bg-surface-2",
       },
       size: {
+        xs: "h-8 px-3.5 text-xs",
         sm: "h-9 px-4 text-sm",
         md: "h-11 px-6 text-sm",
         lg: "h-13 px-8 text-base",
