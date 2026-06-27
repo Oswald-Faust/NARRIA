@@ -10,6 +10,8 @@ import { Input, Label } from "@/components/ui/input";
 import { SocialAuth } from "@/components/auth/social-auth";
 import { koba } from "@/lib/fonts";
 
+const OTP_PENDING_AUTH_KEY = "narria.pending-auth";
+
 export default function RegisterPage() {
   const router = useRouter();
   const [show, setShow] = useState(false);
@@ -39,6 +41,15 @@ export default function RegisterPage() {
     if (!res.ok) {
       setError(data.error ?? "Erreur lors de l'inscription.");
       return;
+    }
+    if (typeof window !== "undefined") {
+      window.sessionStorage.setItem(
+        OTP_PENDING_AUTH_KEY,
+        JSON.stringify({
+          email: String(payload.email ?? "").toLowerCase(),
+          password: String(payload.password ?? ""),
+        }),
+      );
     }
     router.push(`/otp?email=${encodeURIComponent(data.email)}`);
   }

@@ -3,9 +3,12 @@
 import { Suspense, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { signIn } from "next-auth/react";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { Button } from "@/components/ui/button";
 import { koba } from "@/lib/fonts";
+
+const OTP_PENDING_AUTH_KEY = "narria.pending-auth";
 
 function OtpForm() {
   const router = useRouter();
@@ -44,6 +47,36 @@ function OtpForm() {
     if (!res.ok) {
       setError(data.error ?? "Code incorrect.");
       return;
+    }
+
+    const pendingAuthRaw =
+      typeof window !== "undefined"
+        ? window.sessionStorage.getItem(OTP_PENDING_AUTH_KEY)
+        : null;
+    const pendingAuth = pendingAuthRaw ? JSON.parse(pendingAuthRaw) as {
+      email?: string;
+      password?: string;
+    } : null;
+
+    if (
+      pendingAuth?.email?.toLowerCase() === email.toLowerCase() &&
+      pendingAuth?.password
+    ) {
+      const login = await signIn("credentials", {
+        email,
+        password: pendingAuth.password,
+        redirect: false,
+      });
+
+      if (!login?.error) {
+        window.sessionStorage.removeItem(OTP_PENDING_AUTH_KEY);
+        router.push("/accueil");
+        return;
+      }
+    }
+
+    if (typeof window !== "undefined") {
+      window.sessionStorage.removeItem(OTP_PENDING_AUTH_KEY);
     }
     router.push("/login?verified=1");
   }
