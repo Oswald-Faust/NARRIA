@@ -7,6 +7,7 @@ import { Card, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input, Textarea, Label } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { FileDropzone, type FileDropzoneResult } from "@/components/analyse/file-dropzone";
 
 interface NodeOut {
   nodeId: string;
@@ -39,6 +40,13 @@ export default function AnalyserPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<AnalyzeResult | null>(null);
+
+  function handleExtracted(r: FileDropzoneResult) {
+    setText(r.text);
+    if (r.title.trim()) setTitle(r.title);
+    if (r.author.trim()) setAuthor(r.author);
+    setError(r.warnings.length > 0 ? r.warnings.join(" ") : null);
+  }
 
   useEffect(() => {
     fetch("/api/samples").then((r) => r.json()).then((d) => setSamples(d.samples ?? []));
@@ -91,6 +99,8 @@ export default function AnalyserPage() {
             placeholder="Collez ici le texte à analyser (200 caractères minimum)…"
           />
         </div>
+
+        <FileDropzone onExtracted={handleExtracted} />
 
         {samples.length > 0 && (
           <div className="flex flex-wrap items-center gap-2">
