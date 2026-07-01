@@ -8,23 +8,13 @@ import { Button } from "@/components/ui/button";
 import { Input, Textarea, Label } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { FileDropzone, type FileDropzoneResult } from "@/components/analyse/file-dropzone";
+import { AnalysisReport, type AnalysisReportData } from "@/components/analyse/analysis-report";
 
-interface NodeOut {
-  nodeId: string;
-  functionCode: string | null;
-  functionName: string | null;
-  functionFamily: string | null;
-  phase: string | null;
-  tension: number;
-  actants: string[];
-}
-interface AnalyzeResult {
-  title: string;
+type AnalyzeResult = AnalysisReportData & {
   nNodes: number;
   wordCount: number;
   functionSequence: string[];
-  nodes: NodeOut[];
-}
+};
 interface Sample {
   id: string;
   title: string;
@@ -131,58 +121,32 @@ export default function AnalyserPage() {
       </Card>
 
       {result && (
-        <Card className="space-y-5">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <CardTitle>Graphe narratif — {result.title}</CardTitle>
-            <div className="flex gap-2">
-              <Badge tone="purple">{result.nNodes} nœuds</Badge>
-              <Badge tone="neutral">{result.wordCount} mots</Badge>
-            </div>
-          </div>
-
-          <div>
-            <Label>Séquence de fonctions</Label>
-            <div className="flex flex-wrap gap-2">
-              {result.functionSequence.length ? (
-                result.functionSequence.map((c, i) => (
-                  <Badge key={i} tone={c.startsWith("FN") ? "yellow" : "pink"}>{c}</Badge>
-                ))
-              ) : (
-                <span className="text-sm text-muted">Aucune fonction identifiée.</span>
-              )}
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            {result.nodes.map((n) => (
-              <div key={n.nodeId} className="flex items-center gap-3 rounded-xl border border-border bg-surface-2 px-4 py-3">
-                <span className="font-heading text-sm font-bold text-soft-purple">{n.nodeId}</span>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm text-foreground">
-                    {n.functionCode ? (
-                      <>
-                        <span className="font-semibold">{n.functionCode}</span> — {n.functionName}
-                        <span className="text-muted"> · {n.functionFamily}</span>
-                      </>
-                    ) : (
-                      <span className="text-muted">Fonction non identifiée</span>
-                    )}
-                  </p>
-                  {n.actants.length > 0 && (
-                    <p className="truncate text-xs text-muted">Actants : {n.actants.join(", ")}</p>
-                  )}
-                </div>
-                <Badge tone="neutral">{n.phase}</Badge>
-                <div className="flex items-center gap-2">
-                  <div className="h-1.5 w-20 overflow-hidden rounded-full bg-border">
-                    <div className="h-full bg-gradient-to-r from-soft-purple to-pink" style={{ width: `${n.tension * 100}%` }} />
-                  </div>
-                  <span className="w-8 text-right text-xs text-muted">{n.tension.toFixed(2)}</span>
-                </div>
+        <>
+          <Card className="space-y-5">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <CardTitle>Graphe narratif — {result.title}</CardTitle>
+              <div className="flex gap-2">
+                <Badge tone="purple">{result.nNodes} nœuds</Badge>
+                <Badge tone="neutral">{result.wordCount} mots</Badge>
               </div>
-            ))}
-          </div>
-        </Card>
+            </div>
+
+            <div>
+              <Label>Séquence de fonctions</Label>
+              <div className="flex flex-wrap gap-2">
+                {result.functionSequence.length ? (
+                  result.functionSequence.map((c, i) => (
+                    <Badge key={i} tone={c.startsWith("FN") ? "yellow" : "pink"}>{c}</Badge>
+                  ))
+                ) : (
+                  <span className="text-sm text-muted">Aucune fonction identifiée.</span>
+                )}
+              </div>
+            </div>
+          </Card>
+
+          <AnalysisReport data={result} />
+        </>
       )}
     </div>
   );
