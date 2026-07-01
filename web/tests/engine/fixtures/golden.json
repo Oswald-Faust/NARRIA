@@ -1,0 +1,264 @@
+{
+  "analyses": {
+    "romeo_juliette": {
+      "n_segments": 6,
+      "n_nodes": 6,
+      "n_edges": 7,
+      "function_sequence": [
+        "F10",
+        "F50",
+        "F20",
+        "F01",
+        "F10",
+        "F23"
+      ],
+      "tension_profile": [
+        0.53,
+        0.55,
+        0.97,
+        0.83,
+        0.83,
+        0.84
+      ],
+      "actants_per_node": [
+        [
+          "Capulet",
+          "Montaigu",
+          "Vérone"
+        ],
+        [
+          "Roméo",
+          "Juliette",
+          "Laurent"
+        ],
+        [
+          "Roméo",
+          "Tybalt",
+          "Mercutio"
+        ],
+        [
+          "Roméo",
+          "Juliette",
+          "Mantoue"
+        ],
+        [
+          "Juliette",
+          "Roméo",
+          "Ses"
+        ],
+        [
+          "Juliette",
+          "Roméo",
+          "Désespérée"
+        ]
+      ],
+      "phases": [
+        "Exposition",
+        "Complication",
+        "Complication",
+        "Climax",
+        "Complication",
+        "Climax"
+      ]
+    },
+    "amants_conakry": {
+      "n_segments": 6,
+      "n_nodes": 6,
+      "n_edges": 7,
+      "function_sequence": [
+        "F10",
+        "F50",
+        "F20",
+        "F02",
+        "F30",
+        "F11"
+      ],
+      "tension_profile": [
+        0.45,
+        0.5,
+        1.0,
+        0.83,
+        0.83,
+        0.76
+      ],
+      "actants_per_node": [
+        [
+          "Camara",
+          "Barry",
+          "Conakry"
+        ],
+        [
+          "Mamadou",
+          "Aïssatou",
+          "Barry"
+        ],
+        [
+          "Mamadou",
+          "Sékou",
+          "Ibrahima"
+        ],
+        [
+          "Mamadou",
+          "Conakry",
+          "Aïssatou"
+        ],
+        [
+          "Aïssatou",
+          "Mamadou",
+          "Camayenne"
+        ],
+        [
+          "Aïssatou",
+          "Mamadou",
+          "Désespérée"
+        ]
+      ],
+      "phases": [
+        "Exposition",
+        "Complication",
+        "Complication",
+        "Climax",
+        "Complication",
+        "Climax"
+      ]
+    },
+    "saison_pluies": {
+      "n_segments": 6,
+      "n_nodes": 6,
+      "n_edges": 6,
+      "function_sequence": [
+        "FNCOMM",
+        "F01",
+        "F10",
+        "FNANC",
+        "F10",
+        "FNCOMM"
+      ],
+      "tension_profile": [
+        0.45,
+        0.55,
+        0.65,
+        0.75,
+        0.75,
+        0.65
+      ],
+      "actants_per_node": [
+        [
+          "Timbi",
+          "Aboubacar",
+          "Personne"
+        ],
+        [
+          "Fanta",
+          "Nènè Hadiatou",
+          "Timbi"
+        ],
+        [
+          "Kadiatou",
+          "Fanta"
+        ],
+        [
+          "Fanta",
+          "Timbi"
+        ],
+        [
+          "Fanta",
+          "Immédiatement"
+        ],
+        [
+          "Timbi",
+          "Nènè Hadiatou",
+          "Aboubacar"
+        ]
+      ],
+      "phases": [
+        "Exposition",
+        "Complication",
+        "Complication",
+        "Complication",
+        "Résolution",
+        "Résolution"
+      ]
+    }
+  },
+  "comparisons": {
+    "romeo_juliette__vs__amants_conakry": {
+      "sns": 0.631514,
+      "ss": 0.385856,
+      "st": 0.3,
+      "srj": 0.506948,
+      "srj_level": "Modéré",
+      "s_iso": 0.5,
+      "s_ged": 0.375,
+      "s_func": 0.707107,
+      "s_act": 0.704545,
+      "s_tens": 0.993701,
+      "modality": "Possible hybridation"
+    },
+    "romeo_juliette__vs__saison_pluies": {
+      "sns": 0.572459,
+      "ss": 0.287431,
+      "st": 0.3,
+      "srj": 0.443956,
+      "srj_level": "Modéré",
+      "s_iso": 0.5,
+      "s_ged": 0.285714,
+      "s_func": 0.57735,
+      "s_act": 0.75,
+      "s_tens": 0.889855,
+      "modality": "Possible hybridation"
+    },
+    "amants_conakry__vs__romeo_juliette": {
+      "sns": 0.664164,
+      "ss": 0.440274,
+      "st": 0.27388,
+      "srj": 0.541775,
+      "srj_level": "Modéré",
+      "s_iso": 0.630602,
+      "s_ged": 0.375,
+      "s_func": 0.707107,
+      "s_act": 0.704545,
+      "s_tens": 0.993701,
+      "modality": "Transposition (contextes différents)"
+    },
+    "amants_conakry__vs__saison_pluies": {
+      "sns": 0.437959,
+      "ss": 0.063264,
+      "st": 0.341421,
+      "srj": 0.300489,
+      "srj_level": "Modéré",
+      "s_iso": 0.292893,
+      "s_ged": 0.111111,
+      "s_func": 0.408248,
+      "s_act": 0.704545,
+      "s_tens": 0.898461,
+      "modality": "Correspondance partielle non classifiée"
+    },
+    "saison_pluies__vs__romeo_juliette": {
+      "sns": 0.558934,
+      "ss": 0.264891,
+      "st": 0.310819,
+      "srj": 0.42953,
+      "srj_level": "Modéré",
+      "s_iso": 0.445903,
+      "s_ged": 0.285714,
+      "s_func": 0.57735,
+      "s_act": 0.75,
+      "s_tens": 0.889855,
+      "modality": "Correspondance partielle non classifiée"
+    },
+    "saison_pluies__vs__amants_conakry": {
+      "sns": 0.406402,
+      "ss": 0.01067,
+      "st": 0.366667,
+      "srj": 0.166829,
+      "srj_level": "Faible",
+      "s_iso": 0.166667,
+      "s_ged": 0.111111,
+      "s_func": 0.408248,
+      "s_act": 0.704545,
+      "s_tens": 0.898461,
+      "modality": "Aucune modalité significative"
+    }
+  }
+}

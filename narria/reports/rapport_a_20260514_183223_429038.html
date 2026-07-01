@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Rapport NARR'IA — Antigone vs Antigone</title>
+<style>
+body {
+    font-family: Georgia, serif;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem;
+    color: #1A1A1A;
+    background: #FAFAFA;
+    line-height: 1.6;
+}
+h1 { color: #1F4E79; border-bottom: 4px solid #C55A11; padding-bottom: 0.5rem; }
+h2 { color: #1F4E79; border-bottom: 2px solid #BDD7EE; padding-bottom: 0.3rem; margin-top: 2rem; }
+h3 { color: #C55A11; }
+.header-meta { background: #F2F2F2; padding: 1rem; border-radius: 4px; margin-bottom: 2rem; }
+.header-meta p { margin: 0.3rem 0; }
+.works { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1.5rem 0; }
+.work { background: white; padding: 1rem; border-radius: 4px; border-left: 4px solid #1F4E79; }
+.work.cand { border-left-color: #C55A11; }
+.scores { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+.score-card { background: white; padding: 1rem; border-radius: 4px; text-align: center; border-top: 3px solid #1F4E79; }
+.score-card.highlight { border-top-color: #C55A11; background: #FCE4D6; }
+.score-label { font-size: 0.8rem; color: #595959; text-transform: uppercase; font-family: Arial, sans-serif; }
+.score-value { font-size: 2.2rem; font-weight: bold; color: #1F4E79; font-family: Arial, sans-serif; }
+.score-card.highlight .score-value { color: #C55A11; }
+.verdict { background: #BDD7EE; padding: 1.2rem; border-left: 4px solid #1F4E79; border-radius: 4px; margin: 1.5rem 0; }
+.verdict.warning { background: #FCE4D6; border-left-color: #C55A11; }
+.warnings { background: #FCE4D6; padding: 1rem 1.5rem; border-left: 4px solid #C55A11; border-radius: 4px; margin: 1.5rem 0; }
+.methodological-note { background: #F2F2F2; padding: 1rem 1.5rem; border-left: 4px solid #888888; border-radius: 4px; margin: 1.5rem 0; font-size: 0.95em; }
+.methodological-note h3 { margin-top: 0; color: #555555; font-size: 1.05em; }
+.methodological-note p { margin: 0.5rem 0; }
+.warnings ul { margin: 0.3rem 0; padding-left: 1.5rem; }
+table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.92rem; }
+th { background: #1F4E79; color: white; padding: 0.5rem; text-align: left; font-family: Arial, sans-serif; }
+td { padding: 0.5rem; border-bottom: 1px solid #CCCCCC; }
+tr:nth-child(even) { background: #F2F2F2; }
+code { background: #FCE4D6; padding: 0.1rem 0.4rem; border-radius: 2px; font-size: 0.88rem; font-weight: bold; color: #C55A11; }
+.tension-container { display: flex; align-items: flex-end; gap: 2px; height: 60px; padding: 0.5rem 0; }
+.tbar { width: 12px; border-radius: 2px 2px 0 0; }
+.srj-badge { display: inline-block; padding: 0.3rem 0.8rem; border-radius: 3px; color: white; font-weight: bold; font-family: Arial, sans-serif; }
+.footer { margin-top: 3rem; padding-top: 1rem; border-top: 2px solid #1F4E79; font-size: 0.85rem; color: #595959; text-align: center; }
+.footer p { margin: 0.3rem 0; }
+</style>
+</head>
+<body>
+
+<h1>Rapport NARR'IA</h1>
+
+<div class="header-meta">
+    <p><strong>Date d'analyse :</strong> 14 May 2026, 18:33</p>
+    <p><strong>Système :</strong> NARR'IA v2.0.0 — Narratologie computationnelle du plagiat d'intrigue</p>
+    <p><strong>Nature :</strong> Analyse de similarité structurale entre deux œuvres narratives</p>
+</div>
+
+<h2>Œuvres comparées</h2>
+<div class="works">
+    <div class="work">
+        <h3>Œuvre de référence</h3>
+        <p><strong>Antigone</strong></p>
+        <p><em>Sophocle</em></p>
+        <p>Graphe narratif : <code>g_20260514_182735_220606</code> — 19 nœuds, 19 transitions</p>
+        <div class="tension-container"><div class="tbar" style="height: 15px; background: #1F4E79;"></div><div class="tbar" style="height: 17px; background: #1F4E79;"></div><div class="tbar" style="height: 20px; background: #1F4E79;"></div><div class="tbar" style="height: 19px; background: #1F4E79;"></div><div class="tbar" style="height: 27px; background: #1F4E79;"></div><div class="tbar" style="height: 30px; background: #1F4E79;"></div><div class="tbar" style="height: 32px; background: #1F4E79;"></div><div class="tbar" style="height: 37px; background: #1F4E79;"></div><div class="tbar" style="height: 40px; background: #1F4E79;"></div><div class="tbar" style="height: 34px; background: #1F4E79;"></div><div class="tbar" style="height: 42px; background: #1F4E79;"></div><div class="tbar" style="height: 44px; background: #1F4E79;"></div><div class="tbar" style="height: 45px; background: #1F4E79;"></div><div class="tbar" style="height: 47px; background: #1F4E79;"></div><div class="tbar" style="height: 49px; background: #1F4E79;"></div><div class="tbar" style="height: 50px; background: #1F4E79;"></div><div class="tbar" style="height: 47px; background: #1F4E79;"></div><div class="tbar" style="height: 45px; background: #1F4E79;"></div><div class="tbar" style="height: 25px; background: #1F4E79;"></div></div>
+    </div>
+    <div class="work cand">
+        <h3>Œuvre candidate</h3>
+        <p><strong>Antigone</strong></p>
+        <p><em>Jean Anouilh</em></p>
+        <p>Graphe narratif : <code>g_20260514_183208_635967</code> — 21 nœuds, 29 transitions</p>
+        <div class="tension-container"><div class="tbar" style="height: 15px; background: #C55A11;"></div><div class="tbar" style="height: 21px; background: #C55A11;"></div><div class="tbar" style="height: 13px; background: #C55A11;"></div><div class="tbar" style="height: 15px; background: #C55A11;"></div><div class="tbar" style="height: 21px; background: #C55A11;"></div><div class="tbar" style="height: 23px; background: #C55A11;"></div><div class="tbar" style="height: 18px; background: #C55A11;"></div><div class="tbar" style="height: 28px; background: #C55A11;"></div><div class="tbar" style="height: 31px; background: #C55A11;"></div><div class="tbar" style="height: 34px; background: #C55A11;"></div><div class="tbar" style="height: 44px; background: #C55A11;"></div><div class="tbar" style="height: 39px; background: #C55A11;"></div><div class="tbar" style="height: 42px; background: #C55A11;"></div><div class="tbar" style="height: 47px; background: #C55A11;"></div><div class="tbar" style="height: 50px; background: #C55A11;"></div><div class="tbar" style="height: 47px; background: #C55A11;"></div><div class="tbar" style="height: 44px; background: #C55A11;"></div><div class="tbar" style="height: 50px; background: #C55A11;"></div><div class="tbar" style="height: 47px; background: #C55A11;"></div><div class="tbar" style="height: 36px; background: #C55A11;"></div><div class="tbar" style="height: 15px; background: #C55A11;"></div></div>
+    </div>
+</div>
+
+
+<h2>Analyse sémantique (mode LLM)</h2>
+<div class="works">
+    <div class="work"><h4>Œuvre de référence</h4><p><strong>Résumé :</strong> Antigone transgresse l'édit du roi Créon en ensevelissant son frère Polynice, proscrit et non pleuré. Condamnée à mort, elle est emmurée vivante. Son fiancé Hémon, fils de Créon, se suicide auprès d'elle. La reine Eurydice se donne également la mort. Créon, trop tard converti à la prudence par le devin Tirésias, demeure seul face à l'effondrement de sa maison.</p><p><strong>Genre :</strong> Tragédie classique grecque</p><p><strong>Tradition :</strong> Classique occidentale (Grèce antique)</p><p><strong>Thématiques :</strong> loi divine, loi humaine, tyrannie, piété familiale, transgression, orgueil, hybris, sagesse, destin, famille maudite, suicide, conflit générationnel, devoir, conscience, justice, mort, ensevelissement, honneur</p><p><strong>Schéma actantiel :</strong></p><ul style="font-size:0.9rem;margin:0.3rem 0;"><li><strong>Protagoniste :</strong> Créon (le tyran qui impose l'interdiction et condamne Antigone)</li><li><strong>Objet :</strong> Maintenir l'ordre civique et son autorité absolue</li><li><strong>Destinateur :</strong> Raison d'État, orgueil politique, volonté de souveraineté</li><li><strong>Destinataire :</strong> La cité de Thèbes, lui-même (affirmation du pouvoir)</li><li><strong>Adjuvant :</strong> Gardes, appareil d'État, loi édictée</li><li><strong>Opposant :</strong> Antigone, Hémon, Tirésias, lois divines, voix du peuple</li></ul><p style="font-size:0.85rem;color:#595959;"><em>Analyse LLM : 0.1598 USD consommés</em></p></div>
+    <div class="work"><h4>Œuvre candidate</h4><p><strong>Résumé :</strong> Réécriture moderne du mythe d'Antigone par Jean Anouilh (1944). Antigone, fille d'Œdipe, défie l'édit de son oncle Créon interdisant d'enterrer son frère Polynice, rebelle et traître. Malgré les supplications de sa sœur Ismène, de son fiancé Hémon et de Créon lui-même, elle persiste dans son refus absolu et sa volonté de mourir plutôt que de céder. Créon tente de la sauver en révélant que ses deux frères étaient également vils, mais Antigone choisit la mort par fidélité à elle-même. Hémon se suicide auprès d'elle, suivi d'Eurydice, la reine. Créon reste seul pour gouverner.</p><p><strong>Genre :</strong> Tragédie moderne</p><p><strong>Tradition :</strong> Classique occidentale (théâtre français du XXe siècle, réécriture de Sophocle)</p><p><strong>Thématiques :</strong> tragédie, conflit loi divine vs loi humaine, intransigeance, absolu, refus du compromis, destin, famille maudite, solitude existentielle, liberté, mort volontaire, honneur, devoir, pouvoir politique, raison d'État, jeunesse vs vieillesse, pureté vs compromission, révolte, sacrifice, fatalité</p><p><strong>Schéma actantiel :</strong></p><ul style="font-size:0.9rem;margin:0.3rem 0;"><li><strong>Protagoniste :</strong> Antigone (héroïne tragique qui transgresse l'interdit royal)</li><li><strong>Objet :</strong> Enterrer dignement son frère Polynice / affirmer sa liberté absolue face au pouvoir</li><li><strong>Destinateur :</strong> Devoir religieux et familial / pulsion de mort existentielle / refus du compromis</li><li><strong>Destinataire :</strong> Polynice (frère mort) / Elle-même (affirmation de son être authentique) / L'absolu moral</li><li><strong>Adjuvant :</strong> Sa détermination absolue / sa jeunesse intransigeante / la mémoire de son père Œdipe</li><li><strong>Opposant :</strong> Créon (roi et oncle) / La loi de la cité / Ismène (par sa prudence) / Les gardes / La raison politique</li></ul><p style="font-size:0.85rem;color:#595959;"><em>Analyse LLM : 0.2321 USD consommés</em></p></div>
+</div>
+
+
+<h2>Scores composites</h2>
+<div class="scores">
+    <div class="score-card highlight">
+        <div class="score-label">SNS</div>
+        <div class="score-value">0.559</div>
+        <div>Similarité narrative</div>
+    </div>
+    <div class="score-card">
+        <div class="score-label">SNS_N</div>
+        <div class="score-value">0.642</div>
+        <div>Normalisé / genre</div>
+    </div>
+    <div class="score-card">
+        <div class="score-label">SS</div>
+        <div class="score-value">0.264</div>
+        <div>Spécificité</div>
+    </div>
+    <div class="score-card">
+        <div class="score-label">ST</div>
+        <div class="score-value">0.333</div>
+        <div>Transformation</div>
+    </div>
+    <div class="score-card">
+        <div class="score-label">SRJ</div>
+        <div class="score-value">0.429</div>
+        <div><span class="srj-badge" style="background: #1F4E79;">Modéré</span></div>
+    </div>
+</div>
+
+<h2>Verdict interprétatif</h2>
+<div class="verdict warning">
+    <p><strong>Modalité détectée :</strong> Transposition (contextes différents)</p>
+    <p>Les deux œuvres présentent des correspondances structurales notables (modalité détectée : Transposition (contextes différents)). Le score dépasse ce qui est attendu d'une convergence indépendante dans le même genre. Il est fortement recommandé de consulter un narratologue et, le cas échéant, un juriste spécialisé en propriété intellectuelle avant toute conclusion.</p>
+</div>
+
+<div class='warnings'><h3>⚠ Avertissements méthodologiques</h3><ul><li>Cette analyse est une aide à la décision — jamais un verdict. Aucun score, si élevé soit-il, ne constitue une preuve de plagiat. Les résultats de NARR'IA sont probabilistes et doivent toujours être soumis à l'appréciation d'une expertise humaine qualifiée (narratologue et, le cas échéant, juriste). NARR'IA n'établit pas le plagiat : il signale des correspondances structurales à investiguer.</li></ul></div>
+
+<h2>Détail des composantes du SNS</h2>
+<table>
+    <tr><th>Composante</th><th>Description</th><th>Score</th></tr>
+    <tr><td>S_ISO</td><td>Isomorphisme de sous-graphes narratifs (NARR'IA-VF2)</td><td>0.667</td></tr>
+    <tr><td>S_GED</td><td>Distance d'édition de graphes narratifs (GED narrative)</td><td>0.445</td></tr>
+    <tr><td>S_FUNC</td><td>Similarité des séquences de fonctions narratives (DTW)</td><td>0.476</td></tr>
+    <tr><td>S_ACT</td><td>Similarité des chaînes actantielles</td><td>0.264</td></tr>
+    <tr><td>S_TENS</td><td>Corrélation des signatures tensives</td><td>0.962</td></tr>
+</table>
+
+<div class="methodological-note">
+    <h3>Note méthodologique sur la lecture des scores</h3>
+    <p>Les indicateurs primaires de NARR'IA, sur lesquels l'interprétation
+    doit principalement s'appuyer, sont le <strong>SNS</strong> (similarité
+    narrative composite), le <strong>S_ISO</strong> (isomorphisme structural)
+    et le <strong>S_TENS</strong> (signature tensive), ainsi que le
+    <strong>verdict modal</strong>. Ces indicateurs reposent sur des
+    algorithmes structurellement stables.</p>
+    <p>Les sous-scores <strong>S_ACT</strong> (chaînes actantielles) et
+    <strong>ST</strong> (transformations) relèvent d'algorithmes
+    sensibles à la formulation des actants extraits par le LLM et aux
+    métadonnées formelles fournies. Ils constituent des <em>indicateurs
+    secondaires</em> en cours de calibration empirique. Une certaine
+    variabilité de ces deux scores entre exécutions est attendue et ne
+    remet pas en cause la fiabilité du verdict global.</p>
+    <p>Pour toute analyse rigoureuse, il convient d'interpréter ces deux
+    sous-scores avec prudence et de privilégier l'expertise humaine du
+    narratologue pour qualifier la nature exacte des transformations
+    entre œuvres.</p>
+</div>
+
+<h2>Correspondances structurales principales</h2>
+<table>
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>Nœud de référence</th>
+            <th>Nœud candidat</th>
+            <th>Similarité</th>
+        </tr>
+    </thead>
+    <tbody>
+        
+                <tr>
+                    <td>1</td>
+                    <td><code>n014</code> (F43)</td>
+                    <td><code>n017</code> (F43)</td>
+                    <td>80.0%</td>
+                </tr>
+            
+                <tr>
+                    <td>2</td>
+                    <td><code>n015</code> (F43)</td>
+                    <td><code>n019</code> (F43)</td>
+                    <td>79.9%</td>
+                </tr>
+            
+                <tr>
+                    <td>3</td>
+                    <td><code>n006</code> (F30)</td>
+                    <td><code>n010</code> (F30)</td>
+                    <td>79.9%</td>
+                </tr>
+            
+                <tr>
+                    <td>4</td>
+                    <td><code>n018</code> (F42)</td>
+                    <td><code>n020</code> (F42)</td>
+                    <td>79.9%</td>
+                </tr>
+            
+                <tr>
+                    <td>5</td>
+                    <td><code>n013</code> (F34)</td>
+                    <td><code>n014</code> (F34)</td>
+                    <td>79.8%</td>
+                </tr>
+            
+                <tr>
+                    <td>6</td>
+                    <td><code>n015</code> (F43)</td>
+                    <td><code>n018</code> (F43)</td>
+                    <td>79.8%</td>
+                </tr>
+            
+                <tr>
+                    <td>7</td>
+                    <td><code>n013</code> (F34)</td>
+                    <td><code>n013</code> (F34)</td>
+                    <td>79.8%</td>
+                </tr>
+            
+                <tr>
+                    <td>8</td>
+                    <td><code>n009</code> (F47)</td>
+                    <td><code>n016</code> (F47)</td>
+                    <td>79.3%</td>
+                </tr>
+            
+                <tr>
+                    <td>9</td>
+                    <td><code>n019</code> (F49)</td>
+                    <td><code>n021</code> (F49)</td>
+                    <td>74.9%</td>
+                </tr>
+            
+                <tr>
+                    <td>10</td>
+                    <td><code>n010</code> (F21)</td>
+                    <td><code>n005</code> (F21)</td>
+                    <td>74.2%</td>
+                </tr>
+            
+                <tr>
+                    <td>11</td>
+                    <td><code>n007</code> (F31)</td>
+                    <td><code>n012</code> (F31)</td>
+                    <td>69.9%</td>
+                </tr>
+            
+                <tr>
+                    <td>12</td>
+                    <td><code>n004</code> (F52)</td>
+                    <td><code>n006</code> (F52)</td>
+                    <td>69.1%</td>
+                </tr>
+            
+                <tr>
+                    <td>13</td>
+                    <td><code>n005</code> (F05)</td>
+                    <td><code>n002</code> (F05)</td>
+                    <td>69.0%</td>
+                </tr>
+            
+                <tr>
+                    <td>14</td>
+                    <td><code>n008</code> (F26)</td>
+                    <td><code>n015</code> (F26)</td>
+                    <td>65.0%</td>
+                </tr>
+            
+    </tbody>
+</table>
+
+<h2>Limites et avertissements</h2>
+<div class="warnings">
+    <h3>À retenir impérativement</h3>
+    <ul>
+        <li>Les scores NARR'IA sont des <strong>estimations probabilistes</strong>, jamais des verdicts définitifs de plagiat.</li>
+        <li>L'interprétation des résultats exige une <strong>expertise humaine</strong> (narratologue, juriste selon le contexte).</li>
+        <li>Un SNS élevé peut refléter une <strong>convergence indépendante</strong> due à des conventions génériques communes, sans emprunt réel.</li>
+        <li>Une accusation publique de plagiat <strong>ne peut en aucun cas</strong> se fonder sur ces seuls scores.</li>
+        <li>Ce rapport ne constitue <strong>pas un avis juridique</strong>. Pour toute suite judiciaire, consulter un avocat spécialisé en propriété intellectuelle.</li>
+    </ul>
+</div>
+
+<div class="footer">
+    <p>Rapport généré par NARR'IA v2.0.0 — Système de narratologie computationnelle</p>
+    <p>© 2026 Adéchinan David Adékambi · Département de Lettres Modernes, Université de Kindia · République de Guinée</p>
+    <p>Ouvrage de référence : <em>NARR'IA — Vers une narratologie computationnelle du plagiat d'intrigue</em> (en cours de finalisation)</p>
+</div>
+
+</body>
+</html>
