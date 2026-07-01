@@ -88,4 +88,20 @@ describe("enforceCulturalRestriction", () => {
     expect(result.nodes[0].function_code).toBe("F49");
     expect(result.nodes[0].function_name).toBe("Sentence morale");
   });
+
+  it("ajoute _cultural_correction sur le nœud recodé et cultural_corrections_note global", () => {
+    const data = { ...VALID_PAYLOAD, tradition: "Classique gréco-latine (fable ésopique)", nodes: [{ ...VALID_PAYLOAD.nodes[0], function_code: "FNBENI", function_name: "Bénédiction" }] };
+    const parsed = LlmAnalysisSchema.parse(data);
+    const result = enforceCulturalRestriction(parsed);
+    expect(result.nodes[0]._cultural_correction).toContain("FNBENI");
+    expect(result.nodes[0]._cultural_correction).toContain("F11");
+    expect(result.cultural_corrections_note).toContain("1 fonction");
+  });
+
+  it("ne définit pas cultural_corrections_note si aucune correction n'a eu lieu", () => {
+    const data = { ...VALID_PAYLOAD, tradition: "Classique gréco-latine (fable ésopique)" };
+    const parsed = LlmAnalysisSchema.parse(data);
+    const result = enforceCulturalRestriction(parsed);
+    expect(result.cultural_corrections_note).toBeUndefined();
+  });
 });

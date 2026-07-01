@@ -73,6 +73,69 @@ export interface PromptMeta {
   author?: string;
 }
 
+/**
+ * Bloc JSON schema montré au LLM, avec un exemple concret (Roméo/Juliette).
+ * Construit comme fragment séparé (guillemets ordinaires) pour éviter tout
+ * conflit avec les backtick du template literal englobant de `buildUserPrompt`.
+ */
+const JSON_SCHEMA_BLOCK = [
+  "Réponds UNIQUEMENT avec un objet JSON valide structuré ainsi :",
+  "",
+  "```json",
+  "{",
+  '  "summary": "Résumé synthétique de l\'intrigue en 2-3 phrases",',
+  '  "genre": "Genre narratif détecté (tragédie, quête initiatique, roman d\'apprentissage, etc.)",',
+  '  "tradition": "Tradition narrative dominante (classique occidentale, africaine orale, réaliste moderne, etc.)",',
+  '  "formal_features": {',
+  '    "form": "prose | vers_libre | vers_metrique | mixte | drame | dialogue",',
+  '    "register": "narratif_neutre | poetique | lyrique | dramatique | didactique | comique | satirique | epique",',
+  '    "narrative_length_category": "tres_court | court | moyen | long | tres_long",',
+  '    "approximate_word_count": 250,',
+  '    "has_explicit_morality": true,',
+  '    "has_narrator_intervention": true,',
+  '    "uses_dialogue": true,',
+  '    "stylistic_signature": "Description en 1-2 phrases du style dominant (sobre, fleuri, archaïsant, oral, etc.)"',
+  "  },",
+  '  "nodes": [',
+  "    {",
+  '      "sequence": 1,',
+  '      "function_code": "F10",',
+  '      "function_name": "Rencontre",',
+  '      "function_family": "Quête et cheminement",',
+  '      "actants": ["Roméo (sujet)", "Juliette (objet de désir)"],',
+  '      "modalities": {"vouloir": 0.8, "devoir": 0.2, "pouvoir": 0.5, "savoir": 0.3},',
+  '      "tension": 0.4,',
+  '      "phase": "Exposition",',
+  '      "text_excerpt": "Roméo aperçoit Juliette au bal",',
+  '      "justification": "Premier contact entre les deux protagonistes principaux, déclencheur de l\'intrigue amoureuse"',
+  "    },",
+  "    ...",
+  "  ],",
+  '  "main_actants_v1": {',
+  '    "_focus": "agent_actif",',
+  '    "_description": "Configuration où le Sujet est l\'agent qui pose et conduit l\'action principale (souvent un antagoniste actif dans les fables)",',
+  '    "protagoniste": "L\'agent qui conduit l\'action (peut être un antagoniste prédateur, un héros conquérant, etc.)",',
+  '    "objet": "Ce que cet agent cherche à obtenir / accomplir",',
+  '    "destinateur": "Force qui motive cet agent",',
+  '    "destinataire": "Bénéficiaire de l\'action de cet agent",',
+  '    "adjuvant": "Forces qui aident cet agent",',
+  '    "opposant": "Forces qui résistent à cet agent"',
+  "  },",
+  '  "main_actants_v2": {',
+  '    "_focus": "patient_central",',
+  '    "_description": "Configuration alternative où le Sujet est celui qui subit l\'action principale ou qui en est l\'enjeu central (souvent une victime ou un récepteur)",',
+  '    "protagoniste": "Le personnage central qui subit ou autour duquel tout converge",',
+  '    "objet": "Ce que ce personnage cherche (souvent : survie, justice, vérité, libération)",',
+  '    "destinateur": "Force qui pousse ce personnage à agir ou à subir",',
+  '    "destinataire": "Pour qui / pour quoi ce personnage agit ou souffre",',
+  '    "adjuvant": "Aides éventuelles de ce personnage",',
+  '    "opposant": "Forces qui agissent contre lui (souvent l\'agent actif de v1)"',
+  "  },",
+  '  "thematic_keywords": ["amour", "haine", "réconciliation", ...]',
+  "}",
+  "```",
+].join("\n");
+
 export function buildUserPrompt(text: string, meta: PromptMeta = {}): string {
   let metaBlock = "";
   if (meta.title) metaBlock += `Titre : ${meta.title}\n`;
@@ -95,6 +158,8 @@ Pour chaque fonction narrative identifiée, tu dois fournir :
 5. La phase dramatique (Exposition / Complication / Climax / Résolution)
 6. **Une justification textuelle citant un court extrait du texte qui appuie ton identification**
 7. Un index de séquence (ordre narratif : 1, 2, 3, ...)
+
+${JSON_SCHEMA_BLOCK}
 
 **Sur les deux schémas actantiels** : tu fournis SYSTÉMATIQUEMENT les deux configurations v1 et v2, même si l'une te paraît plus naturelle que l'autre. C'est le système NARR'IA qui choisira la combinaison la plus cohérente lors d'une comparaison entre deux œuvres. Si l'œuvre n'a vraiment qu'un seul actant central possible (par exemple un monologue introspectif), tu peux dupliquer la même configuration dans v1 et v2.
 

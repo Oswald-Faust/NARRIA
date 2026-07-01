@@ -18,6 +18,7 @@ const LlmNodeSchema = z.object({
   phase: z.string(),
   text_excerpt: z.string(),
   justification: z.string(),
+  _cultural_correction: z.string().optional(),
 });
 
 const ActantConfigSchema = z.object({
@@ -51,6 +52,7 @@ export const LlmAnalysisSchema = z.object({
   main_actants_v1: ActantConfigSchema,
   main_actants_v2: ActantConfigSchema,
   thematic_keywords: z.array(z.string()),
+  cultural_corrections_note: z.string().optional(),
 });
 
 export type LlmAnalysis = z.infer<typeof LlmAnalysisSchema>;
@@ -86,11 +88,27 @@ function isAfrodescendantTradition(tradition: string): boolean {
 export function enforceCulturalRestriction(data: LlmAnalysis): LlmAnalysis {
   if (isAfrodescendantTradition(data.tradition)) return data;
 
+  let correctionsCount = 0;
+
   const nodes = data.nodes.map((node) => {
     if (!node.function_code.startsWith("FN")) return node;
-    const fallback = AFRICAN_TO_WESTERN_FALLBACK[node.function_code] ?? ["F49", "Sentence morale"];
-    return { ...node, function_code: fallback[0], function_name: fallback[1] };
+    const oldCode = node.function_code;
+    const fallback = AFRICAN_TO_WESTERN_FALLBACK[oldCode] ?? ["F49", "Sentence morale"];
+    correctionsCount += 1;
+    return {
+      ...node,
+      function_code: fallback[0],
+      function_name: fallback[1],
+      _cultural_correction: `Fonction ${oldCode} (africaine) recodée en ${fallback[0]} car la tradition '${data.tradition}' n'est pas afrodescendante`,
+    };
   });
 
-  return { ...data, nodes };
+  const result: LlmAnalysis = { ...data, nodes };
+
+  if (correctionsCount > 0) {
+    result.cultural_corrections_note =
+      ` [Filet de sécurité culturelle : ${correctionsCount} fonction(s) africaine(s) recodée(s) en équivalent occidental car la tradition détectée n'est pas afrodescendante.]`.trim();
+  }
+
+  return result;
 }
