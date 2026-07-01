@@ -2,8 +2,11 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { connectDB } from "@/lib/db/mongoose";
 import { Analysis } from "@/lib/db/models/analysis";
-import { analyzeHeuristic, functionSequence } from "@/lib/engine";
+import { analyzeLLM, functionSequence, LlmExtractionError } from "@/lib/engine";
 import { createNotification } from "@/lib/notifications";
+
+export const runtime = "nodejs";
+export const maxDuration = 120;
 
 export async function POST(req: Request) {
   const session = await auth();
@@ -11,10 +14,18 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Authentification requise" }, { status: 401 });
   }
 
+  if (!process.env.ANTHROPIC_API_KEY) {
+    return NextResponse.json(
+      { error: "Clé ANTHROPIC_API_KEY manquante côté serveur." },
+      { status: 503 },
+    );
+  }
+
   const body = await req.json().catch(() => null);
   const text: string = body?.text ?? "";
   const title: string = body?.title || "Texte sans titre";
   const author: string = body?.author || "Auteur inconnu";
+  const sourceFile = body?.sourceFile ?? null;
 
   if (text.trim().length < 200) {
     return NextResponse.json(
@@ -23,18 +34,42 @@ export async function POST(req: Request) {
     );
   }
 
-  const graph = analyzeHeuristic(text, { title, author });
+  let graph;
+  let usage;
+  try {
+    ({ graph, usage } = await analyzeLLM(text, { title, author }));
+  } catch (e) {
+    if (e instanceof LlmExtractionError) {
+      const partial = e.partialUsage;
+      console.error(
+        `Analyse LLM échouée après un coût partiel de ${partial?.costUsd ?? 0} USD (${(partial?.inputTokens ?? 0) + (partial?.outputTokens ?? 0)} tokens).`,
+      );
+    }
+    const message = e instanceof Error ? e.message : "Erreur lors de l'analyse LLM.";
+    return NextResponse.json({ error: message }, { status: 502 });
+  }
+
   const wordCount = text.trim().split(/\s+/).length;
+  const meta = graph.metadata as Record<string, unknown>;
 
   await connectDB();
   const doc = await Analysis.create({
     ownerId: session.user.id,
     title,
     author,
-    mode: "heuristic",
+    mode: "llm",
     wordCount,
     nNodes: graph.nodes.length,
     graph,
+    costTokens: usage.inputTokens + usage.outputTokens,
+    costUsd: usage.costUsd,
+    summary: meta.summary,
+    genre: meta.genre,
+    tradition: meta.tradition,
+    mainActants: meta.mainActants,
+    thematicKeywords: meta.thematicKeywords,
+    formalFeatures: meta.formalFeatures,
+    sourceFile,
   });
 
   await createNotification({
@@ -49,9 +84,17 @@ export async function POST(req: Request) {
     id: String(doc._id),
     title,
     author,
+    mode: "llm",
     nNodes: graph.nodes.length,
     wordCount,
     functionSequence: functionSequence(graph),
     nodes: graph.nodes,
+    summary: meta.summary,
+    genre: meta.genre,
+    tradition: meta.tradition,
+    mainActants: meta.mainActants,
+    thematicKeywords: meta.thematicKeywords,
+    costUsd: usage.costUsd,
+    tokensTotal: usage.inputTokens + usage.outputTokens,
   });
 }
