@@ -8,10 +8,9 @@ import { SYSTEM_PROMPT_NARRATOLOGY, buildUserPrompt, type PromptMeta } from "./l
 import { LlmAnalysisSchema, enforceCulturalRestriction, type LlmAnalysis, type LlmNode } from "./llm-schema";
 import { needsChunking, chunkText, mergePartialGraphs, type TextChunk } from "./chunker";
 import type { NarrativeGraph, NarrativeNode, LlmAnalysisMetadata } from "../models";
+import { estimateCostUsd } from "@/lib/pricing";
 
 export const EXTRACTION_MODEL_ID = "claude-sonnet-4-6";
-const PRICE_INPUT_PER_MTOK = 3.0;
-const PRICE_OUTPUT_PER_MTOK = 15.0;
 
 export interface LlmExtractionUsage {
   inputTokens: number;
@@ -19,8 +18,16 @@ export interface LlmExtractionUsage {
   costUsd: number;
 }
 
-function costFromUsage(inputTokens: number, outputTokens: number): number {
-  return (inputTokens * PRICE_INPUT_PER_MTOK + outputTokens * PRICE_OUTPUT_PER_MTOK) / 1_000_000;
+/** Erreur d'extraction LLM portant l'usage (tokens/coût) déjà consommé avant l'échec. */
+export class LlmExtractionError extends Error {
+  constructor(
+    message: string,
+    public readonly partialUsage: LlmExtractionUsage,
+    public readonly cause?: unknown,
+  ) {
+    super(message);
+    this.name = "LlmExtractionError";
+  }
 }
 
 async function analyzeChunk(text: string, meta: PromptMeta): Promise<{ analysis: LlmAnalysis; usage: LlmExtractionUsage }> {
@@ -38,7 +45,7 @@ async function analyzeChunk(text: string, meta: PromptMeta): Promise<{ analysis:
 
   return {
     analysis,
-    usage: { inputTokens, outputTokens, costUsd: costFromUsage(inputTokens, outputTokens) },
+    usage: { inputTokens, outputTokens, costUsd: estimateCostUsd(EXTRACTION_MODEL_ID, { inputTokens, outputTokens }) },
   };
 }
 
@@ -86,14 +93,24 @@ export async function analyzeLLM(text: string, meta: LlmAnalysisMeta = {}): Prom
   } else {
     const chunks: TextChunk[] = chunkText(text);
     const partials: LlmAnalysis[] = [];
+    // Séquentiel : respecte le rate limit Anthropic et l'ordre attendu par mergePartialGraphs
     for (const chunk of chunks) {
-      const { analysis, usage } = await analyzeChunk(chunk.text, promptMeta);
-      partials.push(analysis);
-      totalUsage = {
-        inputTokens: totalUsage.inputTokens + usage.inputTokens,
-        outputTokens: totalUsage.outputTokens + usage.outputTokens,
-        costUsd: totalUsage.costUsd + usage.costUsd,
-      };
+      try {
+        const { analysis, usage } = await analyzeChunk(chunk.text, promptMeta);
+        partials.push(analysis);
+        totalUsage = {
+          inputTokens: totalUsage.inputTokens + usage.inputTokens,
+          outputTokens: totalUsage.outputTokens + usage.outputTokens,
+          costUsd: totalUsage.costUsd + usage.costUsd,
+        };
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        throw new LlmExtractionError(
+          `Échec de l'extraction LLM après ${partials.length}/${chunks.length} chunk(s) traité(s) : ${message}`,
+          totalUsage,
+          err,
+        );
+      }
     }
     const mergedResult = mergePartialGraphs(partials, chunks);
     merged = mergedResult.analysis;
@@ -121,6 +138,9 @@ export async function analyzeLLM(text: string, meta: LlmAnalysisMeta = {}): Prom
       title: meta.title ?? "Texte sans titre",
       author: meta.author ?? "Auteur inconnu",
       ...metadata,
+      // Clés à plat consommées par comparator.ts (scoreGreimasAlignment / deltaFocus)
+      main_actants_v1: merged.main_actants_v1,
+      main_actants_v2: merged.main_actants_v2,
     },
     nodes,
     edges: [],

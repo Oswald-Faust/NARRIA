@@ -11,8 +11,8 @@ export { compare } from "./comparison/comparator";
 export { FUNCTION_REPERTOIRE, getFunctionByCode, allFunctionCodes, totalFunctions } from "./repertoire";
 export { segment } from "./segmentation/segmenter";
 export { extractGraph } from "./extraction/heuristic-extractor";
-export { analyzeLLM } from "./extraction/llm-extractor";
-export type { LlmAnalysisMeta, LlmAnalysisOutcome } from "./extraction/llm-extractor";
+export { analyzeLLM, LlmExtractionError } from "./extraction/llm-extractor";
+export type { LlmAnalysisMeta, LlmAnalysisOutcome, LlmExtractionUsage } from "./extraction/llm-extractor";
 
 export interface AnalysisMeta {
   title?: string;
