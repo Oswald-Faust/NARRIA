@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
-import { extractFile, SUPPORTED_EXTENSIONS } from "@/lib/engine/extraction/file-extractor";
+import { extractFile } from "@/lib/engine/extraction/file-extractor";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -52,8 +52,4 @@ export async function POST(req: Request) {
     const message = e instanceof Error ? e.message : "Erreur d'extraction inconnue.";
     return NextResponse.json({ error: message }, { status: 422 });
   }
-}
-
-export function supportedExtensions() {
-  return SUPPORTED_EXTENSIONS;
 }
