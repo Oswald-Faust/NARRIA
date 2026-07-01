@@ -37,18 +37,19 @@ export interface ActantialLayout {
   boxes: ActantialBox[];
 }
 
-export function getActantialLayout(actants: MainActants): ActantialLayout {
+export function getActantialLayout(actants: Partial<MainActants> | null | undefined): ActantialLayout {
+  const safe = actants ?? {};
   const { width: W, height: H } = ACTANTIAL_DIMENSIONS;
   const topY = 80;
   const bottomY = H - 80; // 280
 
   const boxes: ActantialBox[] = [
-    { key: "destinateur", label: "DESTINATEUR", value: truncateActantLabel(actants.destinateur), cx: 130, cy: topY },
-    { key: "objet", label: "OBJET", value: truncateActantLabel(actants.objet), cx: W / 2, cy: topY },
-    { key: "destinataire", label: "DESTINATAIRE", value: truncateActantLabel(actants.destinataire), cx: W - 130, cy: topY },
-    { key: "adjuvant", label: "ADJUVANT", value: truncateActantLabel(actants.adjuvant), cx: 130, cy: bottomY },
-    { key: "sujet", label: "SUJET", value: truncateActantLabel(actants.protagoniste), cx: W / 2, cy: bottomY },
-    { key: "opposant", label: "OPPOSANT", value: truncateActantLabel(actants.opposant), cx: W - 130, cy: bottomY },
+    { key: "destinateur", label: "DESTINATEUR", value: truncateActantLabel(safe.destinateur), cx: 130, cy: topY },
+    { key: "objet", label: "OBJET", value: truncateActantLabel(safe.objet), cx: W / 2, cy: topY },
+    { key: "destinataire", label: "DESTINATAIRE", value: truncateActantLabel(safe.destinataire), cx: W - 130, cy: topY },
+    { key: "adjuvant", label: "ADJUVANT", value: truncateActantLabel(safe.adjuvant), cx: 130, cy: bottomY },
+    { key: "sujet", label: "SUJET", value: truncateActantLabel(safe.protagoniste), cx: W / 2, cy: bottomY },
+    { key: "opposant", label: "OPPOSANT", value: truncateActantLabel(safe.opposant), cx: W - 130, cy: bottomY },
   ];
 
   return { dimensions: ACTANTIAL_DIMENSIONS, boxes };

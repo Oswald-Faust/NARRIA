@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { getActantialLayout, truncateActantLabel, ACTANTIAL_DIMENSIONS } from "@/lib/reports/actantial-geometry";
+import { getActantialLayout, truncateActantLabel, ACTANTIAL_DIMENSIONS, type MainActants } from "@/lib/reports/actantial-geometry";
 
 describe("ACTANTIAL_DIMENSIONS", () => {
   it("reproduit les dimensions exactes du SVG Python (W=720, H=360, boxW=140, boxH=50)", () => {
@@ -47,5 +47,19 @@ describe("getActantialLayout", () => {
     expect(byKey.sujet.cy).toBe(280);
     expect(byKey.opposant.cx).toBe(590);
     expect(byKey.opposant.cy).toBe(280);
+  });
+});
+
+describe("getActantialLayout — robustesse", () => {
+  it("ne plante pas si actants est undefined et affiche des tirets", () => {
+    const layout = getActantialLayout(undefined as unknown as MainActants);
+    expect(layout.boxes.every((b) => b.value === "—")).toBe(true);
+  });
+
+  it("ne plante pas si actants est un objet partiel", () => {
+    const layout = getActantialLayout({ protagoniste: "Roméo" } as MainActants);
+    const byKey = Object.fromEntries(layout.boxes.map((b) => [b.key, b]));
+    expect(byKey.sujet.value).toBe("Roméo");
+    expect(byKey.objet.value).toBe("—");
   });
 });

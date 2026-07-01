@@ -1,16 +1,16 @@
 import { getActantialLayout, type MainActants } from "@/lib/reports/actantial-geometry";
 
 interface ActantialDiagramProps {
-  actants: MainActants;
+  actants: Partial<MainActants> | null | undefined;
 }
 
-const BOX_STYLES: Record<string, { stroke: string; fill: string; text: string }> = {
-  destinateur: { stroke: "#f472b6", fill: "rgba(244,114,182,0.12)", text: "#f9a8d4" },
-  destinataire: { stroke: "#f472b6", fill: "rgba(244,114,182,0.12)", text: "#f9a8d4" },
-  objet: { stroke: "#a78bfa", fill: "rgba(167,139,250,0.12)", text: "#c4b5fd" },
-  sujet: { stroke: "#a78bfa", fill: "rgba(167,139,250,0.12)", text: "#c4b5fd" },
-  adjuvant: { stroke: "#9ca3af", fill: "rgba(156,163,175,0.10)", text: "#d1d5db" },
-  opposant: { stroke: "#9ca3af", fill: "rgba(156,163,175,0.10)", text: "#d1d5db" },
+const BOX_STYLES: Record<string, { stroke: string; text: string }> = {
+  destinateur: { stroke: "var(--color-pink)", text: "var(--color-soft-pink)" },
+  destinataire: { stroke: "var(--color-pink)", text: "var(--color-soft-pink)" },
+  objet: { stroke: "var(--color-purple)", text: "var(--color-soft-purple)" },
+  sujet: { stroke: "var(--color-purple)", text: "var(--color-soft-purple)" },
+  adjuvant: { stroke: "var(--color-muted)", text: "var(--color-muted)" },
+  opposant: { stroke: "var(--color-muted)", text: "var(--color-muted)" },
 };
 
 export function ActantialDiagram({ actants }: ActantialDiagramProps) {
@@ -20,22 +20,22 @@ export function ActantialDiagram({ actants }: ActantialDiagramProps) {
   return (
     <div className="flex flex-col items-center gap-2">
       <svg viewBox={`0 0 ${W} ${H}`} width="100%" height="auto" className="max-w-[560px]">
-        <line x1={W / 2} y1={H - 80 - boxH / 2 - 5} x2={W / 2} y2={80 + boxH / 2 + 5} stroke="#a78bfa" strokeWidth={3} />
-        <polygon points={`${W / 2 - 6},${80 + boxH / 2 + 10} ${W / 2 + 6},${80 + boxH / 2 + 10} ${W / 2},${80 + boxH / 2 + 2}`} fill="#a78bfa" />
-        <text x={W / 2 + 10} y={H / 2} fontFamily="sans-serif" fontSize={9} fill="#a78bfa" fontWeight="bold">
+        <line x1={W / 2} y1={H - 80 - boxH / 2 - 5} x2={W / 2} y2={80 + boxH / 2 + 5} stroke="var(--color-purple)" strokeWidth={3} />
+        <polygon points={`${W / 2 - 6},${80 + boxH / 2 + 10} ${W / 2 + 6},${80 + boxH / 2 + 10} ${W / 2},${80 + boxH / 2 + 2}`} fill="var(--color-purple)" />
+        <text x={W / 2 + 10} y={H / 2} fontFamily="sans-serif" fontSize={9} fill="var(--color-purple)" fontWeight="bold">
           AXE DU DÉSIR
         </text>
 
-        <line x1={130 + boxW / 2 + 5} y1={80} x2={W - 130 - boxW / 2 - 5} y2={80} stroke="#f472b6" strokeWidth={2} />
-        <polygon points={`${W - 130 - boxW / 2 - 3},75 ${W - 130 - boxW / 2 - 3},85 ${W - 130 - boxW / 2 + 5},80`} fill="#f472b6" />
-        <text x={W / 2} y={35} textAnchor="middle" fontFamily="sans-serif" fontSize={9} fill="#f472b6" fontWeight="bold">
+        <line x1={130 + boxW / 2 + 5} y1={80} x2={W - 130 - boxW / 2 - 5} y2={80} stroke="var(--color-pink)" strokeWidth={2} />
+        <polygon points={`${W - 130 - boxW / 2 - 3},75 ${W - 130 - boxW / 2 - 3},85 ${W - 130 - boxW / 2 + 5},80`} fill="var(--color-pink)" />
+        <text x={W / 2} y={35} textAnchor="middle" fontFamily="sans-serif" fontSize={9} fill="var(--color-pink)" fontWeight="bold">
           AXE DE COMMUNICATION
         </text>
 
-        <line x1={130 + boxW / 2 + 5} y1={H - 80} x2={W / 2 - boxW / 2 - 5} y2={H - 80} stroke="#9ca3af" strokeWidth={2} />
-        <polygon points={`${W / 2 - boxW / 2 - 3},${H - 85} ${W / 2 - boxW / 2 - 3},${H - 75} ${W / 2 - boxW / 2 + 5},${H - 80}`} fill="#9ca3af" />
-        <line x1={W - 130 - boxW / 2 - 5} y1={H - 80} x2={W / 2 + boxW / 2 + 5} y2={H - 80} stroke="#9ca3af" strokeWidth={2} strokeDasharray="4 3" />
-        <polygon points={`${W / 2 + boxW / 2 + 3},${H - 85} ${W / 2 + boxW / 2 + 3},${H - 75} ${W / 2 + boxW / 2 - 5},${H - 80}`} fill="#9ca3af" />
+        <line x1={130 + boxW / 2 + 5} y1={H - 80} x2={W / 2 - boxW / 2 - 5} y2={H - 80} stroke="var(--color-muted)" strokeWidth={2} />
+        <polygon points={`${W / 2 - boxW / 2 - 3},${H - 85} ${W / 2 - boxW / 2 - 3},${H - 75} ${W / 2 - boxW / 2 + 5},${H - 80}`} fill="var(--color-muted)" />
+        <line x1={W - 130 - boxW / 2 - 5} y1={H - 80} x2={W / 2 + boxW / 2 + 5} y2={H - 80} stroke="var(--color-muted)" strokeWidth={2} strokeDasharray="4 3" />
+        <polygon points={`${W / 2 + boxW / 2 + 3},${H - 85} ${W / 2 + boxW / 2 + 3},${H - 75} ${W / 2 + boxW / 2 - 5},${H - 80}`} fill="var(--color-muted)" />
 
         {boxes.map((box) => {
           const style = BOX_STYLES[box.key];
@@ -43,7 +43,7 @@ export function ActantialDiagram({ actants }: ActantialDiagramProps) {
           const y = box.cy - boxH / 2;
           return (
             <g key={box.key}>
-              <rect x={x} y={y} width={boxW} height={boxH} rx={6} ry={6} fill={style.fill} stroke={style.stroke} strokeWidth={2} />
+              <rect x={x} y={y} width={boxW} height={boxH} rx={6} ry={6} fill={style.stroke} fillOpacity={0.12} stroke={style.stroke} strokeWidth={2} />
               <text x={box.cx} y={box.cy - 6} textAnchor="middle" fontFamily="sans-serif" fontSize={10} fill={style.stroke} fontWeight="bold">
                 {box.label}
               </text>
