@@ -73,3 +73,19 @@ export interface ComparisonResult {
   correspondences: Correspondence[];
   warnings: string[];
 }
+
+export interface LlmAnalysisMetadata {
+  mode: "llm";
+  summary: string;
+  genre: string;
+  tradition: string;
+  formalFeatures: Record<string, unknown>;
+  mainActants: {
+    v1: Record<string, string>;
+    v2: Record<string, string>;
+  };
+  thematicKeywords: string[];
+  costUsd: number;
+  tokensTotal: number;
+  mergeInfo?: { nChunks: number; nNodesBeforeDedup: number; nNodesAfterDedup: number; nDuplicatesRemoved: number };
+}
