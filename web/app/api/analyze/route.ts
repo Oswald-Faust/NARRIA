@@ -3,7 +3,9 @@ import { auth } from "@/auth";
 import { connectDB } from "@/lib/db/mongoose";
 import { Analysis } from "@/lib/db/models/analysis";
 import { analyzeLLM, functionSequence, LlmExtractionError } from "@/lib/engine";
+import { EXTRACTION_MODEL_ID } from "@/lib/engine/extraction/llm-extractor";
 import { createNotification } from "@/lib/notifications";
+import { recordUsage } from "@/lib/usage";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -39,13 +41,23 @@ export async function POST(req: Request) {
   try {
     ({ graph, usage } = await analyzeLLM(text, { title, author }));
   } catch (e) {
+    let partial: { inputTokens?: number; outputTokens?: number; costUsd?: number } | undefined;
     if (e instanceof LlmExtractionError) {
-      const partial = e.partialUsage;
+      partial = e.partialUsage;
       console.error(
         `Analyse LLM échouée après un coût partiel de ${partial?.costUsd ?? 0} USD (${(partial?.inputTokens ?? 0) + (partial?.outputTokens ?? 0)} tokens).`,
       );
     }
     const message = e instanceof Error ? e.message : "Erreur lors de l'analyse LLM.";
+    void recordUsage({
+      ownerId: session.user.id,
+      route: "analyze",
+      model: EXTRACTION_MODEL_ID,
+      inputTokens: partial?.inputTokens ?? 0,
+      outputTokens: partial?.outputTokens ?? 0,
+      success: false,
+      error: message,
+    });
     return NextResponse.json({ error: message }, { status: 502 });
   }
 
@@ -78,6 +90,14 @@ export async function POST(req: Request) {
     title: `Analyse terminée — « ${title} »`,
     body: `L'analyse narrative de votre œuvre est prête. ${graph.nodes.length} nœuds narratifs détectés.`,
     href: "/historique",
+  });
+
+  void recordUsage({
+    ownerId: session.user.id,
+    route: "analyze",
+    model: EXTRACTION_MODEL_ID,
+    inputTokens: usage.inputTokens,
+    outputTokens: usage.outputTokens,
   });
 
   return NextResponse.json({
