@@ -69,4 +69,56 @@ describe("renderAnalysisHtmlReport", () => {
   it("conserve la section du graphe narratif", () => {
     expect(html).toContain("<h2>Graphe narratif");
   });
+
+  it("échappe le HTML injecté dans title/summary/textExcerpt (protection XSS)", () => {
+    const html = renderAnalysisHtmlReport({
+      title: "<script>alert('xss')</script>",
+      author: "Auteur",
+      mode: "llm",
+      summary: "Résumé avec <img src=x onerror=alert(1)>",
+      nodes: [
+        {
+          nodeId: "n001",
+          functionCode: "F01",
+          functionName: "Départ",
+          functionFamily: "Rupture initiale",
+          actants: ["<b>Actant</b>"],
+          modalities: { vouloir: 0.5, devoir: 0.5, pouvoir: 0.5, savoir: 0.5 },
+          tension: 0.2,
+          phase: "Exposition",
+          textExcerpt: "Citation avec <script>document.cookie</script>",
+        },
+      ],
+      dateHuman: "01/07/2026",
+    });
+    expect(html).not.toContain("<script>alert");
+    expect(html).not.toContain("<img src=x onerror");
+    expect(html).not.toContain("<b>Actant</b>");
+    expect(html).not.toContain("<script>document.cookie");
+    expect(html).toContain("&lt;script&gt;");
+  });
+
+  it("ne plante pas si un nœud n'a pas de modalities", () => {
+    expect(() =>
+      renderAnalysisHtmlReport({
+        title: "Test",
+        author: "Auteur",
+        mode: "heuristic",
+        nodes: [
+          {
+            nodeId: "n001",
+            functionCode: "F01",
+            functionName: "Départ",
+            functionFamily: "Rupture initiale",
+            actants: [],
+            modalities: undefined as unknown as { vouloir: number; devoir: number; pouvoir: number; savoir: number },
+            tension: 0.2,
+            phase: "Exposition",
+            textExcerpt: "…",
+          },
+        ],
+        dateHuman: "01/07/2026",
+      }),
+    ).not.toThrow();
+  });
 });

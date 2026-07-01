@@ -12,7 +12,8 @@ function escapeHtml(s: string): string {
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
 function renderActantialSvgOriginalPalette(actants: MainActants): string {
@@ -64,7 +65,7 @@ export function renderAnalysisHtmlReport(analysis: AnalysisReportData & { dateHu
       let h = `<div class="node"><h3>Nœud ${i + 1} — ${escapeHtml(n.functionName || n.functionCode || "?")}</h3>`;
       if (n.functionCode) h += `<p><strong>Code :</strong> <code>${escapeHtml(n.functionCode)}</code></p>`;
       if (n.actants.length > 0) h += `<p><strong>Actants :</strong> ${escapeHtml(n.actants.join(", "))}</p>`;
-      const modStr = Object.entries(n.modalities)
+      const modStr = Object.entries(n.modalities ?? {})
         .map(([k, v]) => `${k}=${v.toFixed(2)}`)
         .join(" · ");
       h += `<p><strong>Modalités :</strong> ${escapeHtml(modStr)}</p>`;

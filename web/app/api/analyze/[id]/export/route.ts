@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { Types } from "mongoose";
 import { auth } from "@/auth";
 import { connectDB } from "@/lib/db/mongoose";
 import { Analysis } from "@/lib/db/models/analysis";
@@ -25,6 +26,9 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   }
 
   const { id } = await params;
+  if (!Types.ObjectId.isValid(id)) {
+    return NextResponse.json({ error: "Identifiant d'analyse invalide." }, { status: 400 });
+  }
   const format = new URL(req.url).searchParams.get("format") ?? "html";
   if (format !== "html") {
     return NextResponse.json(
