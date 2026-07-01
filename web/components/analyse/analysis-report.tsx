@@ -142,14 +142,14 @@ export function AnalysisReport({ data }: { data: AnalysisReportData }) {
           <a
             href={`/api/analyze/${data.id}/export?format=html`}
             download
-            className="inline-flex h-9 items-center gap-2 rounded-full border border-border px-4 text-sm text-foreground hover:bg-surface-2"
+            className="inline-flex h-9 items-center gap-2 rounded-full border border-border bg-surface px-4 text-sm text-foreground hover:bg-surface-2"
           >
             <Download className="h-4 w-4" /> Télécharger HTML
           </a>
           <a
             href={`/api/analyze/${data.id}/export?format=pdf`}
             download
-            className="inline-flex h-9 items-center gap-2 rounded-full border border-border px-4 text-sm text-foreground hover:bg-surface-2"
+            className="inline-flex h-9 items-center gap-2 rounded-full border border-border bg-surface px-4 text-sm text-foreground hover:bg-surface-2"
           >
             <Download className="h-4 w-4" /> Télécharger PDF
           </a>

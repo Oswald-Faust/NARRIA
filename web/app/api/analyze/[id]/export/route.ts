@@ -78,8 +78,18 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   }
 
   const { htmlToPdf } = await import("@/lib/reports/pdf");
-  const pdf = await htmlToPdf(html);
-  return new NextResponse(pdf as unknown as BodyInit, {
+  let pdf: Buffer;
+  try {
+    pdf = await htmlToPdf(html);
+  } catch (e) {
+    const message = e instanceof Error ? e.message : "Erreur inconnue lors de la génération du PDF.";
+    console.error("[export] Génération PDF échouée:", message);
+    return NextResponse.json(
+      { error: "Génération du PDF impossible pour le moment. Réessayez ou téléchargez le format HTML." },
+      { status: 500 },
+    );
+  }
+  return new NextResponse(new Uint8Array(pdf), {
     headers: {
       "Content-Type": "application/pdf",
       "Content-Disposition": `attachment; filename="${filename}.pdf"`,

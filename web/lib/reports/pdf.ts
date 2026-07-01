@@ -16,15 +16,21 @@ export async function htmlToPdf(html: string): Promise<Buffer> {
 
   try {
     const page = await browser.newPage();
+    // Timeout explicite cohérent avec `maxDuration = 60` de la route
+    // d'export appelante : on veut échouer proprement (et retourner une
+    // erreur JSON exploitable) avant le hard-kill de la fonction serverless,
+    // plutôt que de dépendre du timeout par défaut de Puppeteer (30s).
+    page.setDefaultTimeout(45000);
     // Le rapport est un HTML autoportant (styles inline, SVG inline, pas de
     // requêtes réseau externes) : "load" suffit. `setContent` de cette version
     // de puppeteer-core n'accepte pas "networkidle0"/"networkidle2" (réservés
     // à la navigation via `goto`).
-    await page.setContent(html, { waitUntil: "load" });
+    await page.setContent(html, { waitUntil: "load", timeout: 45000 });
     const pdf = await page.pdf({
       format: "A4",
       printBackground: true,
       margin: { top: "20mm", bottom: "20mm", left: "15mm", right: "15mm" },
+      timeout: 45000,
     });
     return Buffer.from(pdf);
   } finally {
