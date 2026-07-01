@@ -1,4 +1,4 @@
-import { BookOpen, Sparkles } from "lucide-react";
+import { BookOpen, Download, Sparkles } from "lucide-react";
 import { Card, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ActantialDiagram } from "@/components/analyse/actantial-diagram";
@@ -135,6 +135,25 @@ export function AnalysisReport({ data }: { data: AnalysisReportData }) {
         <p className="text-right text-xs italic text-muted">
           Analyse via Claude — coût : {data.costUsd.toFixed(4)} USD · {(data.tokensTotal ?? 0).toLocaleString("fr-FR")} tokens
         </p>
+      )}
+
+      {data.id && (
+        <div className="flex justify-end gap-2">
+          <a
+            href={`/api/analyze/${data.id}/export?format=html`}
+            download
+            className="inline-flex h-9 items-center gap-2 rounded-full border border-border px-4 text-sm text-foreground hover:bg-surface-2"
+          >
+            <Download className="h-4 w-4" /> Télécharger HTML
+          </a>
+          <a
+            href={`/api/analyze/${data.id}/export?format=pdf`}
+            download
+            className="inline-flex h-9 items-center gap-2 rounded-full border border-border px-4 text-sm text-foreground hover:bg-surface-2"
+          >
+            <Download className="h-4 w-4" /> Télécharger PDF
+          </a>
+        </div>
       )}
     </div>
   );

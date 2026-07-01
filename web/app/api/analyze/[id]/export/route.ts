@@ -30,11 +30,8 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     return NextResponse.json({ error: "Identifiant d'analyse invalide." }, { status: 400 });
   }
   const format = new URL(req.url).searchParams.get("format") ?? "html";
-  if (format !== "html") {
-    return NextResponse.json(
-      { error: "Seul le format html est disponible pour l'instant (pdf à venir)." },
-      { status: 400 },
-    );
+  if (format !== "html" && format !== "pdf") {
+    return NextResponse.json({ error: "Format non supporté (html ou pdf)." }, { status: 400 });
   }
 
   await connectDB();
@@ -71,10 +68,21 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
 
   const filename = `${slugify(doc.title)}_${doc._id}`;
 
-  return new NextResponse(html, {
+  if (format === "html") {
+    return new NextResponse(html, {
+      headers: {
+        "Content-Type": "text/html; charset=utf-8",
+        "Content-Disposition": `attachment; filename="${filename}.html"`,
+      },
+    });
+  }
+
+  const { htmlToPdf } = await import("@/lib/reports/pdf");
+  const pdf = await htmlToPdf(html);
+  return new NextResponse(pdf as unknown as BodyInit, {
     headers: {
-      "Content-Type": "text/html; charset=utf-8",
-      "Content-Disposition": `attachment; filename="${filename}.html"`,
+      "Content-Type": "application/pdf",
+      "Content-Disposition": `attachment; filename="${filename}.pdf"`,
     },
   });
 }
