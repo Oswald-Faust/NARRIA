@@ -61,10 +61,18 @@ export function removeRecurringLines(text: string): string {
   return lines.filter((line) => !recurring.has(line.trim())).join("\n");
 }
 
+function decodeXmlEntities(s: string): string {
+  return s
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'");
+}
+
 export function cleanText(text: string, sourceFormat: SourceFormat): string {
   if (!text) return text;
   let out = text.replace(/\r\n?/g, "\n");
-  // eslint-disable-next-line no-control-regex
   out = out.replace(/[\x00-\x08\x0B-\x1F\x7F]/g, "");
   if (sourceFormat === "pdf") {
     out = removeRecurringLines(out);
@@ -100,30 +108,63 @@ function finalize(
 // ─── .txt ───
 
 function extractTxt(buffer: Buffer, filename: string): ExtractionResult {
-  let text: string;
-  try {
-    text = buffer.toString("utf-8");
-    if (text.includes("�")) throw new Error("invalid utf-8");
-  } catch {
-    text = buffer.toString("latin1");
-  }
+  const utf8Text = buffer.toString("utf-8");
+  const text = utf8Text.includes("�") ? buffer.toString("latin1") : utf8Text;
   return finalize(text, "txt", filename);
 }
 
 // ─── .docx ───
 
 async function extractDocx(buffer: Buffer, filename: string): Promise<ExtractionResult> {
-  const { value: text } = await mammoth.extractRawText({ buffer });
+  let text: string;
+  try {
+    ({ value: text } = await mammoth.extractRawText({ buffer }));
+  } catch (e) {
+    const message = e instanceof Error ? e.message : String(e);
+    throw new Error(`Impossible d'ouvrir le fichier DOCX : ${message.slice(0, 200)}`);
+  }
   const paragraphCount = text.split(/\n+/).filter((p) => p.trim()).length;
-  return finalize(text, "docx", filename, { paragraphCount });
+
+  let title = "";
+  let author = "";
+  try {
+    const zip = await JSZip.loadAsync(buffer);
+    const coreFile = zip.file("docProps/core.xml");
+    if (coreFile) {
+      const coreXml = await coreFile.async("string");
+      const titleMatch = /<dc:title[^>]*>([^<]*)<\/dc:title>/.exec(coreXml);
+      const authorMatch = /<dc:creator[^>]*>([^<]*)<\/dc:creator>/.exec(coreXml);
+      title = titleMatch ? decodeXmlEntities(titleMatch[1]).trim() : "";
+      author = authorMatch ? decodeXmlEntities(authorMatch[1]).trim() : "";
+    }
+  } catch {
+    // Métadonnées indisponibles : repli silencieux (title/author restent vides).
+  }
+
+  return finalize(text, "docx", filename, { paragraphCount, title, author });
 }
 
 // ─── .pdf ───
 
 async function extractPdf(buffer: Buffer, filename: string): Promise<ExtractionResult> {
   const warnings: string[] = [];
-  const pdf = await getDocumentProxy(new Uint8Array(buffer));
-  const { text, totalPages } = await pdfExtractText(pdf, { mergePages: true });
+  let text: string;
+  let totalPages: number;
+  try {
+    const pdf = await getDocumentProxy(new Uint8Array(buffer));
+    ({ text, totalPages } = await pdfExtractText(pdf, { mergePages: true }));
+  } catch (e) {
+    const isPasswordError =
+      e instanceof Error && (e.name === "PasswordException" || /password/i.test(e.message));
+    if (isPasswordError) {
+      throw new Error(
+        "Le fichier PDF est chiffré (protégé par mot de passe). " +
+          "Veuillez le déverrouiller avant de le téléverser.",
+      );
+    }
+    const message = e instanceof Error ? e.message : String(e);
+    throw new Error(`Impossible d'ouvrir le fichier PDF : ${message.slice(0, 200)}`);
+  }
 
   if (totalPages >= 3 && text.trim().length < totalPages * 50) {
     warnings.push(
@@ -146,12 +187,7 @@ function odtXmlToText(xml: string): string {
   s = s.replace(/<\/text:p>/g, "\n\n");
   s = s.replace(/<\/text:h[^>]*>/g, "\n\n");
   s = s.replace(/<[^>]+>/g, "");
-  s = s
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .replace(/&apos;/g, "'");
+  s = decodeXmlEntities(s);
   return s.trim();
 }
 
@@ -236,8 +272,8 @@ async function extractEpub(buffer: Buffer, filename: string): Promise<Extraction
 
   return finalize(text, "epub", filename, {
     paragraphCount: chapterTexts.length,
-    title: titleMatch?.[1]?.trim() ?? "",
-    author: authorMatch?.[1]?.trim() ?? "",
+    title: titleMatch ? decodeXmlEntities(titleMatch[1]).trim() : "",
+    author: authorMatch ? decodeXmlEntities(authorMatch[1]).trim() : "",
     warnings,
   });
 }
