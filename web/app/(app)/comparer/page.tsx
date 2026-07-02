@@ -7,6 +7,7 @@ import { Card, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input, Textarea, Label } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { FileDropzone, type FileDropzoneResult } from "@/components/analyse/file-dropzone";
 
 interface Sample { id: string; title: string; author: string; text: string }
 interface CompareResult {
@@ -19,10 +20,11 @@ const srjTone = (level: string) =>
   level === "Critique" ? "danger" : level === "Élevé" ? "pink" : level === "Modéré" ? "yellow" : "success";
 
 function WorkColumn({
-  label, title, setTitle, text, setText, samples, accent,
+  label, title, setTitle, text, setText, samples, accent, onExtracted,
 }: {
   label: string; title: string; setTitle: (v: string) => void;
   text: string; setText: (v: string) => void; samples: Sample[]; accent: string;
+  onExtracted: (r: FileDropzoneResult) => void;
 }) {
   return (
     <Card className="space-y-3">
@@ -35,6 +37,7 @@ function WorkColumn({
         <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Titre de l'œuvre" />
       </div>
       <Textarea value={text} onChange={(e) => setText(e.target.value)} rows={9} placeholder="Collez le texte (200 caractères min.)…" />
+      <FileDropzone onExtracted={onExtracted} />
       <div className="flex flex-wrap gap-1.5">
         {samples.map((s) => (
           <button
@@ -73,6 +76,18 @@ export default function ComparerPage() {
     fetch("/api/samples").then((r) => r.json()).then((d) => setSamples(d.samples ?? []));
   }, []);
 
+  function handleRefExtracted(r: FileDropzoneResult) {
+    setRefText(r.text);
+    if (r.title.trim()) setRefTitle(r.title);
+    setError(r.warnings.length > 0 ? r.warnings.join(" ") : null);
+  }
+
+  function handleCandExtracted(r: FileDropzoneResult) {
+    setCandText(r.text);
+    if (r.title.trim()) setCandTitle(r.title);
+    setError(r.warnings.length > 0 ? r.warnings.join(" ") : null);
+  }
+
   async function run() {
     setError(null); setResult(null); setLoading(true);
     const res = await fetch("/api/compare", {
@@ -95,8 +110,8 @@ export default function ComparerPage() {
       />
 
       <div className="grid gap-5 md:grid-cols-2">
-        <WorkColumn label="Œuvre de référence" title={refTitle} setTitle={setRefTitle} text={refText} setText={setRefText} samples={samples} accent="bg-soft-purple" />
-        <WorkColumn label="Œuvre candidate" title={candTitle} setTitle={setCandTitle} text={candText} setText={setCandText} samples={samples} accent="bg-soft-pink" />
+        <WorkColumn label="Œuvre de référence" title={refTitle} setTitle={setRefTitle} text={refText} setText={setRefText} samples={samples} accent="bg-soft-purple" onExtracted={handleRefExtracted} />
+        <WorkColumn label="Œuvre candidate" title={candTitle} setTitle={setCandTitle} text={candText} setText={setCandText} samples={samples} accent="bg-soft-pink" onExtracted={handleCandExtracted} />
       </div>
 
       {error && <p className="text-sm text-red-400">{error}</p>}
