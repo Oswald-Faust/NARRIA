@@ -1,23 +1,20 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { GitCompareArrows, Loader2, FileText, TriangleAlert } from "lucide-react";
+import { GitCompareArrows, Loader2, FileText } from "lucide-react";
 import { GradientHeader } from "@/components/ui/gradient-header";
 import { Card, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input, Textarea, Label } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { FileDropzone, type FileDropzoneResult } from "@/components/analyse/file-dropzone";
+import { ComparisonReport, type ComparisonReportData } from "@/components/comparer/comparison-report";
 
 interface Sample { id: string; title: string; author: string; text: string }
-interface CompareResult {
-  sns: number; ss: number; st: number; srj: number; srjLevel: string;
-  sIso: number; sGed: number; sFunc: number; sAct: number; sTens: number;
-  detectedModality: string; verdict: string; warnings: string[];
-}
+type CompareResult = ComparisonReportData;
 
 const srjTone = (level: string) =>
-  level === "Critique" ? "danger" : level === "Élevé" ? "pink" : level === "Modéré" ? "yellow" : "success";
+  level === "Critique" ? "danger" : level === "Élevé" ? "pink" : level === "Modéré" ? "neutral" : "success";
 
 function WorkColumn({
   label, title, setTitle, text, setText, samples, accent, onExtracted,
@@ -50,15 +47,6 @@ function WorkColumn({
         ))}
       </div>
     </Card>
-  );
-}
-
-function ScoreTile({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="rounded-xl border border-border bg-surface-2 p-3 text-center">
-      <p className="font-heading text-2xl font-bold text-foreground">{value.toFixed(2)}</p>
-      <p className="text-[11px] uppercase tracking-wide text-muted">{label}</p>
-    </div>
   );
 }
 
@@ -136,35 +124,7 @@ export default function ComparerPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <ScoreTile label="SNS" value={result.sns} />
-            <ScoreTile label="Spécificité" value={result.ss} />
-            <ScoreTile label="Transformation" value={result.st} />
-            <ScoreTile label="Risque (SRJ)" value={result.srj} />
-          </div>
-
-          <div>
-            <Label>Composantes du SNS</Label>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
-              <ScoreTile label="Isomorphisme" value={result.sIso} />
-              <ScoreTile label="GED" value={result.sGed} />
-              <ScoreTile label="Fonctions" value={result.sFunc} />
-              <ScoreTile label="Actants" value={result.sAct} />
-              <ScoreTile label="Tension" value={result.sTens} />
-            </div>
-          </div>
-
-          <div className="rounded-xl border border-border bg-surface-2 p-4">
-            <p className="mb-1 font-heading text-sm font-bold">Verdict interprétatif</p>
-            <p className="text-sm text-foreground/90">{result.verdict}</p>
-          </div>
-
-          {result.warnings.map((w, i) => (
-            <div key={i} className="flex items-start gap-2 rounded-xl border border-yellow/30 bg-yellow/10 px-4 py-3">
-              <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0 text-yellow" />
-              <p className="text-xs text-foreground/90">{w}</p>
-            </div>
-          ))}
+          <ComparisonReport data={result} />
         </Card>
       )}
     </div>

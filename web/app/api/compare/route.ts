@@ -2,13 +2,45 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { connectDB } from "@/lib/db/mongoose";
 import { Comparison } from "@/lib/db/models/comparison";
-import { analyzeLLM, compare, LlmExtractionError } from "@/lib/engine";
+import { analyzeLLM, compare, LlmExtractionError, tensionProfile } from "@/lib/engine";
+import type { NarrativeGraph } from "@/lib/engine";
 import { EXTRACTION_MODEL_ID } from "@/lib/engine/extraction/llm-extractor";
 import { createNotification } from "@/lib/notifications";
 import { recordUsage } from "@/lib/usage";
 
 export const runtime = "nodejs";
 export const maxDuration = 180;
+
+/** Extrait les infos par-œuvre nécessaires au rapport de comparaison (sections « Œuvres comparées » et « Analyse LLM »). */
+function buildWork(g: NarrativeGraph, costUsd: number) {
+  const meta = g.metadata as Record<string, unknown>;
+  const actants = meta.main_actants_v1 as
+    | { protagoniste?: string; objet?: string; destinateur?: string; destinataire?: string; adjuvant?: string; opposant?: string }
+    | undefined;
+  return {
+    title: String(meta.title ?? "Œuvre"),
+    author: String(meta.author ?? "Auteur inconnu"),
+    graphId: g.graphId,
+    nNodes: g.nodes.length,
+    nEdges: g.edges.length,
+    tensionProfile: tensionProfile(g),
+    summary: typeof meta.summary === "string" ? meta.summary : "",
+    genre: typeof meta.genre === "string" ? meta.genre : "",
+    tradition: typeof meta.tradition === "string" ? meta.tradition : "",
+    thematicKeywords: Array.isArray(meta.thematicKeywords) ? (meta.thematicKeywords as string[]) : [],
+    mainActants: actants
+      ? {
+          protagoniste: actants.protagoniste ?? "",
+          objet: actants.objet ?? "",
+          destinateur: actants.destinateur ?? "",
+          destinataire: actants.destinataire ?? "",
+          adjuvant: actants.adjuvant ?? "",
+          opposant: actants.opposant ?? "",
+        }
+      : null,
+    costUsd,
+  };
+}
 
 export async function POST(req: Request) {
   const session = await auth();
@@ -125,5 +157,14 @@ export async function POST(req: Request) {
     href: "/historique",
   });
 
-  return NextResponse.json({ id: String(doc._id), refTitle, candTitle, mode: "llm", costUsd: totalCost, ...result });
+  return NextResponse.json({
+    id: String(doc._id),
+    refTitle,
+    candTitle,
+    mode: "llm",
+    costUsd: totalCost,
+    refWork: buildWork(gRef, refOutcome.usage.costUsd),
+    candWork: buildWork(gCand, candOutcome.usage.costUsd),
+    ...result,
+  });
 }
