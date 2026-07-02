@@ -7,7 +7,7 @@ import { anthropic } from "@ai-sdk/anthropic";
 import { SYSTEM_PROMPT_NARRATOLOGY, buildUserPrompt, type PromptMeta } from "./llm-prompts";
 import { LlmAnalysisSchema, enforceCulturalRestriction, type LlmAnalysis, type LlmNode } from "./llm-schema";
 import { needsChunking, chunkText, mergePartialGraphs, type TextChunk } from "./chunker";
-import type { NarrativeGraph, NarrativeNode, LlmAnalysisMetadata } from "../models";
+import type { NarrativeGraph, NarrativeNode, NarrativeEdge, LlmAnalysisMetadata } from "../models";
 import { estimateCostUsd } from "@/lib/pricing";
 
 export const EXTRACTION_MODEL_ID = "claude-sonnet-4-6";
@@ -66,6 +66,25 @@ function toNarrativeNode(node: LlmNode, index: number): NarrativeNode {
     phase: node.phase || null,
     textExcerpt: node.text_excerpt,
   };
+}
+
+/**
+ * Construit des arêtes séquentielles reliant chaque nœud consécutif (n nœuds → n-1 arêtes).
+ * Fidélité au rendu Python (« N nœuds, M transitions ») ; `comparator.ts` n'utilise pas
+ * les arêtes, donc aucun impact sur les scores.
+ */
+export function buildSequentialEdges(nodes: NarrativeNode[]): NarrativeEdge[] {
+  const edges: NarrativeEdge[] = [];
+  for (let i = 0; i < nodes.length - 1; i++) {
+    edges.push({
+      edgeId: `e_${String(i).padStart(3, "0")}`,
+      source: nodes[i].nodeId,
+      target: nodes[i + 1].nodeId,
+      transitionType: "sequential",
+      weight: 1,
+    });
+  }
+  return edges;
 }
 
 export interface LlmAnalysisMeta {
@@ -143,7 +162,7 @@ export async function analyzeLLM(text: string, meta: LlmAnalysisMeta = {}): Prom
       main_actants_v2: merged.main_actants_v2,
     },
     nodes,
-    edges: [],
+    edges: buildSequentialEdges(nodes),
   };
 
   return { graph, usage: totalUsage };
