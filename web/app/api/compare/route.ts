@@ -47,8 +47,13 @@ export async function POST(req: Request) {
   let refOutcome;
   let candOutcome;
   try {
-    refOutcome = await analyzeLLM(refText, { title: refTitle, author: refAuthor });
-    candOutcome = await analyzeLLM(candText, { title: candTitle, author: candAuthor });
+    // Parallélise les deux analyses indépendantes (~/2 de latence, marge face à maxDuration).
+    // Compromis : si un seul appel échoue, Promise.all rejette et le coût de l'appel *réussi*
+    // n'est pas récupérable ici — même trou qu'en séquentiel, sans régression de traçage.
+    [refOutcome, candOutcome] = await Promise.all([
+      analyzeLLM(refText, { title: refTitle, author: refAuthor }),
+      analyzeLLM(candText, { title: candTitle, author: candAuthor }),
+    ]);
   } catch (e) {
     let partial: { inputTokens?: number; outputTokens?: number; costUsd?: number } | undefined;
     if (e instanceof LlmExtractionError) {
