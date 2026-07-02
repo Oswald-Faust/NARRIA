@@ -3,7 +3,7 @@
  * (`narria/m5_reporting/reporter.py`, `generate_html` + `_render_llm_metadata`),
  * recolorée au thème sombre de l'app.
  */
-import { TriangleAlert } from "lucide-react";
+import { Download, TriangleAlert } from "lucide-react";
 import { Badge, type BadgeProps } from "@/components/ui/badge";
 import { TensionSparkline } from "./tension-sparkline";
 
@@ -421,6 +421,26 @@ export function ComparisonReport({ data }: { data: ComparisonReportData }) {
           </div>
         ) : null}
       </section>
+
+      {/* 9. Téléchargements */}
+      {data.id ? (
+        <div className="flex justify-end gap-2">
+          <a
+            href={`/api/compare/${data.id}/export?format=html`}
+            download
+            className="inline-flex h-9 items-center gap-2 rounded-full border border-border bg-surface px-4 text-sm text-foreground hover:bg-surface-2"
+          >
+            <Download className="h-4 w-4" /> Télécharger HTML
+          </a>
+          <a
+            href={`/api/compare/${data.id}/export?format=pdf`}
+            download
+            className="inline-flex h-9 items-center gap-2 rounded-full border border-border bg-surface px-4 text-sm text-foreground hover:bg-surface-2"
+          >
+            <Download className="h-4 w-4" /> Télécharger PDF
+          </a>
+        </div>
+      ) : null}
     </div>
   );
 }
