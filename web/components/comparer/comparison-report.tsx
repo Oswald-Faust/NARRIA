@@ -206,6 +206,15 @@ const SNS_COMPONENTS: Array<{ code: string; description: string; key: keyof Comp
 
 export function ComparisonReport({ data }: { data: ComparisonReportData }) {
   const { refWork, candWork } = data;
+
+  if (!refWork || !candWork) {
+    return (
+      <p className="text-sm text-muted">
+        Données de comparaison incomplètes — relancez la comparaison pour afficher le rapport détaillé.
+      </p>
+    );
+  }
+
   const hasLlmMeta =
     !!(refWork.summary || refWork.genre || refWork.mainActants) ||
     !!(candWork.summary || candWork.genre || candWork.mainActants);

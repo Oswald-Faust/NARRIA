@@ -17,7 +17,7 @@ export function TensionSparkline({ profile, color }: TensionSparklineProps) {
   return (
     <div className="flex h-[60px] items-end gap-[2px] py-2">
       {profile.map((t, i) => {
-        const h = maxT > 0 ? Math.round((t / maxT) * 50) : 0;
+        const h = maxT > 0 ? Math.trunc((t / maxT) * 50) : 0;
         return (
           <div
             key={i}
