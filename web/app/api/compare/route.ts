@@ -75,96 +75,135 @@ export async function POST(req: Request) {
   }
 
   const ownerId = session.user.id;
+  const encoder = new TextEncoder();
 
-  let refOutcome;
-  let candOutcome;
-  try {
-    // Parallélise les deux analyses indépendantes (~/2 de latence, marge face à maxDuration).
-    // Compromis : si un seul appel échoue, Promise.all rejette et le coût de l'appel *réussi*
-    // n'est pas récupérable ici — même trou qu'en séquentiel, sans régression de traçage.
-    [refOutcome, candOutcome] = await Promise.all([
-      analyzeLLM(refText, { title: refTitle, author: refAuthor }),
-      analyzeLLM(candText, { title: candTitle, author: candAuthor }),
-    ]);
-  } catch (e) {
-    let partial: { inputTokens?: number; outputTokens?: number; costUsd?: number } | undefined;
-    if (e instanceof LlmExtractionError) {
-      partial = e.partialUsage;
-      console.error(
-        `Comparaison LLM échouée après un coût partiel de ${partial?.costUsd ?? 0} USD (${(partial?.inputTokens ?? 0) + (partial?.outputTokens ?? 0)} tokens).`,
-      );
-    }
-    const message = e instanceof Error ? e.message : "Erreur lors de l'analyse LLM.";
-    void recordUsage({
-      ownerId,
-      route: "compare",
-      model: EXTRACTION_MODEL_ID,
-      inputTokens: partial?.inputTokens ?? 0,
-      outputTokens: partial?.outputTokens ?? 0,
-      success: false,
-      error: message,
-    });
-    return NextResponse.json({ error: message }, { status: 502 });
-  }
+  const stream = new ReadableStream({
+    async start(controller) {
+      function send(obj: unknown) {
+        controller.enqueue(encoder.encode(JSON.stringify(obj) + "\n"));
+      }
 
-  const gRef = refOutcome.graph;
-  const gCand = candOutcome.graph;
-  const totalCost = refOutcome.usage.costUsd + candOutcome.usage.costUsd;
-  const totalInputTokens = refOutcome.usage.inputTokens + candOutcome.usage.inputTokens;
-  const totalOutputTokens = refOutcome.usage.outputTokens + candOutcome.usage.outputTokens;
+      try {
+        let refFraction = 0;
+        let candFraction = 0;
+        function sendCombinedProgress() {
+          const fraction = (refFraction + candFraction) / 2;
+          const percent = Math.round(fraction * 100);
+          const bothDone = refFraction >= 1 && candFraction >= 1;
+          const message = bothDone
+            ? "Finalisation…"
+            : "Analyse de l'œuvre de référence et candidate en cours…";
+          send({ type: "progress", percent, message });
+        }
 
-  void recordUsage({
-    ownerId,
-    route: "compare",
-    model: EXTRACTION_MODEL_ID,
-    inputTokens: totalInputTokens,
-    outputTokens: totalOutputTokens,
-  });
+        let refOutcome;
+        let candOutcome;
+        try {
+          // Parallélise les deux analyses indépendantes (~/2 de latence, marge face à maxDuration).
+          // Compromis : si un seul appel échoue, Promise.all rejette et le coût de l'appel *réussi*
+          // n'est pas récupérable ici — même trou qu'en séquentiel, sans régression de traçage.
+          [refOutcome, candOutcome] = await Promise.all([
+            analyzeLLM(refText, { title: refTitle, author: refAuthor }, (event) => {
+              refFraction = event.fraction;
+              sendCombinedProgress();
+            }),
+            analyzeLLM(candText, { title: candTitle, author: candAuthor }, (event) => {
+              candFraction = event.fraction;
+              sendCombinedProgress();
+            }),
+          ]);
+        } catch (e) {
+          let partial: { inputTokens?: number; outputTokens?: number; costUsd?: number } | undefined;
+          if (e instanceof LlmExtractionError) {
+            partial = e.partialUsage;
+            console.error(
+              `Comparaison LLM échouée après un coût partiel de ${partial?.costUsd ?? 0} USD (${(partial?.inputTokens ?? 0) + (partial?.outputTokens ?? 0)} tokens).`,
+            );
+          }
+          const message = e instanceof Error ? e.message : "Erreur lors de l'analyse LLM.";
+          void recordUsage({
+            ownerId,
+            route: "compare",
+            model: EXTRACTION_MODEL_ID,
+            inputTokens: partial?.inputTokens ?? 0,
+            outputTokens: partial?.outputTokens ?? 0,
+            success: false,
+            error: message,
+          });
+          send({ type: "error", error: message, status: 502 });
+          return;
+        }
 
-  const result = compare(gRef, gCand);
+        const gRef = refOutcome.graph;
+        const gCand = candOutcome.graph;
+        const totalCost = refOutcome.usage.costUsd + candOutcome.usage.costUsd;
+        const totalInputTokens = refOutcome.usage.inputTokens + candOutcome.usage.inputTokens;
+        const totalOutputTokens = refOutcome.usage.outputTokens + candOutcome.usage.outputTokens;
 
-  await connectDB();
-  const doc = await Comparison.create({
-    ownerId,
-    refTitle,
-    candTitle,
-    mode: "llm",
-    scores: {
-      sns: result.sns, snsNormalized: result.snsNormalized, ss: result.ss, st: result.st, srj: result.srj,
-      sIso: result.sIso, sGed: result.sGed, sFunc: result.sFunc,
-      sAct: result.sAct, sTens: result.sTens,
+        void recordUsage({
+          ownerId,
+          route: "compare",
+          model: EXTRACTION_MODEL_ID,
+          inputTokens: totalInputTokens,
+          outputTokens: totalOutputTokens,
+        });
+
+        const result = compare(gRef, gCand);
+
+        await connectDB();
+        const doc = await Comparison.create({
+          ownerId,
+          refTitle,
+          candTitle,
+          mode: "llm",
+          scores: {
+            sns: result.sns, snsNormalized: result.snsNormalized, ss: result.ss, st: result.st, srj: result.srj,
+            sIso: result.sIso, sGed: result.sGed, sFunc: result.sFunc,
+            sAct: result.sAct, sTens: result.sTens,
+          },
+          snsNormalized: result.snsNormalized,
+          srjLevel: result.srjLevel,
+          modality: result.detectedModality,
+          verdict: result.verdict,
+          correspondences: result.correspondences,
+          warnings: result.warnings,
+          costUsd: totalCost,
+          refGraph: gRef,
+          candGraph: gCand,
+        });
+
+        const pct = Math.round((result.sns ?? 0) * 100);
+        const high = result.srjLevel === "Critique" || result.srjLevel === "Élevé";
+        await createNotification({
+          ownerId,
+          type: high ? "ip" : "comparison",
+          title: high
+            ? `Similarité élevée détectée — ${refTitle} / ${candTitle}`
+            : `Comparaison terminée — ${refTitle} / ${candTitle}`,
+          body: `Indice de similarité narrative : ${pct} %. Niveau de risque : ${result.srjLevel}.`,
+          href: "/historique",
+        });
+
+        send({
+          type: "result",
+          data: {
+            id: String(doc._id),
+            refTitle,
+            candTitle,
+            mode: "llm",
+            costUsd: totalCost,
+            refWork: buildWork(gRef, refOutcome.usage.costUsd),
+            candWork: buildWork(gCand, candOutcome.usage.costUsd),
+            ...result,
+          },
+        });
+      } finally {
+        controller.close();
+      }
     },
-    snsNormalized: result.snsNormalized,
-    srjLevel: result.srjLevel,
-    modality: result.detectedModality,
-    verdict: result.verdict,
-    correspondences: result.correspondences,
-    warnings: result.warnings,
-    costUsd: totalCost,
-    refGraph: gRef,
-    candGraph: gCand,
   });
 
-  const pct = Math.round((result.sns ?? 0) * 100);
-  const high = result.srjLevel === "Critique" || result.srjLevel === "Élevé";
-  await createNotification({
-    ownerId,
-    type: high ? "ip" : "comparison",
-    title: high
-      ? `Similarité élevée détectée — ${refTitle} / ${candTitle}`
-      : `Comparaison terminée — ${refTitle} / ${candTitle}`,
-    body: `Indice de similarité narrative : ${pct} %. Niveau de risque : ${result.srjLevel}.`,
-    href: "/historique",
-  });
-
-  return NextResponse.json({
-    id: String(doc._id),
-    refTitle,
-    candTitle,
-    mode: "llm",
-    costUsd: totalCost,
-    refWork: buildWork(gRef, refOutcome.usage.costUsd),
-    candWork: buildWork(gCand, candOutcome.usage.costUsd),
-    ...result,
+  return new NextResponse(stream, {
+    headers: { "Content-Type": "application/x-ndjson; charset=utf-8", "Cache-Control": "no-cache" },
   });
 }

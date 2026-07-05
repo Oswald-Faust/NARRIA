@@ -12,7 +12,13 @@ export { FUNCTION_REPERTOIRE, getFunctionByCode, allFunctionCodes, totalFunction
 export { segment } from "./segmentation/segmenter";
 export { extractGraph } from "./extraction/heuristic-extractor";
 export { analyzeLLM, LlmExtractionError } from "./extraction/llm-extractor";
-export type { LlmAnalysisMeta, LlmAnalysisOutcome, LlmExtractionUsage } from "./extraction/llm-extractor";
+export type {
+  LlmAnalysisMeta,
+  LlmAnalysisOutcome,
+  LlmExtractionUsage,
+  LlmProgressEvent,
+  LlmProgressCallback,
+} from "./extraction/llm-extractor";
 
 export interface AnalysisMeta {
   title?: string;

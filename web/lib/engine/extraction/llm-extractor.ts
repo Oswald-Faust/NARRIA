@@ -2,7 +2,7 @@
  * Extraction narratologique via Claude — port de `narria/llm/claude_client.py`
  * (analyze_narrative) avec chunking (`narria/llm/chunker.py`) pour les textes longs.
  */
-import { generateObject } from "ai";
+import { streamObject } from "ai";
 import { anthropic } from "@ai-sdk/anthropic";
 import { SYSTEM_PROMPT_NARRATOLOGY, buildUserPrompt, type PromptMeta } from "./llm-prompts";
 import { LlmAnalysisSchema, enforceCulturalRestriction, type LlmAnalysis, type LlmNode } from "./llm-schema";
@@ -30,8 +30,22 @@ export class LlmExtractionError extends Error {
   }
 }
 
-async function analyzeChunk(text: string, meta: PromptMeta): Promise<{ analysis: LlmAnalysis; usage: LlmExtractionUsage }> {
-  const result = await generateObject({
+/** Estime le nombre de nœuds attendus (~1/400 mots, plancher 5, plafond 35) — reflète la
+ *  consigne de granularité du prompt, utilisé uniquement pour estimer une progression. */
+export function estimateTargetNodeCount(wordCount: number): number {
+  const raw = Math.round(wordCount / 400);
+  return Math.min(35, Math.max(5, raw));
+}
+
+async function analyzeChunk(
+  text: string,
+  meta: PromptMeta,
+  onProgress?: (chunkFraction: number) => void,
+): Promise<{ analysis: LlmAnalysis; usage: LlmExtractionUsage }> {
+  const wordCount = text.trim() ? text.trim().split(/\s+/).length : 0;
+  const targetNodes = estimateTargetNodeCount(wordCount);
+
+  const result = streamObject({
     model: anthropic(EXTRACTION_MODEL_ID),
     system: SYSTEM_PROMPT_NARRATOLOGY,
     prompt: buildUserPrompt(text, meta),
@@ -39,9 +53,26 @@ async function analyzeChunk(text: string, meta: PromptMeta): Promise<{ analysis:
     maxRetries: 2,
   });
 
-  const analysis = enforceCulturalRestriction(result.object);
-  const inputTokens = result.usage?.inputTokens ?? 0;
-  const outputTokens = result.usage?.outputTokens ?? 0;
+  if (onProgress) {
+    (async () => {
+      try {
+        for await (const partial of result.partialObjectStream) {
+          const nodesSoFar = Array.isArray(partial?.nodes) ? partial.nodes.length : 0;
+          onProgress(Math.min(0.95, nodesSoFar / targetNodes));
+        }
+      } catch {
+        // Le flux de progression est best-effort ; toute erreur réelle remonte via result.object.
+      }
+    })();
+  }
+
+  const object = await result.object;
+  const usage = await result.usage;
+  onProgress?.(1);
+
+  const analysis = enforceCulturalRestriction(object);
+  const inputTokens = usage?.inputTokens ?? 0;
+  const outputTokens = usage?.outputTokens ?? 0;
 
   return {
     analysis,
@@ -97,8 +128,22 @@ export interface LlmAnalysisOutcome {
   usage: LlmExtractionUsage;
 }
 
+export interface LlmProgressEvent {
+  stage: "extracting" | "merging" | "done";
+  /** Progression globale [0, 1] sur l'ensemble du texte (tous chunks confondus). */
+  fraction: number;
+  /** Bloc courant (1-indexé) et nombre total de blocs, pour affichage ("bloc 2/3"). */
+  chunkIndex?: number;
+  chunkTotal?: number;
+}
+export type LlmProgressCallback = (event: LlmProgressEvent) => void;
+
 /** Analyse LLM complète d'un texte → graphe narratif enrichi (mode par défaut de /api/analyze). */
-export async function analyzeLLM(text: string, meta: LlmAnalysisMeta = {}): Promise<LlmAnalysisOutcome> {
+export async function analyzeLLM(
+  text: string,
+  meta: LlmAnalysisMeta = {},
+  onProgress?: LlmProgressCallback,
+): Promise<LlmAnalysisOutcome> {
   const promptMeta: PromptMeta = { title: meta.title, author: meta.author };
 
   let merged: LlmAnalysis;
@@ -106,16 +151,27 @@ export async function analyzeLLM(text: string, meta: LlmAnalysisMeta = {}): Prom
   let mergeInfo: LlmAnalysisMetadata["mergeInfo"];
 
   if (!needsChunking(text)) {
-    const { analysis, usage } = await analyzeChunk(text, promptMeta);
+    const { analysis, usage } = await analyzeChunk(text, promptMeta, (f) =>
+      onProgress?.({ stage: "extracting", fraction: f }),
+    );
     merged = analysis;
     totalUsage = usage;
   } else {
     const chunks: TextChunk[] = chunkText(text);
     const partials: LlmAnalysis[] = [];
     // Séquentiel : respecte le rate limit Anthropic et l'ordre attendu par mergePartialGraphs
-    for (const chunk of chunks) {
+    for (let i = 0; i < chunks.length; i++) {
+      const chunk = chunks[i];
       try {
-        const { analysis, usage } = await analyzeChunk(chunk.text, promptMeta);
+        const { analysis, usage } = await analyzeChunk(chunk.text, promptMeta, (chunkFraction) => {
+          const globalFraction = (i + chunkFraction) / chunks.length;
+          onProgress?.({
+            stage: "extracting",
+            fraction: globalFraction,
+            chunkIndex: i + 1,
+            chunkTotal: chunks.length,
+          });
+        });
         partials.push(analysis);
         totalUsage = {
           inputTokens: totalUsage.inputTokens + usage.inputTokens,
@@ -131,6 +187,7 @@ export async function analyzeLLM(text: string, meta: LlmAnalysisMeta = {}): Prom
         );
       }
     }
+    onProgress?.({ stage: "merging", fraction: 0.98 });
     const mergedResult = mergePartialGraphs(partials, chunks);
     merged = mergedResult.analysis;
     mergeInfo = mergedResult.mergeInfo;
@@ -164,6 +221,8 @@ export async function analyzeLLM(text: string, meta: LlmAnalysisMeta = {}): Prom
     nodes,
     edges: buildSequentialEdges(nodes),
   };
+
+  onProgress?.({ stage: "done", fraction: 1 });
 
   return { graph, usage: totalUsage };
 }

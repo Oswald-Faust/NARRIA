@@ -9,6 +9,7 @@ import { Input, Textarea, Label } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { FileDropzone, type FileDropzoneResult } from "@/components/analyse/file-dropzone";
 import { AnalysisReport, type AnalysisReportData } from "@/components/analyse/analysis-report";
+import { ProgressBar } from "@/components/ui/progress-bar";
 
 type AnalyzeResult = AnalysisReportData & {
   nNodes: number;
@@ -30,6 +31,7 @@ export default function AnalyserPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<AnalyzeResult | null>(null);
+  const [progress, setProgress] = useState<{ percent: number; message: string } | null>(null);
 
   function handleExtracted(r: FileDropzoneResult) {
     setText(r.text);
@@ -45,16 +47,44 @@ export default function AnalyserPage() {
   async function run() {
     setError(null);
     setResult(null);
+    setProgress(null);
     setLoading(true);
-    const res = await fetch("/api/analyze", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text, title, author }),
-    });
-    const data = await res.json();
-    setLoading(false);
-    if (!res.ok) return setError(data.error ?? "Erreur lors de l'analyse.");
-    setResult(data);
+    try {
+      const res = await fetch("/api/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text, title, author }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        setError(data.error ?? "Erreur lors de l'analyse.");
+        return;
+      }
+
+      const reader = res.body?.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split("\n");
+          buffer = lines.pop() ?? "";
+          for (const line of lines) {
+            if (!line.trim()) continue;
+            const parsed = JSON.parse(line);
+            if (parsed.type === "progress") setProgress({ percent: parsed.percent, message: parsed.message });
+            else if (parsed.type === "result") setResult(parsed.data);
+            else if (parsed.type === "error") setError(parsed.error);
+          }
+        }
+      }
+    } finally {
+      setLoading(false);
+      setProgress(null);
+    }
   }
 
   return (
@@ -118,6 +148,8 @@ export default function AnalyserPage() {
             {loading ? "Analyse…" : "Lancer l'analyse narrative"}
           </Button>
         </div>
+
+        {loading && progress && <ProgressBar percent={progress.percent} label={progress.message} />}
       </Card>
 
       {result && (

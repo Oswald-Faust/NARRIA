@@ -36,85 +36,119 @@ export async function POST(req: Request) {
     );
   }
 
-  let graph;
-  let usage;
-  try {
-    ({ graph, usage } = await analyzeLLM(text, { title, author }));
-  } catch (e) {
-    let partial: { inputTokens?: number; outputTokens?: number; costUsd?: number } | undefined;
-    if (e instanceof LlmExtractionError) {
-      partial = e.partialUsage;
-      console.error(
-        `Analyse LLM échouée après un coût partiel de ${partial?.costUsd ?? 0} USD (${(partial?.inputTokens ?? 0) + (partial?.outputTokens ?? 0)} tokens).`,
-      );
-    }
-    const message = e instanceof Error ? e.message : "Erreur lors de l'analyse LLM.";
-    void recordUsage({
-      ownerId: session.user.id,
-      route: "analyze",
-      model: EXTRACTION_MODEL_ID,
-      inputTokens: partial?.inputTokens ?? 0,
-      outputTokens: partial?.outputTokens ?? 0,
-      success: false,
-      error: message,
-    });
-    return NextResponse.json({ error: message }, { status: 502 });
-  }
+  const ownerId = session.user.id;
+  const encoder = new TextEncoder();
 
-  const wordCount = text.trim().split(/\s+/).length;
-  const meta = graph.metadata as Record<string, unknown>;
+  const stream = new ReadableStream({
+    async start(controller) {
+      function send(obj: unknown) {
+        controller.enqueue(encoder.encode(JSON.stringify(obj) + "\n"));
+      }
 
-  await connectDB();
-  const doc = await Analysis.create({
-    ownerId: session.user.id,
-    title,
-    author,
-    mode: "llm",
-    wordCount,
-    nNodes: graph.nodes.length,
-    graph,
-    costTokens: usage.inputTokens + usage.outputTokens,
-    costUsd: usage.costUsd,
-    summary: meta.summary,
-    genre: meta.genre,
-    tradition: meta.tradition,
-    mainActants: meta.mainActants,
-    thematicKeywords: meta.thematicKeywords,
-    formalFeatures: meta.formalFeatures,
-    sourceFile,
+      try {
+        let graph;
+        let usage;
+        try {
+          ({ graph, usage } = await analyzeLLM(text, { title, author }, (event) => {
+            const percent = Math.round(event.fraction * 100);
+            const message =
+              event.stage === "merging"
+                ? "Fusion des résultats…"
+                : event.stage === "done"
+                  ? "Finalisation…"
+                  : event.chunkTotal && event.chunkTotal > 1
+                    ? `Analyse Claude en cours… bloc ${event.chunkIndex}/${event.chunkTotal}`
+                    : "Analyse Claude en cours…";
+            send({ type: "progress", percent, message });
+          }));
+        } catch (e) {
+          let partial: { inputTokens?: number; outputTokens?: number; costUsd?: number } | undefined;
+          if (e instanceof LlmExtractionError) {
+            partial = e.partialUsage;
+            console.error(
+              `Analyse LLM échouée après un coût partiel de ${partial?.costUsd ?? 0} USD (${(partial?.inputTokens ?? 0) + (partial?.outputTokens ?? 0)} tokens).`,
+            );
+          }
+          const message = e instanceof Error ? e.message : "Erreur lors de l'analyse LLM.";
+          void recordUsage({
+            ownerId,
+            route: "analyze",
+            model: EXTRACTION_MODEL_ID,
+            inputTokens: partial?.inputTokens ?? 0,
+            outputTokens: partial?.outputTokens ?? 0,
+            success: false,
+            error: message,
+          });
+          send({ type: "error", error: message, status: 502 });
+          return;
+        }
+
+        const wordCount = text.trim().split(/\s+/).length;
+        const meta = graph.metadata as Record<string, unknown>;
+
+        await connectDB();
+        const doc = await Analysis.create({
+          ownerId,
+          title,
+          author,
+          mode: "llm",
+          wordCount,
+          nNodes: graph.nodes.length,
+          graph,
+          costTokens: usage.inputTokens + usage.outputTokens,
+          costUsd: usage.costUsd,
+          summary: meta.summary,
+          genre: meta.genre,
+          tradition: meta.tradition,
+          mainActants: meta.mainActants,
+          thematicKeywords: meta.thematicKeywords,
+          formalFeatures: meta.formalFeatures,
+          sourceFile,
+        });
+
+        await createNotification({
+          ownerId,
+          type: "analysis",
+          title: `Analyse terminée — « ${title} »`,
+          body: `L'analyse narrative de votre œuvre est prête. ${graph.nodes.length} nœuds narratifs détectés.`,
+          href: "/historique",
+        });
+
+        void recordUsage({
+          ownerId,
+          route: "analyze",
+          model: EXTRACTION_MODEL_ID,
+          inputTokens: usage.inputTokens,
+          outputTokens: usage.outputTokens,
+        });
+
+        send({
+          type: "result",
+          data: {
+            id: String(doc._id),
+            title,
+            author,
+            mode: "llm",
+            nNodes: graph.nodes.length,
+            wordCount,
+            functionSequence: functionSequence(graph),
+            nodes: graph.nodes,
+            summary: meta.summary,
+            genre: meta.genre,
+            tradition: meta.tradition,
+            mainActants: meta.mainActants,
+            thematicKeywords: meta.thematicKeywords,
+            costUsd: usage.costUsd,
+            tokensTotal: usage.inputTokens + usage.outputTokens,
+          },
+        });
+      } finally {
+        controller.close();
+      }
+    },
   });
 
-  await createNotification({
-    ownerId: session.user.id,
-    type: "analysis",
-    title: `Analyse terminée — « ${title} »`,
-    body: `L'analyse narrative de votre œuvre est prête. ${graph.nodes.length} nœuds narratifs détectés.`,
-    href: "/historique",
-  });
-
-  void recordUsage({
-    ownerId: session.user.id,
-    route: "analyze",
-    model: EXTRACTION_MODEL_ID,
-    inputTokens: usage.inputTokens,
-    outputTokens: usage.outputTokens,
-  });
-
-  return NextResponse.json({
-    id: String(doc._id),
-    title,
-    author,
-    mode: "llm",
-    nNodes: graph.nodes.length,
-    wordCount,
-    functionSequence: functionSequence(graph),
-    nodes: graph.nodes,
-    summary: meta.summary,
-    genre: meta.genre,
-    tradition: meta.tradition,
-    mainActants: meta.mainActants,
-    thematicKeywords: meta.thematicKeywords,
-    costUsd: usage.costUsd,
-    tokensTotal: usage.inputTokens + usage.outputTokens,
+  return new NextResponse(stream, {
+    headers: { "Content-Type": "application/x-ndjson; charset=utf-8", "Cache-Control": "no-cache" },
   });
 }

@@ -9,6 +9,7 @@ import { Input, Textarea, Label } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { FileDropzone, type FileDropzoneResult } from "@/components/analyse/file-dropzone";
 import { ComparisonReport, type ComparisonReportData } from "@/components/comparer/comparison-report";
+import { ProgressBar } from "@/components/ui/progress-bar";
 
 interface Sample { id: string; title: string; author: string; text: string }
 type CompareResult = ComparisonReportData;
@@ -59,6 +60,7 @@ export default function ComparerPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<CompareResult | null>(null);
+  const [progress, setProgress] = useState<{ percent: number; message: string } | null>(null);
 
   useEffect(() => {
     fetch("/api/samples").then((r) => r.json()).then((d) => setSamples(d.samples ?? []));
@@ -77,16 +79,46 @@ export default function ComparerPage() {
   }
 
   async function run() {
-    setError(null); setResult(null); setLoading(true);
-    const res = await fetch("/api/compare", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ refText, candText, refTitle, candTitle }),
-    });
-    const data = await res.json();
-    setLoading(false);
-    if (!res.ok) return setError(data.error ?? "Erreur lors de la comparaison.");
-    setResult(data);
+    setError(null);
+    setResult(null);
+    setProgress(null);
+    setLoading(true);
+    try {
+      const res = await fetch("/api/compare", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ refText, candText, refTitle, candTitle }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        setError(data.error ?? "Erreur lors de la comparaison.");
+        return;
+      }
+
+      const reader = res.body?.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split("\n");
+          buffer = lines.pop() ?? "";
+          for (const line of lines) {
+            if (!line.trim()) continue;
+            const parsed = JSON.parse(line);
+            if (parsed.type === "progress") setProgress({ percent: parsed.percent, message: parsed.message });
+            else if (parsed.type === "result") setResult(parsed.data);
+            else if (parsed.type === "error") setError(parsed.error);
+          }
+        }
+      }
+    } finally {
+      setLoading(false);
+      setProgress(null);
+    }
   }
 
   return (
@@ -113,6 +145,8 @@ export default function ComparerPage() {
           {loading ? "Comparaison…" : "Lancer la comparaison"}
         </Button>
       </div>
+
+      {loading && progress && <ProgressBar percent={progress.percent} label={progress.message} />}
 
       {result && (
         <Card className="space-y-6">
