@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { History } from "lucide-react";
+import Link from "next/link";
+import { History, ExternalLink } from "lucide-react";
 import { GradientHeader } from "@/components/ui/gradient-header";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -54,7 +55,7 @@ export default function HistoriquePage() {
           ) : (
             <table className="w-full min-w-[640px] text-left text-sm">
               <thead className="border-b border-border text-xs uppercase tracking-wide text-muted">
-                <tr><th className="px-5 py-3">Date</th><th className="px-5 py-3">Titre</th><th className="px-5 py-3">Auteur</th><th className="px-5 py-3">Mode</th><th className="px-5 py-3">Nœuds</th></tr>
+                <tr><th className="px-5 py-3">Date</th><th className="px-5 py-3">Titre</th><th className="px-5 py-3">Auteur</th><th className="px-5 py-3">Mode</th><th className="px-5 py-3">Nœuds</th><th className="px-5 py-3"></th></tr>
               </thead>
               <tbody>
                 {analyses.map((a) => (
@@ -64,6 +65,11 @@ export default function HistoriquePage() {
                     <td className="px-5 py-3 text-muted">{a.author}</td>
                     <td className="px-5 py-3"><Badge tone="neutral">{a.mode}</Badge></td>
                     <td className="px-5 py-3 text-muted">{a.nNodes}</td>
+                    <td className="px-5 py-3 text-right">
+                      <Link href={`/historique/analyses/${a.id}`} className="inline-flex items-center gap-1 text-xs text-soft-pink hover:underline">
+                        <ExternalLink className="h-3 w-3" /> Consulter
+                      </Link>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -74,7 +80,7 @@ export default function HistoriquePage() {
         ) : (
           <table className="w-full text-left text-sm">
             <thead className="border-b border-border text-xs uppercase tracking-wide text-muted">
-              <tr><th className="px-5 py-3">Date</th><th className="px-5 py-3">Référence</th><th className="px-5 py-3">Candidate</th><th className="px-5 py-3">SNS</th><th className="px-5 py-3">Risque</th></tr>
+              <tr><th className="px-5 py-3">Date</th><th className="px-5 py-3">Référence</th><th className="px-5 py-3">Candidate</th><th className="px-5 py-3">SNS</th><th className="px-5 py-3">Risque</th><th className="px-5 py-3"></th></tr>
             </thead>
             <tbody>
               {comparisons.map((c) => (
@@ -84,6 +90,11 @@ export default function HistoriquePage() {
                   <td className="px-5 py-3 text-foreground">{c.candTitle}</td>
                   <td className="px-5 py-3"><Badge tone="pink">{c.sns?.toFixed(2)}</Badge></td>
                   <td className="px-5 py-3"><Badge tone={srjTone(c.srjLevel)}>{c.srjLevel}</Badge></td>
+                  <td className="px-5 py-3 text-right">
+                    <Link href={`/historique/comparaisons/${c.id}`} className="inline-flex items-center gap-1 text-xs text-soft-pink hover:underline">
+                      <ExternalLink className="h-3 w-3" /> Consulter
+                    </Link>
+                  </td>
                 </tr>
               ))}
             </tbody>

@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { GitCompareArrows, Loader2, FileText } from "lucide-react";
+import Link from "next/link";
+import { GitCompareArrows, Loader2, FileText, ExternalLink } from "lucide-react";
 import { GradientHeader } from "@/components/ui/gradient-header";
 import { Card, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -164,6 +165,14 @@ export default function ComparerPage() {
             <div className="flex items-center gap-2">
               <Badge tone="purple">{result.detectedModality}</Badge>
               <Badge tone={srjTone(result.srjLevel)}>Risque {result.srjLevel}</Badge>
+              {result.id && (
+                <Link
+                  href={`/historique/comparaisons/${result.id}`}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface px-3 py-1 text-xs text-foreground hover:bg-surface-2"
+                >
+                  <ExternalLink className="h-3 w-3" /> Voir en page dédiée
+                </Link>
+              )}
             </div>
           </div>
 

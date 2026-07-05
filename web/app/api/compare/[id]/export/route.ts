@@ -36,7 +36,7 @@ function buildReportWork(g: NarrativeGraph | undefined, fallbackTitle: string): 
     graphId: g?.graphId ?? "—",
     nNodes: Array.isArray(g?.nodes) ? g.nodes.length : 0,
     nEdges: Array.isArray(g?.edges) ? g.edges.length : 0,
-    tensionProfile: g ? tensionProfile(g) : [],
+    tensionProfile: Array.isArray(g?.nodes) ? tensionProfile(g) : [],
     mode: typeof meta.mode === "string" ? meta.mode : "heuristic",
     summary: typeof meta.summary === "string" ? meta.summary : "",
     genre: typeof meta.genre === "string" ? meta.genre : "",

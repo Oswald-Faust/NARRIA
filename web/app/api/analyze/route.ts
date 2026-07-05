@@ -6,6 +6,7 @@ import { analyzeLLM, functionSequence, LlmExtractionError } from "@/lib/engine";
 import { EXTRACTION_MODEL_ID } from "@/lib/engine/extraction/llm-extractor";
 import { createNotification } from "@/lib/notifications";
 import { recordUsage } from "@/lib/usage";
+import { describeExtractionProgress } from "@/lib/progress-messages";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -53,12 +54,10 @@ export async function POST(req: Request) {
             const percent = Math.round(event.fraction * 100);
             const message =
               event.stage === "merging"
-                ? "Fusion des résultats…"
+                ? "Fusion des blocs analysés…"
                 : event.stage === "done"
-                  ? "Finalisation…"
-                  : event.chunkTotal && event.chunkTotal > 1
-                    ? `Analyse Claude en cours… bloc ${event.chunkIndex}/${event.chunkTotal}`
-                    : "Analyse Claude en cours…";
+                  ? "Analyse via IA terminée…"
+                  : describeExtractionProgress(percent, event.chunkIndex, event.chunkTotal);
             send({ type: "progress", percent, message });
           }));
         } catch (e) {
@@ -82,6 +81,8 @@ export async function POST(req: Request) {
           send({ type: "error", error: message, status: 502 });
           return;
         }
+
+        send({ type: "progress", percent: 99, message: "Enregistrement de l'analyse…" });
 
         const wordCount = text.trim().split(/\s+/).length;
         const meta = graph.metadata as Record<string, unknown>;

@@ -57,8 +57,17 @@ async function analyzeChunk(
     (async () => {
       try {
         for await (const partial of result.partialObjectStream) {
+          // Les nœuds occupent le gros du volume généré, mais plusieurs champs sont
+          // streamés APRÈS eux (main_actants_v1/v2, thematic_keywords) : sans en tenir
+          // compte, la progression restait bloquée à son plafond pendant toute cette
+          // phase finale, donnant une fausse impression de blocage.
           const nodesSoFar = Array.isArray(partial?.nodes) ? partial.nodes.length : 0;
-          onProgress(Math.min(0.95, nodesSoFar / targetNodes));
+          const nodesFraction = Math.min(1, nodesSoFar / targetNodes);
+          const hasActantsV1 = Boolean(partial?.main_actants_v1?.protagoniste);
+          const hasActantsV2 = Boolean(partial?.main_actants_v2?.protagoniste);
+          const hasKeywords = Array.isArray(partial?.thematic_keywords) && partial.thematic_keywords.length > 0;
+          const tailFraction = (Number(hasActantsV1) + Number(hasActantsV2) + Number(hasKeywords)) / 3;
+          onProgress(Math.min(0.98, nodesFraction * 0.85 + tailFraction * 0.15));
         }
       } catch {
         // Le flux de progression est best-effort ; toute erreur réelle remonte via result.object.

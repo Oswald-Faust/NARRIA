@@ -7,6 +7,7 @@ import type { NarrativeGraph } from "@/lib/engine";
 import { EXTRACTION_MODEL_ID } from "@/lib/engine/extraction/llm-extractor";
 import { createNotification } from "@/lib/notifications";
 import { recordUsage } from "@/lib/usage";
+import { describeExtractionProgress } from "@/lib/progress-messages";
 
 export const runtime = "nodejs";
 export const maxDuration = 180;
@@ -91,8 +92,8 @@ export async function POST(req: Request) {
           const percent = Math.round(fraction * 100);
           const bothDone = refFraction >= 1 && candFraction >= 1;
           const message = bothDone
-            ? "Finalisation…"
-            : "Analyse de l'œuvre de référence et candidate en cours…";
+            ? "Finalisation de la comparaison…"
+            : describeExtractionProgress(percent);
           send({ type: "progress", percent, message });
         }
 
@@ -149,6 +150,8 @@ export async function POST(req: Request) {
         });
 
         const result = compare(gRef, gCand);
+
+        send({ type: "progress", percent: 99, message: "Enregistrement de la comparaison…" });
 
         await connectDB();
         const doc = await Comparison.create({
