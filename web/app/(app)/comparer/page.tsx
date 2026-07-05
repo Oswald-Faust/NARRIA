@@ -100,19 +100,28 @@ export default function ComparerPage() {
       const decoder = new TextDecoder();
       let buffer = "";
       if (reader) {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          buffer += decoder.decode(value, { stream: true });
-          const lines = buffer.split("\n");
-          buffer = lines.pop() ?? "";
-          for (const line of lines) {
-            if (!line.trim()) continue;
-            const parsed = JSON.parse(line);
-            if (parsed.type === "progress") setProgress({ percent: parsed.percent, message: parsed.message });
-            else if (parsed.type === "result") setResult(parsed.data);
-            else if (parsed.type === "error") setError(parsed.error);
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split("\n");
+            buffer = lines.pop() ?? "";
+            for (const line of lines) {
+              if (!line.trim()) continue;
+              try {
+                const parsed = JSON.parse(line);
+                if (parsed.type === "progress") setProgress({ percent: parsed.percent, message: parsed.message });
+                else if (parsed.type === "result") setResult(parsed.data);
+                else if (parsed.type === "error") setError(parsed.error);
+              } catch {
+                // Ligne NDJSON malformée : on l'ignore et on continue le flux.
+                continue;
+              }
+            }
           }
+        } catch {
+          setError("La connexion a été interrompue pendant le traitement. Réessayez.");
         }
       }
     } finally {
