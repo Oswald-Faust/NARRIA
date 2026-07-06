@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { Types } from "mongoose";
 import { auth } from "@/auth";
 import { connectDB } from "@/lib/db/mongoose";
 import { ChatConversation } from "@/lib/db/models/chat-conversation";
@@ -38,6 +39,8 @@ export async function POST(req: Request) {
 
   const body = await req.json().catch(() => null);
   const title = titleFromText(body?.title ?? "");
+  const projectId: string | null =
+    typeof body?.projectId === "string" && Types.ObjectId.isValid(body.projectId) ? body.projectId : null;
 
   await connectDB();
   const conversation = await ChatConversation.create({
@@ -45,6 +48,7 @@ export async function POST(req: Request) {
     title,
     messages: [],
     lastMessageAt: new Date(),
+    projectId,
   });
 
   return NextResponse.json({
