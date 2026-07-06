@@ -35,12 +35,19 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   const project = await Project.findById(id).lean();
   if (!project) return NextResponse.json({ error: "Projet introuvable." }, { status: 404 });
 
-  const invitation = await ProjectInvitation.create({
-    projectId: id,
-    email,
-    role: inviteRole,
-    invitedByUserId: session.user.id,
-  });
+  const existing = await ProjectInvitation.findOne({ projectId: id, email, status: "pending" });
+  const invitation = existing
+    ? await ProjectInvitation.findOneAndUpdate(
+        { _id: existing._id },
+        { $set: { role: inviteRole, invitedByUserId: session.user.id } },
+        { new: true },
+      )
+    : await ProjectInvitation.create({
+        projectId: id,
+        email,
+        role: inviteRole,
+        invitedByUserId: session.user.id,
+      });
 
   const invitedUser = await User.findOne({ email }).lean();
   if (invitedUser) {

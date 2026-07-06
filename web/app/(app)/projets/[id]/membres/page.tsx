@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, use } from "react";
+import { useEffect, useRef, useState, use } from "react";
 import Link from "next/link";
 import { Users, Mail, Copy, RefreshCw, Trash2, ArrowLeft } from "lucide-react";
 import { GradientHeader } from "@/components/ui/gradient-header";
@@ -21,6 +21,8 @@ export default function ProjectMembersPage({ params }: { params: Promise<{ id: s
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<"co-admin" | "collaborateur" | "lecteur">("collaborateur");
   const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const reloadSeqRef = useRef(0);
 
   useEffect(() => {
     let active = true;
@@ -40,73 +42,109 @@ export default function ProjectMembersPage({ params }: { params: Promise<{ id: s
   }, [id]);
 
   async function reload() {
+    const seq = ++reloadSeqRef.current;
     const res = await fetch(`/api/projects/${id}`);
-    const data = await res.json();
+    const data = await res.json().catch(() => null);
+    if (seq !== reloadSeqRef.current) return;
     if (res.ok) setProject(data);
+    else setError(data?.error ?? "Erreur lors du rechargement.");
   }
 
   async function invite() {
+    if (busy) return;
+    setBusy(true);
     setError(null);
-    const res = await fetch(`/api/projects/${id}/invitations`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, role }),
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      setError(data.error ?? "Erreur lors de l'invitation.");
-      return;
+    try {
+      const res = await fetch(`/api/projects/${id}/invitations`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, role }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "Erreur lors de l'invitation.");
+        return;
+      }
+      setEmail("");
+      await reload();
+    } finally {
+      setBusy(false);
     }
-    setEmail("");
-    await reload();
   }
 
   async function revoke(invitationId: string) {
+    if (busy) return;
+    if (!window.confirm("Révoquer cette invitation ?")) return;
+    setBusy(true);
     setError(null);
-    const res = await fetch(`/api/projects/${id}/invitations/${invitationId}`, { method: "DELETE" });
-    if (!res.ok) {
-      const data = await res.json().catch(() => null);
-      setError(data?.error ?? "Erreur lors de la révocation.");
-      return;
+    try {
+      const res = await fetch(`/api/projects/${id}/invitations/${invitationId}`, { method: "DELETE" });
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        setError(data?.error ?? "Erreur lors de la révocation.");
+        return;
+      }
+      await reload();
+    } finally {
+      setBusy(false);
     }
-    await reload();
   }
 
   async function changeRole(userId: string, newRole: string) {
+    if (busy) return;
+    setBusy(true);
     setError(null);
-    const res = await fetch(`/api/projects/${id}/members/${userId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ role: newRole }),
-    });
-    if (!res.ok) {
-      const data = await res.json().catch(() => null);
-      setError(data?.error ?? "Erreur lors du changement de rôle.");
-      return;
+    try {
+      const res = await fetch(`/api/projects/${id}/members/${userId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ role: newRole }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        setError(data?.error ?? "Erreur lors du changement de rôle.");
+        return;
+      }
+      await reload();
+    } finally {
+      setBusy(false);
     }
-    await reload();
   }
 
   async function removeMember(userId: string) {
+    if (busy) return;
+    if (!window.confirm("Retirer ce membre du projet ?")) return;
+    setBusy(true);
     setError(null);
-    const res = await fetch(`/api/projects/${id}/members/${userId}`, { method: "DELETE" });
-    if (!res.ok) {
-      const data = await res.json().catch(() => null);
-      setError(data?.error ?? "Erreur lors du retrait du membre.");
-      return;
+    try {
+      const res = await fetch(`/api/projects/${id}/members/${userId}`, { method: "DELETE" });
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        setError(data?.error ?? "Erreur lors du retrait du membre.");
+        return;
+      }
+      await reload();
+    } finally {
+      setBusy(false);
     }
-    await reload();
   }
 
   async function regenerateLink() {
+    if (busy) return;
+    if (!window.confirm("Régénérer le lien d'invitation ? L'ancien lien cessera de fonctionner immédiatement.")) return;
+    setBusy(true);
     setError(null);
-    const res = await fetch(`/api/projects/${id}/invite-link`, { method: "POST" });
-    if (!res.ok) {
-      const data = await res.json().catch(() => null);
-      setError(data?.error ?? "Erreur lors de la régénération du lien.");
-      return;
+    try {
+      const res = await fetch(`/api/projects/${id}/invite-link`, { method: "POST" });
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        setError(data?.error ?? "Erreur lors de la régénération du lien.");
+        return;
+      }
+      await reload();
+    } finally {
+      setBusy(false);
     }
-    await reload();
   }
 
   if (!project) return <p className="text-muted">Chargement…</p>;
@@ -135,7 +173,7 @@ export default function ProjectMembersPage({ params }: { params: Promise<{ id: s
             </button>
           ))}
         </div>
-        <Button variant="purple" className="w-full" onClick={invite}><Mail className="h-4 w-4" /> Envoyer l&apos;invitation</Button>
+        <Button variant="purple" className="w-full" onClick={invite} disabled={busy}><Mail className="h-4 w-4" /> Envoyer l&apos;invitation</Button>
       </Card>
 
       {project.pendingInvitations.length > 0 && (
@@ -146,7 +184,7 @@ export default function ProjectMembersPage({ params }: { params: Promise<{ id: s
               <span className="text-foreground">{inv.email}</span>
               <div className="flex items-center gap-2">
                 <Badge tone="neutral">{inv.role}</Badge>
-                <button onClick={() => revoke(inv.id)} className="text-muted hover:text-red-400"><Trash2 className="h-4 w-4" /></button>
+                <button onClick={() => revoke(inv.id)} disabled={busy} aria-label={`Révoquer l'invitation de ${inv.email}`} className="text-muted hover:text-red-400 disabled:opacity-50"><Trash2 className="h-4 w-4" /></button>
               </div>
             </div>
           ))}
@@ -162,12 +200,12 @@ export default function ProjectMembersPage({ params }: { params: Promise<{ id: s
               <Badge tone="purple">owner</Badge>
             ) : (
               <div className="flex items-center gap-2">
-                <select value={m.role} onChange={(e) => changeRole(m.userId, e.target.value)} className="rounded-lg border border-border bg-surface-2 px-2 py-1 text-xs text-foreground">
+                <select value={m.role} onChange={(e) => changeRole(m.userId, e.target.value)} disabled={busy} className="rounded-lg border border-border bg-surface-2 px-2 py-1 text-xs text-foreground disabled:opacity-50">
                   <option value="co-admin">co-admin</option>
                   <option value="collaborateur">collaborateur</option>
                   <option value="lecteur">lecteur</option>
                 </select>
-                <button onClick={() => removeMember(m.userId)} className="text-muted hover:text-red-400"><Trash2 className="h-4 w-4" /></button>
+                <button onClick={() => removeMember(m.userId)} disabled={busy} aria-label="Retirer ce membre" className="text-muted hover:text-red-400 disabled:opacity-50"><Trash2 className="h-4 w-4" /></button>
               </div>
             )}
           </div>
@@ -182,9 +220,9 @@ export default function ProjectMembersPage({ params }: { params: Promise<{ id: s
           <>
             <div className="flex items-center gap-2">
               <Input value={inviteLinkUrl ?? ""} readOnly />
-              <Button variant="secondary" size="icon" onClick={() => inviteLinkUrl && navigator.clipboard.writeText(inviteLinkUrl)}><Copy className="h-4 w-4" /></Button>
+              <Button variant="secondary" size="icon" aria-label="Copier le lien" onClick={() => inviteLinkUrl && navigator.clipboard.writeText(inviteLinkUrl)}><Copy className="h-4 w-4" /></Button>
             </div>
-            <Button variant="secondary" onClick={regenerateLink}><RefreshCw className="h-4 w-4" /> Régénérer le lien</Button>
+            <Button variant="secondary" onClick={regenerateLink} disabled={busy}><RefreshCw className="h-4 w-4" /> Régénérer le lien</Button>
           </>
         )}
       </Card>
