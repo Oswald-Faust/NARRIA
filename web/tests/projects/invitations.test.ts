@@ -31,6 +31,7 @@ vi.mock("@/lib/db/models/project-member", () => ({
 }));
 
 import { acceptPendingInvitationsForEmail } from "@/lib/projects/invitations";
+import { ProjectInvitation } from "@/lib/db/models/project-invitation";
 
 beforeEach(() => {
   invitationDocs.length = 0;
@@ -57,5 +58,10 @@ describe("acceptPendingInvitationsForEmail", () => {
     await acceptPendingInvitationsForEmail("user3", "carl@test.fr");
     expect(memberDocs.filter((m) => m.projectId === "p3" && m.userId === "user3")).toHaveLength(1);
     expect(invitationDocs[0].status).toBe("accepted");
+  });
+
+  it("ne lève jamais d'exception si une opération DB échoue (best-effort)", async () => {
+    vi.spyOn(ProjectInvitation, "find").mockRejectedValueOnce(new Error("DB indisponible"));
+    await expect(acceptPendingInvitationsForEmail("userX", "x@test.fr")).resolves.toBeUndefined();
   });
 });
