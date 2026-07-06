@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, use } from "react";
+import { useEffect, useRef, useState, use } from "react";
 import Link from "next/link";
 import { FolderKanban, ScanText, GitCompareArrows, MessageSquare, Sparkles, Paperclip, Settings, Loader2 } from "lucide-react";
 import { GradientHeader } from "@/components/ui/gradient-header";
@@ -37,32 +37,44 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
   const [project, setProject] = useState<ProjectDetail | null>(null);
   const [tab, setTab] = useState<"projet" | "moi">("projet");
   const [synthLoading, setSynthLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [synthError, setSynthError] = useState<string | null>(null);
+  const synthInFlightRef = useRef(false);
 
   useEffect(() => {
+    let active = true;
     fetch(`/api/projects/${id}`)
       .then(async (res) => {
         const data = await res.json();
+        if (!active) return;
         if (res.ok) setProject(data);
-        else setError(data.error ?? "Projet introuvable.");
+        else setLoadError(data.error ?? "Projet introuvable.");
       })
-      .catch(() => setError("Erreur de chargement."));
+      .catch(() => {
+        if (active) setLoadError("Erreur de chargement.");
+      });
+    return () => {
+      active = false;
+    };
   }, [id]);
 
   async function runSynthesis() {
-    setError(null);
+    if (synthInFlightRef.current) return;
+    synthInFlightRef.current = true;
+    setSynthError(null);
     setSynthLoading(true);
     try {
       const res = await fetch(`/api/projects/${id}/synthesis`, { method: "POST" });
       const data = await res.json();
       if (res.ok) setProject((p) => (p ? { ...p, lastSynthesis: { text: data.text, generatedAt: data.generatedAt } } : p));
-      else setError(data.error ?? "Erreur lors de la synthèse.");
+      else setSynthError(data.error ?? "Erreur lors de la synthèse.");
     } finally {
+      synthInFlightRef.current = false;
       setSynthLoading(false);
     }
   }
 
-  if (error && !project) return <Card className="mx-auto max-w-lg text-sm text-red-400">{error}</Card>;
+  if (loadError && !project) return <Card className="mx-auto max-w-lg text-sm text-red-400">{loadError}</Card>;
   if (!project) return <p className="text-muted">Chargement…</p>;
 
   const canLaunch = project.role === "owner" || project.role === "co-admin" || project.role === "collaborateur";
@@ -81,8 +93,6 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
           </Link>
         ) : undefined}
       />
-
-      {error && <p className="text-sm text-red-400">{error}</p>}
 
       <div>
         <p className="mb-2 text-sm font-semibold text-muted">Outils du projet</p>
@@ -130,6 +140,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
             ) : (
               <p className="text-sm text-muted">Aucune synthèse générée pour le moment.</p>
             )}
+            {synthError && <p className="text-sm text-red-400">{synthError}</p>}
             {canLaunch && (
               <Button variant="purple" className="w-full" onClick={runSynthesis} disabled={synthLoading}>
                 {synthLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
