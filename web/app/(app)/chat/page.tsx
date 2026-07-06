@@ -26,6 +26,7 @@ export default function ChatPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const conversationId = searchParams.get("c");
+  const projectId = searchParams.get("projectId");
   const [input, setInput] = useState("");
   const [loadedTitle, setLoadedTitle] = useState("Nouvelle conversation");
   const [loadingConversation, setLoadingConversation] = useState(false);
@@ -110,7 +111,7 @@ export default function ChatPage() {
     const res = await fetch("/api/chat/conversations", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title: seed }),
+      body: JSON.stringify({ title: seed, projectId }),
     });
     const data = await res.json().catch(() => null);
     const id = data?.conversation?.id as string | undefined;

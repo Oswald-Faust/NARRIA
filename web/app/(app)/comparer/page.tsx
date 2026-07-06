@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { GitCompareArrows, Loader2, FileText, ExternalLink } from "lucide-react";
 import { GradientHeader } from "@/components/ui/gradient-header";
 import { Card, CardTitle } from "@/components/ui/card";
@@ -53,6 +54,8 @@ function WorkColumn({
 }
 
 export default function ComparerPage() {
+  const searchParams = useSearchParams();
+  const projectId = searchParams.get("projectId");
   const [refTitle, setRefTitle] = useState("");
   const [candTitle, setCandTitle] = useState("");
   const [refText, setRefText] = useState("");
@@ -88,7 +91,7 @@ export default function ComparerPage() {
       const res = await fetch("/api/compare", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ refText, candText, refTitle, candTitle }),
+        body: JSON.stringify({ refText, candText, refTitle, candTitle, projectId }),
       });
 
       if (!res.ok) {

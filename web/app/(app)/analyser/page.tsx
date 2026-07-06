@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { ScanText, Loader2, FileText, ExternalLink } from "lucide-react";
 import { GradientHeader } from "@/components/ui/gradient-header";
 import { Card, CardTitle } from "@/components/ui/card";
@@ -25,6 +26,8 @@ interface Sample {
 }
 
 export default function AnalyserPage() {
+  const searchParams = useSearchParams();
+  const projectId = searchParams.get("projectId");
   const [author, setAuthor] = useState("");
   const [title, setTitle] = useState("");
   const [text, setText] = useState("");
@@ -54,7 +57,7 @@ export default function AnalyserPage() {
       const res = await fetch("/api/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text, title, author }),
+        body: JSON.stringify({ text, title, author, projectId }),
       });
 
       if (!res.ok) {
