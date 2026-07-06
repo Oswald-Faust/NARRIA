@@ -68,6 +68,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     lastSynthesis: project.lastSynthesis,
     inviteLinkToken: canManageProject(role) ? project.inviteLinkToken : null,
     role,
+    viewerId: session.user.id,
     members: members.map((m) => ({ userId: m.userId, role: m.role })),
     counts: { analyses: nAnalyses, comparisons: nComparisons, chats: nChats },
     sessions,
