@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/mongoose";
 import { User } from "@/lib/db/models/user";
 import { otpSchema } from "@/lib/auth/schemas";
+import { acceptPendingInvitationsForEmail } from "@/lib/projects/invitations";
 
 export async function POST(req: Request) {
   const body = await req.json().catch(() => null);
@@ -33,6 +34,8 @@ export async function POST(req: Request) {
   user.emailVerified = true;
   user.otp = { code: null, expiresAt: null };
   await user.save();
+
+  await acceptPendingInvitationsForEmail(String(user._id), user.email);
 
   return NextResponse.json({ ok: true });
 }

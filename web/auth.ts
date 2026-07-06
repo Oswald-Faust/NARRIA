@@ -6,6 +6,7 @@ import { User } from "@/lib/db/models/user";
 import { LoginEvent } from "@/lib/db/models/login-event";
 import { verifyPassword } from "@/lib/auth/password";
 import { loginSchema } from "@/lib/auth/schemas";
+import { acceptPendingInvitationsForEmail } from "@/lib/projects/invitations";
 
 /** Journalise une connexion (best-effort, ne bloque jamais l'auth). */
 async function logLogin(
@@ -55,6 +56,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           { _id: user._id },
           { $set: { lastLoginAt: new Date() }, $inc: { loginCount: 1 } },
         );
+
+        await acceptPendingInvitationsForEmail(String(user._id), user.email);
 
         return {
           id: String(user._id),

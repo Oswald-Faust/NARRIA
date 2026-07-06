@@ -66,3 +66,27 @@ export async function sendOtpEmail(email: string, code: string) {
 
   await sendMail({ to: email, subject, text, html });
 }
+
+export async function sendProjectInvitationEmail(email: string, projectName: string, inviterName: string) {
+  const subject = `${inviterName} vous invite à rejoindre le projet « ${projectName} » sur NARR'IA`;
+  const text = [
+    "Bonjour,",
+    "",
+    `${inviterName} vous invite à rejoindre le projet « ${projectName} » sur NARR'IA.`,
+    "",
+    "Connectez-vous à votre compte NARR'IA (ou créez-en un avec cette adresse e-mail) pour rejoindre automatiquement le projet.",
+    "",
+    "L'equipe NARR'IA",
+  ].join("\n");
+
+  const html = `
+    <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #16111f;">
+      <p>Bonjour,</p>
+      <p><strong>${inviterName}</strong> vous invite à rejoindre le projet « <strong>${projectName}</strong> » sur NARR'IA.</p>
+      <p>Connectez-vous à votre compte NARR'IA (ou créez-en un avec cette adresse e-mail) pour rejoindre automatiquement le projet.</p>
+      <p>L'equipe NARR'IA</p>
+    </div>
+  `;
+
+  await sendMail({ to: email, subject, text, html });
+}
