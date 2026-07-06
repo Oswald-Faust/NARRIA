@@ -10,6 +10,7 @@ export const NOTIFICATION_TYPES = [
   "ip",         // alerte propriété intellectuelle
   "repertoire", // mise à jour du répertoire de référence
   "export",     // rapport exporté
+  "project",    // invitation reçue / a rejoint un projet
   "system",     // message système générique
 ] as const;
 

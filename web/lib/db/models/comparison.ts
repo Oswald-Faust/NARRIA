@@ -20,6 +20,7 @@ const ComparisonSchema = new Schema(
     costUsd: Number,
     refGraph: { type: Schema.Types.Mixed },
     candGraph: { type: Schema.Types.Mixed },
+    projectId: { type: Schema.Types.ObjectId, ref: "Project", default: null, index: true },
   },
   { timestamps: true },
 );

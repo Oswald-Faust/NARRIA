@@ -25,6 +25,7 @@ const AnalysisSchema = new Schema(
       ),
       default: null,
     },
+    projectId: { type: Schema.Types.ObjectId, ref: "Project", default: null, index: true },
   },
   { timestamps: true },
 );

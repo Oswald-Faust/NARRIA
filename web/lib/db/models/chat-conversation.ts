@@ -15,6 +15,7 @@ const ChatConversationSchema = new Schema(
     title: { type: String, required: true, default: "Nouvelle conversation" },
     messages: { type: [ChatMessageSchema], default: [] },
     lastMessageAt: { type: Date, default: Date.now, index: true },
+    projectId: { type: Schema.Types.ObjectId, ref: "Project", default: null, index: true },
   },
   { timestamps: true },
 );
