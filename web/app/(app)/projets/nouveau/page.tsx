@@ -12,6 +12,16 @@ import { Badge } from "@/components/ui/badge";
 const PROJECT_TYPES = ["Contentieux de plagiat", "Mandat d'agent", "Cession de droits", "Autre"];
 type PendingInvite = { email: string; role: "co-admin" | "collaborateur" | "lecteur" };
 
+const MAX_FILE_BYTES = 20 * 1024 * 1024;
+const ALLOWED_EXTENSIONS = [".pdf", ".docx", ".txt", ".mp3"];
+
+function fileRejectionReason(file: File): string | null {
+  if (file.size > MAX_FILE_BYTES) return "trop volumineux (max 20 Mo)";
+  const ext = file.name.slice(file.name.lastIndexOf(".")).toLowerCase();
+  if (!ALLOWED_EXTENSIONS.includes(ext)) return "format non supporté";
+  return null;
+}
+
 export default function NewProjectPage() {
   const router = useRouter();
   const [name, setName] = useState("");
@@ -26,12 +36,27 @@ export default function NewProjectPage() {
   const [invites, setInvites] = useState<PendingInvite[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [createdProjectId, setCreatedProjectId] = useState<string | null>(null);
 
   function addInvite() {
     const email = inviteEmail.trim().toLowerCase();
     if (!email.includes("@")) return;
     setInvites((prev) => [...prev, { email, role: inviteRole }]);
     setInviteEmail("");
+  }
+
+  function addFiles(newFiles: File[]) {
+    const rejections: string[] = [];
+    const accepted: File[] = [];
+    for (const file of newFiles) {
+      const reason = fileRejectionReason(file);
+      if (reason) rejections.push(`${file.name} (${reason})`);
+      else accepted.push(file);
+    }
+    if (rejections.length > 0) {
+      setError(`Fichier(s) ignoré(s) : ${rejections.join(", ")}.`);
+    }
+    if (accepted.length > 0) setFiles((prev) => [...prev, ...accepted]);
   }
 
   async function createProject() {
@@ -54,10 +79,22 @@ export default function NewProjectPage() {
       }
       const projectId = data.id as string;
 
+      const failed: string[] = [];
       for (const file of files) {
         const form = new FormData();
         form.append("file", file);
-        await fetch(`/api/projects/${projectId}/attachments`, { method: "POST", body: form }).catch(() => null);
+        try {
+          const uploadRes = await fetch(`/api/projects/${projectId}/attachments`, { method: "POST", body: form });
+          if (!uploadRes.ok) failed.push(file.name);
+        } catch {
+          failed.push(file.name);
+        }
+      }
+
+      if (failed.length > 0) {
+        setCreatedProjectId(projectId);
+        setError(`Projet créé, mais ${failed.length} pièce(s) jointe(s) n'ont pas pu être importées : ${failed.join(", ")}.`);
+        return;
       }
 
       router.push(`/projets/${projectId}`);
@@ -112,8 +149,9 @@ export default function NewProjectPage() {
               <input
                 type="file"
                 multiple
+                accept={ALLOWED_EXTENSIONS.join(",")}
                 className="hidden"
-                onChange={(e) => setFiles((prev) => [...prev, ...Array.from(e.target.files ?? [])])}
+                onChange={(e) => addFiles(Array.from(e.target.files ?? []))}
               />
               <p className="text-sm text-foreground">Glissez vos fichiers ici ou cliquez pour parcourir</p>
               <p className="text-xs text-muted">PDF, DOCX, TXT, MP3 · Max 20 Mo par fichier</p>
@@ -181,10 +219,16 @@ export default function NewProjectPage() {
 
           {error && <p className="text-sm text-red-400">{error}</p>}
 
-          <Button variant="primary" className="w-full" onClick={createProject} disabled={loading}>
-            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <FolderPlus className="h-4 w-4" />}
-            Créer le projet
-          </Button>
+          {createdProjectId ? (
+            <Button variant="primary" className="w-full" onClick={() => router.push(`/projets/${createdProjectId}`)}>
+              Accéder au projet
+            </Button>
+          ) : (
+            <Button variant="primary" className="w-full" onClick={createProject} disabled={loading}>
+              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <FolderPlus className="h-4 w-4" />}
+              Créer le projet
+            </Button>
+          )}
         </div>
       </div>
     </div>

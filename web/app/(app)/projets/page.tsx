@@ -24,17 +24,23 @@ const fmt = (d: string) => new Date(d).toLocaleDateString("fr-FR", { day: "2-dig
 export default function ProjectsPage() {
   const [tab, setTab] = useState<"tous" | "archives">("tous");
   const [q, setQ] = useState("");
+  const [debouncedQ, setDebouncedQ] = useState("");
   const [projects, setProjects] = useState<ProjectItem[]>([]);
   const [nPersonal, setNPersonal] = useState(0);
   const [nCollaborations, setNCollaborations] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const timeout = setTimeout(() => {
+      setDebouncedQ(q);
+      setLoading(true);
+    }, 300);
+    return () => clearTimeout(timeout);
+  }, [q]);
+
+  useEffect(() => {
     let active = true;
-    Promise.resolve().then(() => {
-      if (active) setLoading(true);
-    });
-    const params = new URLSearchParams({ tab, q });
+    const params = new URLSearchParams({ tab, q: debouncedQ });
     fetch(`/api/projects?${params}`)
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
@@ -53,7 +59,7 @@ export default function ProjectsPage() {
     return () => {
       active = false;
     };
-  }, [tab, q]);
+  }, [tab, debouncedQ]);
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
@@ -96,7 +102,10 @@ export default function ProjectsPage() {
           {(["tous", "archives"] as const).map((t) => (
             <button
               key={t}
-              onClick={() => setTab(t)}
+              onClick={() => {
+                setTab(t);
+                setLoading(true);
+              }}
               className={`rounded-full px-4 py-1.5 text-sm font-medium capitalize ${tab === t ? "bg-accent text-white" : "bg-surface-2 text-muted hover:text-foreground"}`}
             >
               {t}
