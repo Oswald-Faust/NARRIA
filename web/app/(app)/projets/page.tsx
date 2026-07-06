@@ -31,6 +31,9 @@ export default function ProjectsPage() {
 
   useEffect(() => {
     let active = true;
+    Promise.resolve().then(() => {
+      if (active) setLoading(true);
+    });
     const params = new URLSearchParams({ tab, q });
     fetch(`/api/projects?${params}`)
       .then((r) => (r.ok ? r.json() : null))
