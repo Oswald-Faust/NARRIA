@@ -4,7 +4,7 @@ import { Schema, model, models } from "mongoose";
  * Trace d'une requête vers l'API Claude (ou le moteur heuristique) — sert au
  * dashboard admin : volume de requêtes, tokens consommés, coût estimé.
  */
-export const USAGE_ROUTES = ["chat", "analyze", "compare"] as const;
+export const USAGE_ROUTES = ["chat", "analyze", "compare", "synthesis"] as const;
 export type UsageRoute = (typeof USAGE_ROUTES)[number];
 
 const ApiUsageSchema = new Schema(
