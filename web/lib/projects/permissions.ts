@@ -1,3 +1,4 @@
+import { Types } from "mongoose";
 import { connectDB } from "@/lib/db/mongoose";
 import { ProjectMember, type ProjectRole } from "@/lib/db/models/project-member";
 
@@ -38,4 +39,30 @@ export function generateInviteLinkToken(): string {
 /** Un projet confidentiel désactive le lien d'invitation générique (dérivé, pas stocké). */
 export function isInviteLinkActive(project: { confidential: boolean }): boolean {
   return !project.confidential;
+}
+
+/**
+ * Résout et valide un `projectId` optionnel fourni par le client, et vérifie que
+ * l'utilisateur a le droit de lancer un outil (Analyse/Comparaison/Chat) sur ce projet.
+ * Retourne `{ projectId }` (projectId `null` si absent/invalide/non fourni, auquel cas
+ * aucune vérification de droits n'est faite), ou `{ error }` si l'utilisateur n'a pas
+ * les droits suffisants sur un projectId valide fourni.
+ */
+export async function resolveProjectLaunchContext(
+  rawProjectId: unknown,
+  userId: string,
+): Promise<{ projectId: string | null; error?: undefined } | { projectId: null; error: string }> {
+  const projectId =
+    typeof rawProjectId === "string" && Types.ObjectId.isValid(rawProjectId) ? rawProjectId : null;
+
+  if (!projectId) {
+    return { projectId: null };
+  }
+
+  const role = await getProjectRole(projectId, userId);
+  if (!canLaunchTools(role)) {
+    return { projectId: null, error: "Droits insuffisants sur ce projet." };
+  }
+
+  return { projectId };
 }

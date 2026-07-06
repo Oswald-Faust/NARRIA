@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { Types } from "mongoose";
 import { auth } from "@/auth";
 import { connectDB } from "@/lib/db/mongoose";
 import { ChatConversation } from "@/lib/db/models/chat-conversation";
+import { resolveProjectLaunchContext } from "@/lib/projects/permissions";
 
 function titleFromText(text: string) {
   const normalized = text.trim().replace(/\s+/g, " ");
@@ -39,8 +39,10 @@ export async function POST(req: Request) {
 
   const body = await req.json().catch(() => null);
   const title = titleFromText(body?.title ?? "");
-  const projectId: string | null =
-    typeof body?.projectId === "string" && Types.ObjectId.isValid(body.projectId) ? body.projectId : null;
+  const { projectId, error: projectError } = await resolveProjectLaunchContext(body?.projectId, session.user.id);
+  if (projectError) {
+    return NextResponse.json({ error: projectError }, { status: 403 });
+  }
 
   await connectDB();
   const conversation = await ChatConversation.create({

@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { Types } from "mongoose";
 import { auth } from "@/auth";
 import { connectDB } from "@/lib/db/mongoose";
 import { Comparison } from "@/lib/db/models/comparison";
@@ -9,7 +8,7 @@ import { EXTRACTION_MODEL_ID } from "@/lib/engine/extraction/llm-extractor";
 import { createNotification } from "@/lib/notifications";
 import { recordUsage } from "@/lib/usage";
 import { describeExtractionProgress } from "@/lib/progress-messages";
-import { getProjectRole, canLaunchTools } from "@/lib/projects/permissions";
+import { resolveProjectLaunchContext } from "@/lib/projects/permissions";
 
 export const runtime = "nodejs";
 export const maxDuration = 180;
@@ -70,14 +69,9 @@ export async function POST(req: Request) {
   void refSourceFile;
   void candSourceFile;
 
-  const projectId: string | null =
-    typeof body?.projectId === "string" && Types.ObjectId.isValid(body.projectId) ? body.projectId : null;
-
-  if (projectId) {
-    const projectRole = await getProjectRole(projectId, session.user.id);
-    if (!canLaunchTools(projectRole)) {
-      return NextResponse.json({ error: "Droits insuffisants sur ce projet." }, { status: 403 });
-    }
+  const { projectId, error: projectError } = await resolveProjectLaunchContext(body?.projectId, session.user.id);
+  if (projectError) {
+    return NextResponse.json({ error: projectError }, { status: 403 });
   }
 
   if (refText.trim().length < 200 || candText.trim().length < 200) {
