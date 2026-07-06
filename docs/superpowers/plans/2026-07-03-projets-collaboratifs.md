@@ -2149,3 +2149,15 @@ git commit -m "feat(projets): page de gestion des collaborateurs (invitations, r
   d'upload (P6) et la route de suppression (P6) et l'affichage (P10).
 - **Hors scope confirmé** : transfert de propriété, notifications temps réel, édition
   collaborative simultanée — non traités, comme documenté dans la spec.
+- **Décision assumée** : `POST /api/projects/[id]/synthesis` (P7) restreint l'accès à
+  `canLaunchTools` plutôt qu'à `canView` prévu initialement à l'étape 1 de P7. Décision
+  prise et validée lors de la revue qualité de P7 : un simple `lecteur` ne doit pas pouvoir
+  déclencher un appel LLM facturé au projet. Le bouton "Générer la synthèse" est masqué
+  côté UI pour ce rôle (P10), cohérent avec la restriction serveur.
+- **Correctif post-implémentation (revue finale holistique)** : les pages `/analyser`,
+  `/comparer` et `/chat` ne lisaient pas le paramètre `?projectId=` transmis par les liens
+  de la page de détail projet (P10) — l'infrastructure serveur (P8) existait mais n'était
+  jamais alimentée en pratique, donc aucune session lancée depuis un projet n'était
+  effectivement rattachée à celui-ci. Corrigé en lisant `useSearchParams().get("projectId")`
+  et en le transmettant dans le body de `POST /api/analyze`, `POST /api/compare` et
+  `POST /api/chat/conversations`.
