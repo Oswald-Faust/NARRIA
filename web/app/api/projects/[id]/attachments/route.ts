@@ -40,7 +40,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     );
   }
 
-  const blob = await put(`projects/${id}/${Date.now()}-${file.name}`, file, { access: "public" });
+  const safeName = file.name.replace(/[^\w.-]/g, "_");
+  const blob = await put(`projects/${id}/${Date.now()}-${safeName}`, file, { access: "public" });
 
   const attachment = {
     id: crypto.randomUUID(),
