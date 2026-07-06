@@ -24,42 +24,38 @@ const fmt = (d: string) => new Date(d).toLocaleDateString("fr-FR", { day: "2-dig
 export default function ProjectsPage() {
   const [tab, setTab] = useState<"tous" | "archives">("tous");
   const [q, setQ] = useState("");
-  const [debouncedQ, setDebouncedQ] = useState("");
   const [projects, setProjects] = useState<ProjectItem[]>([]);
   const [nPersonal, setNPersonal] = useState(0);
   const [nCollaborations, setNCollaborations] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const timeout = setTimeout(() => {
-      setDebouncedQ(q);
-      setLoading(true);
-    }, 300);
-    return () => clearTimeout(timeout);
-  }, [q]);
-
-  useEffect(() => {
     let active = true;
-    const params = new URLSearchParams({ tab, q: debouncedQ });
-    fetch(`/api/projects?${params}`)
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d) => {
-        if (!active) return;
-        setProjects(d?.projects ?? []);
-        setNPersonal(d?.nPersonal ?? 0);
-        setNCollaborations(d?.nCollaborations ?? 0);
-      })
-      .catch(() => {
-        if (!active) return;
-        setProjects([]);
-      })
-      .finally(() => {
-        if (active) setLoading(false);
-      });
+    const timeout = setTimeout(() => {
+      if (!active) return;
+      setLoading(true);
+      const params = new URLSearchParams({ tab, q });
+      fetch(`/api/projects?${params}`)
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d) => {
+          if (!active) return;
+          setProjects(d?.projects ?? []);
+          setNPersonal(d?.nPersonal ?? 0);
+          setNCollaborations(d?.nCollaborations ?? 0);
+        })
+        .catch(() => {
+          if (!active) return;
+          setProjects([]);
+        })
+        .finally(() => {
+          if (active) setLoading(false);
+        });
+    }, 300);
     return () => {
       active = false;
+      clearTimeout(timeout);
     };
-  }, [tab, debouncedQ]);
+  }, [tab, q]);
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
@@ -102,10 +98,7 @@ export default function ProjectsPage() {
           {(["tous", "archives"] as const).map((t) => (
             <button
               key={t}
-              onClick={() => {
-                setTab(t);
-                setLoading(true);
-              }}
+              onClick={() => setTab(t)}
               className={`rounded-full px-4 py-1.5 text-sm font-medium capitalize ${tab === t ? "bg-accent text-white" : "bg-surface-2 text-muted hover:text-foreground"}`}
             >
               {t}
