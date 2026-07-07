@@ -10,7 +10,10 @@ import { describeExtractionProgress } from "@/lib/progress-messages";
 import { resolveProjectLaunchContext } from "@/lib/projects/permissions";
 
 export const runtime = "nodejs";
-export const maxDuration = 120;
+// Un texte long (roman entier, ~120k tokens) reste sous le seuil de découpage en blocs
+// (voir CHUNK_THRESHOLD_TOKENS) mais peut prendre plus de 120s à traiter en un seul appel
+// LLM — 120s s'est avéré insuffisant en production (Vercel Runtime Timeout Error).
+export const maxDuration = 300;
 
 export async function POST(req: Request) {
   const session = await auth();

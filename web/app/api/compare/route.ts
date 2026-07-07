@@ -11,7 +11,9 @@ import { describeExtractionProgress } from "@/lib/progress-messages";
 import { resolveProjectLaunchContext } from "@/lib/projects/permissions";
 
 export const runtime = "nodejs";
-export const maxDuration = 180;
+// Cf. /api/analyze : un texte long peut prendre plus de temps qu'anticipé pour un seul
+// appel LLM, même si les deux œuvres sont analysées en parallèle (Promise.all).
+export const maxDuration = 300;
 
 /** Extrait les infos par-œuvre nécessaires au rapport de comparaison (sections « Œuvres comparées » et « Analyse LLM »). */
 function buildWork(g: NarrativeGraph, costUsd: number) {

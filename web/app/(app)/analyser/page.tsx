@@ -69,6 +69,7 @@ export default function AnalyserPage() {
       const reader = res.body?.getReader();
       const decoder = new TextDecoder();
       let buffer = "";
+      let receivedOutcome = false;
       if (reader) {
         try {
           while (true) {
@@ -82,8 +83,13 @@ export default function AnalyserPage() {
               try {
                 const parsed = JSON.parse(line);
                 if (parsed.type === "progress") setProgress({ percent: parsed.percent, message: parsed.message });
-                else if (parsed.type === "result") setResult(parsed.data);
-                else if (parsed.type === "error") setError(parsed.error);
+                else if (parsed.type === "result") {
+                  setResult(parsed.data);
+                  receivedOutcome = true;
+                } else if (parsed.type === "error") {
+                  setError(parsed.error);
+                  receivedOutcome = true;
+                }
               } catch {
                 // Ligne NDJSON malformée : on l'ignore et on continue le flux.
                 continue;
@@ -92,6 +98,12 @@ export default function AnalyserPage() {
           }
         } catch {
           setError("La connexion a été interrompue pendant le traitement. Réessayez.");
+          receivedOutcome = true;
+        }
+        if (!receivedOutcome) {
+          setError(
+            "Le traitement a été interrompu avant la fin, probablement parce que le texte est trop long. Réessayez avec un texte plus court, ou réessayez dans quelques instants.",
+          );
         }
       }
     } finally {
