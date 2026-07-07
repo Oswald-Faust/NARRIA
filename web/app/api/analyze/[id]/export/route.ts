@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import { connectDB } from "@/lib/db/mongoose";
 import { Analysis } from "@/lib/db/models/analysis";
 import { renderAnalysisHtmlReport } from "@/lib/reports/analysis-html-report";
+import { canAccessSession } from "@/lib/projects/permissions";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -35,8 +36,8 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   }
 
   await connectDB();
-  const doc = await Analysis.findOne({ _id: id, ownerId: session.user.id }).lean();
-  if (!doc) {
+  const doc = await Analysis.findById(id).lean();
+  if (!doc || !(await canAccessSession(doc.ownerId, doc.projectId ? String(doc.projectId) : null, session.user.id))) {
     return NextResponse.json({ error: "Analyse introuvable." }, { status: 404 });
   }
 

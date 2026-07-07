@@ -9,6 +9,7 @@ import {
   renderComparisonHtmlReport,
   type ComparisonReportWork,
 } from "@/lib/reports/comparison-html-report";
+import { canAccessSession } from "@/lib/projects/permissions";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -72,8 +73,10 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   }
 
   await connectDB();
-  const doc = await Comparison.findOne({ _id: id, ownerId: session.user.id }).lean<{
+  const doc = await Comparison.findById(id).lean<{
     _id: unknown;
+    ownerId: string;
+    projectId?: unknown;
     refTitle?: string;
     candTitle?: string;
     scores?: Record<string, number | undefined>;
@@ -87,7 +90,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     candGraph?: NarrativeGraph;
     createdAt?: Date;
   }>();
-  if (!doc) {
+  if (!doc || !(await canAccessSession(doc.ownerId, doc.projectId ? String(doc.projectId) : null, session.user.id))) {
     return NextResponse.json({ error: "Comparaison introuvable." }, { status: 404 });
   }
 

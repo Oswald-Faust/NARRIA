@@ -42,6 +42,23 @@ export function isInviteLinkActive(project: { confidential: boolean }): boolean 
 }
 
 /**
+ * Un utilisateur peut consulter une analyse/comparaison/conversation s'il en est le
+ * propriétaire, ou si elle est rattachée à un projet dont il est membre (tout rôle,
+ * y compris lecteur) — cohérent avec le fait que l'historique des sessions d'un projet
+ * est visible par tous ses membres.
+ */
+export async function canAccessSession(
+  ownerId: string,
+  projectId: string | null | undefined,
+  userId: string,
+): Promise<boolean> {
+  if (ownerId === userId) return true;
+  if (!projectId) return false;
+  const role = await getProjectRole(projectId, userId);
+  return canView(role);
+}
+
+/**
  * Résout et valide un `projectId` optionnel fourni par le client, et vérifie que
  * l'utilisateur a le droit de lancer un outil (Analyse/Comparaison/Chat) sur ce projet.
  * Retourne `{ projectId }` (projectId `null` si absent/invalide/non fourni, auquel cas

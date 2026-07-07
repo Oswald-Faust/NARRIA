@@ -5,6 +5,7 @@ import { connectDB } from "@/lib/db/mongoose";
 import { Analysis } from "@/lib/db/models/analysis";
 import { functionSequence } from "@/lib/engine";
 import type { NarrativeGraph } from "@/lib/engine";
+import { canAccessSession } from "@/lib/projects/permissions";
 
 /** Récupère une analyse sauvegardée pour l'afficher sur sa page dédiée (historique). */
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -19,8 +20,8 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   }
 
   await connectDB();
-  const doc = await Analysis.findOne({ _id: id, ownerId: session.user.id }).lean();
-  if (!doc) {
+  const doc = await Analysis.findById(id).lean();
+  if (!doc || !(await canAccessSession(doc.ownerId, doc.projectId ? String(doc.projectId) : null, session.user.id))) {
     return NextResponse.json({ error: "Analyse introuvable." }, { status: 404 });
   }
 

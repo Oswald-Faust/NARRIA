@@ -5,6 +5,7 @@ import { connectDB } from "@/lib/db/mongoose";
 import { Comparison } from "@/lib/db/models/comparison";
 import { tensionProfile } from "@/lib/engine";
 import type { NarrativeGraph } from "@/lib/engine";
+import { canAccessSession } from "@/lib/projects/permissions";
 
 /** Reconstruit les infos par-œuvre du rapport depuis un graphe stocké (même logique que la route d'export). */
 function buildWork(g: NarrativeGraph | undefined, fallbackTitle: string) {
@@ -50,8 +51,8 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   }
 
   await connectDB();
-  const doc = await Comparison.findOne({ _id: id, ownerId: session.user.id }).lean();
-  if (!doc) {
+  const doc = await Comparison.findById(id).lean();
+  if (!doc || !(await canAccessSession(doc.ownerId, doc.projectId ? String(doc.projectId) : null, session.user.id))) {
     return NextResponse.json({ error: "Comparaison introuvable." }, { status: 404 });
   }
 
