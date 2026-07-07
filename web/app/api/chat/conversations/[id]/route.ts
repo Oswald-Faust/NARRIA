@@ -3,6 +3,7 @@ import type { UIMessage } from "ai";
 import { auth } from "@/auth";
 import { connectDB } from "@/lib/db/mongoose";
 import { ChatConversation } from "@/lib/db/models/chat-conversation";
+import { canAccessSession } from "@/lib/projects/permissions";
 
 function titleFromMessages(messages: UIMessage[]) {
   const firstUser = messages.find((message) => message.role === "user");
@@ -29,12 +30,16 @@ export async function GET(
   const { id } = await params;
   await connectDB();
 
-  const conversation = await ChatConversation.findOne({
-    _id: id,
-    ownerId: session.user.id,
-  }).lean();
+  const conversation = await ChatConversation.findById(id).lean();
 
-  if (!conversation) {
+  if (
+    !conversation ||
+    !(await canAccessSession(
+      conversation.ownerId,
+      conversation.projectId ? String(conversation.projectId) : null,
+      session.user.id,
+    ))
+  ) {
     return NextResponse.json({ error: "Conversation introuvable" }, { status: 404 });
   }
 

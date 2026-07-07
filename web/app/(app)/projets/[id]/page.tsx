@@ -27,7 +27,7 @@ const fmtRelative = (d: string) => {
 };
 
 const sessionHref = (s: SessionItem) =>
-  s.kind === "analysis" ? `/historique/analyses/${s.id}` : s.kind === "comparison" ? `/historique/comparaisons/${s.id}` : `/chat?conversationId=${s.id}`;
+  s.kind === "analysis" ? `/historique/analyses/${s.id}` : s.kind === "comparison" ? `/historique/comparaisons/${s.id}` : `/chat?c=${s.id}`;
 
 const sessionIcon = (kind: SessionItem["kind"]) =>
   kind === "analysis" ? <ScanText className="h-4 w-4 text-soft-purple" /> : kind === "comparison" ? <GitCompareArrows className="h-4 w-4 text-soft-pink" /> : <MessageSquare className="h-4 w-4 text-yellow" />;
