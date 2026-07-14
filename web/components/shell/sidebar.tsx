@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Home, MessageSquareText, ScanText, GitCompareArrows, History,
-  FolderKanban, BookMarked, Settings, Info, ShieldCheck,
+  FolderKanban, BookMarked, Info, ShieldCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LogoFull, LogoMark } from "@/components/brand/logo";
@@ -22,7 +22,6 @@ const MAIN_NAV = [
 
 const BOTTOM_NAV = [
   { href: "/repertoire", label: "Répertoire", icon: BookMarked },
-  { href: "/configuration", label: "Configuration", icon: Settings },
   { href: "/aide", label: "À propos", icon: Info },
 ];
 

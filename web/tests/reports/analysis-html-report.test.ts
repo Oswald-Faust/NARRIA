@@ -46,20 +46,20 @@ describe("renderAnalysisHtmlReport", () => {
     dateHuman: "1 juillet 2026 à 10:00",
   });
 
-  it("conserve le titre principal fidèle à l'original", () => {
-    expect(html).toContain("<h1>Analyse NARR'IA</h1>");
+  it("affiche le titre principal du rapport d'analyse", () => {
+    expect(html).toContain("<h1>Rapport d'analyse narrative</h1>");
   });
 
-  it("conserve la couleur bleu marine d'origine (#1F4E79)", () => {
-    expect(html).toContain("#1F4E79");
+  it("emploie le violet de la marque (#843b90)", () => {
+    expect(html).toContain("#843b90");
   });
 
-  it("conserve la couleur orange d'origine (#C55A11)", () => {
-    expect(html).toContain("#C55A11");
+  it("emploie le rose de la marque (#da3861)", () => {
+    expect(html).toContain("#da3861");
   });
 
-  it("conserve la police serif d'origine (Garamond, Georgia)", () => {
-    expect(html).toContain("Garamond, Georgia, serif");
+  it("emploie une typographie sans-serif moderne (system-ui)", () => {
+    expect(html).toContain("system-ui");
   });
 
   it("conserve le libellé de l'axe du désir du schéma actantiel", () => {
@@ -67,7 +67,7 @@ describe("renderAnalysisHtmlReport", () => {
   });
 
   it("conserve la section du graphe narratif", () => {
-    expect(html).toContain("<h2>Graphe narratif");
+    expect(html).toContain("Graphe narratif (");
   });
 
   it("échappe le HTML injecté dans title/summary/textExcerpt (protection XSS)", () => {

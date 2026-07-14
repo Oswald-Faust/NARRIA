@@ -7,12 +7,17 @@ import { tensionProfile } from "@/lib/engine";
 import type { NarrativeGraph } from "@/lib/engine";
 import {
   renderComparisonHtmlReport,
+  type ComparisonHtmlReportData,
   type ComparisonReportWork,
 } from "@/lib/reports/comparison-html-report";
+import { renderComparisonMarkdownReport } from "@/lib/reports/comparison-md-report";
 import { canAccessSession } from "@/lib/projects/permissions";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
+
+const FORMATS = ["html", "pdf", "json", "md"] as const;
+type ExportFormat = (typeof FORMATS)[number];
 
 function slugify(s: string): string {
   return (
@@ -67,10 +72,11 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   if (!Types.ObjectId.isValid(id)) {
     return NextResponse.json({ error: "Identifiant de comparaison invalide." }, { status: 400 });
   }
-  const format = new URL(req.url).searchParams.get("format") ?? "html";
-  if (format !== "html" && format !== "pdf") {
-    return NextResponse.json({ error: "Format non supporté (html ou pdf)." }, { status: 400 });
+  const formatParam = new URL(req.url).searchParams.get("format") ?? "html";
+  if (!FORMATS.includes(formatParam as ExportFormat)) {
+    return NextResponse.json({ error: "Format non supporté (html, pdf, json ou md)." }, { status: 400 });
   }
+  const format = formatParam as ExportFormat;
 
   await connectDB();
   const doc = await Comparison.findById(id).lean<{
@@ -108,7 +114,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     similarity: typeof c.similarity === "number" ? c.similarity : 0,
   }));
 
-  const html = renderComparisonHtmlReport({
+  const reportData: ComparisonHtmlReportData = {
     dateHuman: new Date(doc.createdAt ?? new Date()).toLocaleString("fr-FR"),
     refWork,
     candWork,
@@ -127,9 +133,56 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     verdict: doc.verdict ?? "",
     correspondences,
     warnings: doc.warnings ?? [],
-  });
+  };
 
   const filename = `${slugify(`${refTitle}_vs_${candTitle}`)}_${doc._id}`;
+
+  if (format === "json") {
+    const payload = {
+      schema: "narria.comparison/2.0",
+      id: String(doc._id),
+      generatedAt: new Date(doc.createdAt ?? new Date()).toISOString(),
+      refTitle,
+      candTitle,
+      refWork,
+      candWork,
+      scores: {
+        sns: reportData.sns,
+        snsNormalized: reportData.snsNormalized,
+        ss: reportData.ss,
+        st: reportData.st,
+        srj: reportData.srj,
+        sIso: reportData.sIso,
+        sGed: reportData.sGed,
+        sFunc: reportData.sFunc,
+        sAct: reportData.sAct,
+        sTens: reportData.sTens,
+      },
+      srjLevel: reportData.srjLevel,
+      detectedModality: reportData.detectedModality,
+      verdict: reportData.verdict,
+      correspondences,
+      warnings: reportData.warnings,
+      graphs: { ref: doc.refGraph ?? null, cand: doc.candGraph ?? null },
+    };
+    return new NextResponse(JSON.stringify(payload, null, 2), {
+      headers: {
+        "Content-Type": "application/json; charset=utf-8",
+        "Content-Disposition": `attachment; filename="${filename}.json"`,
+      },
+    });
+  }
+
+  if (format === "md") {
+    return new NextResponse(renderComparisonMarkdownReport(reportData), {
+      headers: {
+        "Content-Type": "text/markdown; charset=utf-8",
+        "Content-Disposition": `attachment; filename="${filename}.md"`,
+      },
+    });
+  }
+
+  const html = renderComparisonHtmlReport(reportData);
 
   if (format === "html") {
     return new NextResponse(html, {

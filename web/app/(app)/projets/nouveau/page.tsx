@@ -9,7 +9,47 @@ import { Button } from "@/components/ui/button";
 import { Input, Textarea, Label } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 
-const PROJECT_TYPES = ["Contentieux de plagiat", "Mandat d'agent", "Cession de droits", "Autre"];
+const PROJECT_TYPES = [
+  "Contentieux de plagiat",
+  "Mandat d'agent",
+  "Cession de droits",
+  "Adaptation audiovisuelle",
+  "Analyse de manuscrit",
+  "Comparaison d'œuvres",
+  "Expertise littéraire",
+  "Développement éditorial",
+  "Traduction et localisation",
+  "Dossier de production",
+  "Recherche de similarités",
+  "Contrat d'édition",
+  "Dépôt légal / protection",
+  "Projet collaboratif",
+  "Autre",
+];
+
+const PROJECT_CATEGORIES = [
+  "Roman · Littérature générale",
+  "Roman · Littérature jeunesse",
+  "Roman · Littérature de genre",
+  "Nouvelle / recueil",
+  "Théâtre",
+  "Poésie",
+  "Conte / fable",
+  "Bande dessinée / roman graphique",
+  "Scénario cinéma",
+  "Scénario série",
+  "Scénario animation",
+  "Podcast / fiction audio",
+  "Documentaire",
+  "Essai",
+  "Biographie / autobiographie",
+  "Mémoire / thèse",
+  "Article / chronique",
+  "Jeu vidéo narratif",
+  "Webtoon / format numérique",
+  "Œuvre hybride / transmedia",
+  "Autre",
+];
 type PendingInvite = { email: string; role: "co-admin" | "collaborateur" | "lecteur" };
 
 const MAX_FILE_BYTES = 20 * 1024 * 1024;
@@ -26,10 +66,9 @@ export default function NewProjectPage() {
   const router = useRouter();
   const [name, setName] = useState("");
   const [type, setType] = useState(PROJECT_TYPES[0]);
-  const [category, setCategory] = useState("");
+  const [category, setCategory] = useState(PROJECT_CATEGORIES[0]);
   const [summary, setSummary] = useState("");
   const [confidential, setConfidential] = useState(true);
-  const [notifyOnInvite, setNotifyOnInvite] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState<PendingInvite["role"]>("collaborateur");
@@ -70,7 +109,7 @@ export default function NewProjectPage() {
       const res = await fetch("/api/projects", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, type, category, summary, confidential, notifyOnInvite, invitations: invites }),
+        body: JSON.stringify({ name, type, category, summary, confidential, invitations: invites }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -132,7 +171,13 @@ export default function NewProjectPage() {
               </div>
               <div>
                 <Label>Catégorie d&apos;œuvre</Label>
-                <Input value={category} onChange={(e) => setCategory(e.target.value)} placeholder="Ex. Roman · Littérature générale" />
+                <select
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                  className="h-11 w-full rounded-xl border border-border bg-surface-2 px-4 text-sm text-foreground"
+                >
+                  {PROJECT_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                </select>
               </div>
             </div>
             <div>
@@ -211,10 +256,9 @@ export default function NewProjectPage() {
               <span className="text-sm text-foreground">Projet confidentiel<br /><span className="text-xs text-muted">Accès restreint aux collaborateurs invités</span></span>
               <input type="checkbox" checked={confidential} onChange={(e) => setConfidential(e.target.checked)} className="h-5 w-9 accent-accent" />
             </label>
-            <label className="flex items-center justify-between gap-3">
-              <span className="text-sm text-foreground">Notifier les collaborateurs<br /><span className="text-xs text-muted">Envoyer un email à l&apos;invitation</span></span>
-              <input type="checkbox" checked={notifyOnInvite} onChange={(e) => setNotifyOnInvite(e.target.checked)} className="h-5 w-9 accent-accent" />
-            </label>
+            <p className="text-xs text-muted">
+              Chaque collaborateur invité reçoit son e-mail d&apos;invitation immédiatement.
+            </p>
           </Card>
 
           {error && <p className="text-sm text-red-400">{error}</p>}

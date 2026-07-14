@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { KeyRound, Eye, EyeOff, Copy, Check, Coins, Cpu, Activity, CloudCog } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { LoadingBlock } from "@/components/ui/spinner";
 import { Badge } from "@/components/ui/badge";
 import { StatCard } from "@/components/admin/stat-card";
 import { formatUsd } from "@/lib/pricing";
@@ -49,7 +50,7 @@ export default function AdminApiPage() {
     setTimeout(() => setCopied(false), 1500);
   }
 
-  if (loading) return <Card>Chargement…</Card>;
+  if (loading) return <LoadingBlock />;
   if (!data) return <Card>Impossible de charger les données API.</Card>;
 
   return (

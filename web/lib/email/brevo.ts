@@ -67,26 +67,104 @@ export async function sendOtpEmail(email: string, code: string) {
   await sendMail({ to: email, subject, text, html });
 }
 
-export async function sendProjectInvitationEmail(email: string, projectName: string, inviterName: string) {
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+const ROLE_LABELS: Record<string, string> = {
+  "co-admin": "Co-administrateur",
+  collaborateur: "Collaborateur",
+  lecteur: "Lecteur",
+};
+
+/**
+ * E-mail d'invitation à un projet, aux couleurs de la marque, avec un bouton
+ * « Rejoindre le projet » pointant vers un lien d'acceptation nominatif (`joinUrl`).
+ */
+/** Construit le sujet/texte/HTML de l'e-mail d'invitation (pur, testable sans SMTP). */
+export function buildProjectInvitationEmail(
+  projectName: string,
+  inviterName: string,
+  joinUrl: string,
+  role?: string,
+): { subject: string; text: string; html: string } {
+  const roleLabel = role ? ROLE_LABELS[role] ?? role : null;
   const subject = `${inviterName} vous invite à rejoindre le projet « ${projectName} » sur NARR'IA`;
+
   const text = [
     "Bonjour,",
     "",
-    `${inviterName} vous invite à rejoindre le projet « ${projectName} » sur NARR'IA.`,
+    `${inviterName} vous invite à rejoindre le projet « ${projectName} » sur NARR'IA${roleLabel ? ` en tant que ${roleLabel}` : ""}.`,
     "",
-    "Connectez-vous à votre compte NARR'IA (ou créez-en un avec cette adresse e-mail) pour rejoindre automatiquement le projet.",
+    "Pour accepter l'invitation, ouvrez ce lien :",
+    joinUrl,
     "",
-    "L'equipe NARR'IA",
+    "Si vous n'avez pas encore de compte NARR'IA, créez-en un avec cette adresse e-mail : vous serez ensuite redirigé vers l'invitation.",
+    "",
+    "L'équipe NARR'IA",
   ].join("\n");
 
+  const safeProject = escapeHtml(projectName);
+  const safeInviter = escapeHtml(inviterName);
+  const safeUrl = escapeHtml(joinUrl);
+
   const html = `
-    <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #16111f;">
-      <p>Bonjour,</p>
-      <p><strong>${inviterName}</strong> vous invite à rejoindre le projet « <strong>${projectName}</strong> » sur NARR'IA.</p>
-      <p>Connectez-vous à votre compte NARR'IA (ou créez-en un avec cette adresse e-mail) pour rejoindre automatiquement le projet.</p>
-      <p>L'equipe NARR'IA</p>
-    </div>
+  <div style="margin:0;padding:0;background:#f4eff7;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4eff7;padding:24px 0;">
+      <tr><td align="center">
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:18px;overflow:hidden;box-shadow:0 8px 30px rgba(132,59,144,0.10);font-family:Arial,Helvetica,sans-serif;">
+          <tr>
+            <td style="background:linear-gradient(135deg,#843b90,#da3861);padding:28px 32px;">
+              <span style="color:#ffffff;font-size:22px;font-weight:800;letter-spacing:-0.02em;">NARR'IA</span>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:32px;color:#2a2233;line-height:1.6;">
+              <p style="margin:0 0 16px;font-size:16px;">Bonjour,</p>
+              <p style="margin:0 0 16px;font-size:16px;">
+                <strong>${safeInviter}</strong> vous invite à rejoindre le projet
+                « <strong style="color:#843b90;">${safeProject}</strong> » sur NARR'IA${roleLabel ? ` en tant que <strong>${escapeHtml(roleLabel)}</strong>` : ""}.
+              </p>
+              <table role="presentation" cellpadding="0" cellspacing="0" style="margin:26px 0;">
+                <tr><td style="border-radius:999px;background:linear-gradient(135deg,#843b90,#da3861);">
+                  <a href="${safeUrl}" style="display:inline-block;padding:14px 30px;color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;border-radius:999px;">Rejoindre le projet →</a>
+                </td></tr>
+              </table>
+              <p style="margin:0 0 8px;font-size:13px;color:#6c6c6c;">
+                Si vous n'avez pas encore de compte NARR'IA, créez-en un avec cette adresse e-mail : vous serez ensuite redirigé vers l'invitation.
+              </p>
+              <p style="margin:16px 0 0;font-size:12px;color:#9a90a3;word-break:break-all;">
+                Le bouton ne fonctionne pas ? Copiez ce lien : <br/>
+                <a href="${safeUrl}" style="color:#843b90;">${safeUrl}</a>
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:18px 32px;border-top:1px solid #ece2f0;color:#9a90a3;font-size:12px;">
+              NARR'IA · narria.tech — Narratologie computationnelle
+            </td>
+          </tr>
+        </table>
+      </td></tr>
+    </table>
+  </div>
   `;
 
+  return { subject, text, html };
+}
+
+export async function sendProjectInvitationEmail(
+  email: string,
+  projectName: string,
+  inviterName: string,
+  joinUrl: string,
+  role?: string,
+) {
+  const { subject, text, html } = buildProjectInvitationEmail(projectName, inviterName, joinUrl, role);
   await sendMail({ to: email, subject, text, html });
 }

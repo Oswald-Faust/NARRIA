@@ -138,21 +138,17 @@ export function AnalysisReport({ data }: { data: AnalysisReportData }) {
       )}
 
       {data.id && (
-        <div className="flex justify-end gap-2">
-          <a
-            href={`/api/analyze/${data.id}/export?format=html`}
-            download
-            className="inline-flex h-9 items-center gap-2 rounded-full border border-border bg-surface px-4 text-sm text-foreground hover:bg-surface-2"
-          >
-            <Download className="h-4 w-4" /> Télécharger HTML
-          </a>
-          <a
-            href={`/api/analyze/${data.id}/export?format=pdf`}
-            download
-            className="inline-flex h-9 items-center gap-2 rounded-full border border-border bg-surface px-4 text-sm text-foreground hover:bg-surface-2"
-          >
-            <Download className="h-4 w-4" /> Télécharger PDF
-          </a>
+        <div className="flex flex-wrap justify-end gap-2">
+          {(["pdf", "html", "md", "json"] as const).map((fmt) => (
+            <a
+              key={fmt}
+              href={`/api/analyze/${data.id}/export?format=${fmt}`}
+              download
+              className="inline-flex h-9 items-center gap-2 rounded-full border border-border bg-surface px-4 text-sm text-foreground hover:bg-surface-2"
+            >
+              <Download className="h-4 w-4" /> {fmt.toUpperCase()}
+            </a>
+          ))}
         </div>
       )}
     </div>

@@ -6,6 +6,7 @@ import { History, ExternalLink } from "lucide-react";
 import { GradientHeader } from "@/components/ui/gradient-header";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { LoadingBlock } from "@/components/ui/spinner";
 
 interface AnalysisItem { id: string; title: string; author: string; mode: string; nNodes: number; createdAt: string }
 interface ComparisonItem { id: string; refTitle: string; candTitle: string; sns: number; srjLevel: string; modality: string; createdAt: string }
@@ -48,7 +49,7 @@ export default function HistoriquePage() {
 
       <Card className="overflow-x-auto p-0">
         {loading ? (
-          <p className="p-6 text-muted">Chargement…</p>
+          <LoadingBlock />
         ) : tab === "analyses" ? (
           analyses.length === 0 ? (
             <p className="p-6 text-muted">Aucune analyse pour le moment.</p>

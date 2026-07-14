@@ -2,48 +2,28 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { connectDB } from "@/lib/db/mongoose";
 import { Comparison } from "@/lib/db/models/comparison";
-import { analyzeLLM, compare, LlmExtractionError, tensionProfile } from "@/lib/engine";
+import { analyzeLLM, compare, LlmExtractionError } from "@/lib/engine";
 import type { NarrativeGraph } from "@/lib/engine";
 import { EXTRACTION_MODEL_ID } from "@/lib/engine/extraction/llm-extractor";
 import { createNotification } from "@/lib/notifications";
 import { recordUsage } from "@/lib/usage";
 import { describeExtractionProgress } from "@/lib/progress-messages";
 import { resolveProjectLaunchContext } from "@/lib/projects/permissions";
+import { buildWork } from "@/lib/reports/comparison-work";
 
 export const runtime = "nodejs";
 // Cf. /api/analyze : un texte long peut prendre plus de temps qu'anticipé pour un seul
 // appel LLM, même si les deux œuvres sont analysées en parallèle (Promise.all).
 export const maxDuration = 300;
 
-/** Extrait les infos par-œuvre nécessaires au rapport de comparaison (sections « Œuvres comparées » et « Analyse LLM »). */
-function buildWork(g: NarrativeGraph, costUsd: number) {
-  const meta = g.metadata as Record<string, unknown>;
-  const actants = meta.main_actants_v1 as
-    | { protagoniste?: string; objet?: string; destinateur?: string; destinataire?: string; adjuvant?: string; opposant?: string }
-    | undefined;
-  return {
-    title: String(meta.title ?? "Œuvre"),
-    author: String(meta.author ?? "Auteur inconnu"),
-    graphId: g.graphId,
-    nNodes: g.nodes.length,
-    nEdges: g.edges.length,
-    tensionProfile: tensionProfile(g),
-    summary: typeof meta.summary === "string" ? meta.summary : "",
-    genre: typeof meta.genre === "string" ? meta.genre : "",
-    tradition: typeof meta.tradition === "string" ? meta.tradition : "",
-    thematicKeywords: Array.isArray(meta.thematicKeywords) ? (meta.thematicKeywords as string[]) : [],
-    mainActants: actants
-      ? {
-          protagoniste: actants.protagoniste ?? "",
-          objet: actants.objet ?? "",
-          destinateur: actants.destinateur ?? "",
-          destinataire: actants.destinataire ?? "",
-          adjuvant: actants.adjuvant ?? "",
-          opposant: actants.opposant ?? "",
-        }
-      : null,
-    costUsd,
-  };
+/** Valide (a minima) un graphe fourni par le client après analyse individuelle d'une colonne. */
+function asNarrativeGraph(value: unknown): NarrativeGraph | null {
+  if (!value || typeof value !== "object") return null;
+  const g = value as Partial<NarrativeGraph>;
+  if (typeof g.graphId !== "string") return null;
+  if (!Array.isArray(g.nodes) || !Array.isArray(g.edges)) return null;
+  if (!g.metadata || typeof g.metadata !== "object") return null;
+  return g as NarrativeGraph;
 }
 
 export async function POST(req: Request) {
@@ -71,12 +51,18 @@ export async function POST(req: Request) {
   void refSourceFile;
   void candSourceFile;
 
+  // Réutilisation des graphes déjà produits par « Analyser la référence / candidate »
+  // (via /api/compare/analyze) : on saute l'appel LLM et on compare directement.
+  const preRefGraph = asNarrativeGraph(body?.refGraph);
+  const preCandGraph = asNarrativeGraph(body?.candGraph);
+  const reuseGraphs = Boolean(preRefGraph && preCandGraph);
+
   const { projectId, error: projectError } = await resolveProjectLaunchContext(body?.projectId, session.user.id);
   if (projectError) {
     return NextResponse.json({ error: projectError }, { status: 403 });
   }
 
-  if (refText.trim().length < 200 || candText.trim().length < 200) {
+  if (!reuseGraphs && (refText.trim().length < 200 || candText.trim().length < 200)) {
     return NextResponse.json(
       { error: "Chaque texte doit contenir au moins 200 caractères." },
       { status: 400 },
@@ -105,57 +91,73 @@ export async function POST(req: Request) {
           send({ type: "progress", percent, message });
         }
 
-        let refOutcome;
-        let candOutcome;
-        try {
-          // Parallélise les deux analyses indépendantes (~/2 de latence, marge face à maxDuration).
-          // Compromis : si un seul appel échoue, Promise.all rejette et le coût de l'appel *réussi*
-          // n'est pas récupérable ici — même trou qu'en séquentiel, sans régression de traçage.
-          [refOutcome, candOutcome] = await Promise.all([
-            analyzeLLM(refText, { title: refTitle, author: refAuthor }, (event) => {
-              refFraction = event.fraction;
-              sendCombinedProgress();
-            }),
-            analyzeLLM(candText, { title: candTitle, author: candAuthor }, (event) => {
-              candFraction = event.fraction;
-              sendCombinedProgress();
-            }),
-          ]);
-        } catch (e) {
-          let partial: { inputTokens?: number; outputTokens?: number; costUsd?: number } | undefined;
-          if (e instanceof LlmExtractionError) {
-            partial = e.partialUsage;
-            console.error(
-              `Comparaison LLM échouée après un coût partiel de ${partial?.costUsd ?? 0} USD (${(partial?.inputTokens ?? 0) + (partial?.outputTokens ?? 0)} tokens).`,
-            );
+        let gRef: NarrativeGraph;
+        let gCand: NarrativeGraph;
+        let refCostUsd: number;
+        let candCostUsd: number;
+
+        if (reuseGraphs) {
+          // Graphes déjà analysés côté colonnes : l'usage/coût LLM a été enregistré à l'étape
+          // « Analyser » (/api/compare/analyze). On ne re-facture rien ici.
+          gRef = preRefGraph!;
+          gCand = preCandGraph!;
+          refCostUsd = 0;
+          candCostUsd = 0;
+          send({ type: "progress", percent: 50, message: "Comparaison des graphes narratifs…" });
+        } else {
+          let refOutcome;
+          let candOutcome;
+          try {
+            // Parallélise les deux analyses indépendantes (~/2 de latence, marge face à maxDuration).
+            // Compromis : si un seul appel échoue, Promise.all rejette et le coût de l'appel *réussi*
+            // n'est pas récupérable ici — même trou qu'en séquentiel, sans régression de traçage.
+            [refOutcome, candOutcome] = await Promise.all([
+              analyzeLLM(refText, { title: refTitle, author: refAuthor }, (event) => {
+                refFraction = event.fraction;
+                sendCombinedProgress();
+              }),
+              analyzeLLM(candText, { title: candTitle, author: candAuthor }, (event) => {
+                candFraction = event.fraction;
+                sendCombinedProgress();
+              }),
+            ]);
+          } catch (e) {
+            let partial: { inputTokens?: number; outputTokens?: number; costUsd?: number } | undefined;
+            if (e instanceof LlmExtractionError) {
+              partial = e.partialUsage;
+              console.error(
+                `Comparaison LLM échouée après un coût partiel de ${partial?.costUsd ?? 0} USD (${(partial?.inputTokens ?? 0) + (partial?.outputTokens ?? 0)} tokens).`,
+              );
+            }
+            const message = e instanceof Error ? e.message : "Erreur lors de l'analyse LLM.";
+            void recordUsage({
+              ownerId,
+              route: "compare",
+              model: EXTRACTION_MODEL_ID,
+              inputTokens: partial?.inputTokens ?? 0,
+              outputTokens: partial?.outputTokens ?? 0,
+              success: false,
+              error: message,
+            });
+            send({ type: "error", error: message, status: 502 });
+            return;
           }
-          const message = e instanceof Error ? e.message : "Erreur lors de l'analyse LLM.";
+
+          gRef = refOutcome.graph;
+          gCand = candOutcome.graph;
+          refCostUsd = refOutcome.usage.costUsd;
+          candCostUsd = candOutcome.usage.costUsd;
+
           void recordUsage({
             ownerId,
             route: "compare",
             model: EXTRACTION_MODEL_ID,
-            inputTokens: partial?.inputTokens ?? 0,
-            outputTokens: partial?.outputTokens ?? 0,
-            success: false,
-            error: message,
+            inputTokens: refOutcome.usage.inputTokens + candOutcome.usage.inputTokens,
+            outputTokens: refOutcome.usage.outputTokens + candOutcome.usage.outputTokens,
           });
-          send({ type: "error", error: message, status: 502 });
-          return;
         }
 
-        const gRef = refOutcome.graph;
-        const gCand = candOutcome.graph;
-        const totalCost = refOutcome.usage.costUsd + candOutcome.usage.costUsd;
-        const totalInputTokens = refOutcome.usage.inputTokens + candOutcome.usage.inputTokens;
-        const totalOutputTokens = refOutcome.usage.outputTokens + candOutcome.usage.outputTokens;
-
-        void recordUsage({
-          ownerId,
-          route: "compare",
-          model: EXTRACTION_MODEL_ID,
-          inputTokens: totalInputTokens,
-          outputTokens: totalOutputTokens,
-        });
+        const totalCost = refCostUsd + candCostUsd;
 
         const result = compare(gRef, gCand);
 
@@ -204,8 +206,8 @@ export async function POST(req: Request) {
             candTitle,
             mode: "llm",
             costUsd: totalCost,
-            refWork: buildWork(gRef, refOutcome.usage.costUsd),
-            candWork: buildWork(gCand, candOutcome.usage.costUsd),
+            refWork: buildWork(gRef, refCostUsd),
+            candWork: buildWork(gCand, candCostUsd),
             ...result,
           },
         });

@@ -5,6 +5,7 @@ import { connectDB } from "@/lib/db/mongoose";
 import { Project, PROJECT_TYPES } from "@/lib/db/models/project";
 import { ProjectMember } from "@/lib/db/models/project-member";
 import { ProjectInvitation } from "@/lib/db/models/project-invitation";
+import { User } from "@/lib/db/models/user";
 import { Analysis } from "@/lib/db/models/analysis";
 import { Comparison } from "@/lib/db/models/comparison";
 import { ChatConversation } from "@/lib/db/models/chat-conversation";
@@ -32,6 +33,10 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   }
 
   const members = await ProjectMember.find({ projectId: id }).lean();
+  const memberUsers = await User.find({ _id: { $in: members.map((m) => m.userId).filter(Types.ObjectId.isValid) } })
+    .select("email nomComplet prenom")
+    .lean();
+  const usersById = new Map(memberUsers.map((user) => [String(user._id), user]));
   const [nAnalyses, nComparisons, nChats] = await Promise.all([
     Analysis.countDocuments({ projectId: id }),
     Comparison.countDocuments({ projectId: id }),
@@ -61,7 +66,6 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     category: project.category,
     summary: project.summary,
     confidential: project.confidential,
-    notifyOnInvite: project.notifyOnInvite,
     archived: project.archived,
     createdAt: project.createdAt,
     attachments: project.attachments,
@@ -69,7 +73,15 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     inviteLinkToken: canManageProject(role) ? project.inviteLinkToken : null,
     role,
     viewerId: session.user.id,
-    members: members.map((m) => ({ userId: m.userId, role: m.role })),
+    members: members.map((m) => {
+      const user = usersById.get(m.userId);
+      return {
+        userId: m.userId,
+        role: m.role,
+        name: user?.nomComplet || user?.prenom || "",
+        email: user?.email || "",
+      };
+    }),
     counts: { analyses: nAnalyses, comparisons: nComparisons, chats: nChats },
     sessions,
     pendingInvitations: invitations.map((i) => ({ id: String(i._id), email: i.email, role: i.role })),
@@ -100,7 +112,6 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   if (typeof body?.category === "string") update.category = body.category.trim();
   if (typeof body?.summary === "string") update.summary = body.summary.trim();
   if (typeof body?.confidential === "boolean") update.confidential = body.confidential;
-  if (typeof body?.notifyOnInvite === "boolean") update.notifyOnInvite = body.notifyOnInvite;
   if (typeof body?.archived === "boolean") update.archived = body.archived;
 
   await connectDB();

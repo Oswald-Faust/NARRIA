@@ -73,19 +73,21 @@ const baseData: ComparisonHtmlReportData = {
 describe("renderComparisonHtmlReport", () => {
   const html = renderComparisonHtmlReport(baseData);
 
-  it("reproduit la structure et la palette d'origine (claire)", () => {
-    expect(html).toContain("<h1>Rapport NARR'IA</h1>");
-    expect(html).toContain("#1F4E79");
-    expect(html).toContain("#C55A11");
-    expect(html).toContain("Georgia, serif");
+  it("reproduit la structure et la palette de marque (claire)", () => {
+    expect(html).toContain("<h1>Rapport de comparaison</h1>");
+    // Couleurs de la marque NARR'IA (violet / rose)
+    expect(html).toContain("#843b90");
+    expect(html).toContain("#da3861");
     expect(html).toContain("Détail des composantes du SNS");
     expect(html).toContain("Isomorphisme de sous-graphes narratifs (NARR'IA-VF2)");
     expect(html).toContain("Correspondances structurales");
-    expect(html).toContain("NARR'IA · narria.tech · 2026");
+    expect(html).toContain("NARR'IA · narria.tech");
   });
 
   it("affiche le badge SRJ coloré selon le niveau", () => {
-    expect(html).toContain('<span class="srj-badge" style="background: #C55A11;">Élevé</span>');
+    // « Élevé » → tons rose de la marque
+    expect(html).toContain("Élevé");
+    expect(html).toContain("#c22a51");
   });
 
   it("rend les scores avec 3 décimales et le pourcentage de similarité", () => {
@@ -93,8 +95,8 @@ describe("renderComparisonHtmlReport", () => {
     expect(html).toContain("86.5%");
   });
 
-  it("marque le verdict comme warning quand sns > 0.5", () => {
-    expect(html).toContain('class="verdict warning"');
+  it("marque le verdict comme alerte quand sns > 0.5", () => {
+    expect(html).toContain("callout--alert");
   });
 
   it("échappe les valeurs pour prévenir le XSS", () => {

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Search, Trash2, UserPlus } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { LoadingBlock } from "@/components/ui/spinner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
@@ -169,7 +170,7 @@ export default function AdminUsersPage() {
 
       <Card className="overflow-x-auto p-0">
         {loading ? (
-          <p className="p-6 text-muted">Chargement…</p>
+          <LoadingBlock />
         ) : filtered.length === 0 ? (
           <p className="p-6 text-muted">Aucun utilisateur.</p>
         ) : (

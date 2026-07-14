@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { koba } from "@/lib/fonts";
 import { cn } from "@/lib/utils";
+import { LoadingBlock } from "@/components/ui/spinner";
 
 interface NotificationItem {
   id: string;
@@ -188,9 +189,7 @@ export default function NotificationsPage() {
 
       {/* Liste */}
       {loading ? (
-        <p className="rounded-[var(--radius-card)] border border-border bg-surface p-8 text-center text-muted">
-          Chargement…
-        </p>
+        <LoadingBlock />
       ) : filtered.length === 0 ? (
         <div className="flex flex-col items-center gap-3 rounded-[var(--radius-card)] border border-dashed border-border bg-surface p-12 text-center">
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-surface-2 text-muted">

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useEffect } from "react";
-import { Paperclip, FileText, Mic, ArrowUp, Square } from "lucide-react";
+import { Paperclip, FileText, Mic, ArrowUp, Square, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /**
@@ -13,17 +13,26 @@ export function Composer({
   onChange,
   onSubmit,
   onStop,
+  onImportFile,
+  onExport,
   busy,
+  importing = false,
+  canExport = false,
   placeholder = "Posez votre prochaine question à NARR'IA…",
 }: {
   value: string;
   onChange: (v: string) => void;
   onSubmit: () => void;
   onStop?: () => void;
+  onImportFile?: (file: File) => void;
+  onExport?: () => void;
   busy: boolean;
+  importing?: boolean;
+  canExport?: boolean;
   placeholder?: string;
 }) {
   const ref = useRef<HTMLTextAreaElement>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   // Auto-grow.
   useEffect(() => {
@@ -55,8 +64,29 @@ export function Composer({
       />
       <div className="flex items-center justify-between px-1">
         <div className="flex items-center gap-0.5">
-          <IconBtn icon={Paperclip} title="Joindre un fichier" />
-          <IconBtn icon={FileText} title="Insérer un document" />
+          <input
+            ref={fileRef}
+            type="file"
+            accept=".txt,.docx,.pdf,.odt,.epub"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) onImportFile?.(file);
+              e.target.value = "";
+            }}
+          />
+          <IconBtn
+            icon={Paperclip}
+            title={importing ? "Import en cours…" : "Importer un fichier"}
+            onClick={() => fileRef.current?.click()}
+            disabled={busy || importing || !onImportFile}
+          />
+          <IconBtn
+            icon={FileText}
+            title="Exporter la conversation"
+            onClick={onExport}
+            disabled={!canExport || !onExport}
+          />
         </div>
         <div className="flex items-center gap-1">
           <IconBtn icon={Mic} title="Dicter" />
@@ -89,12 +119,24 @@ export function Composer({
   );
 }
 
-function IconBtn({ icon: Icon, title }: { icon: typeof Mic; title: string }) {
+function IconBtn({
+  icon: Icon,
+  title,
+  onClick,
+  disabled = false,
+}: {
+  icon: LucideIcon;
+  title: string;
+  onClick?: () => void;
+  disabled?: boolean;
+}) {
   return (
     <button
       type="button"
       title={title}
-      className="flex h-9 w-9 items-center justify-center rounded-full text-muted transition-colors hover:bg-surface-2 hover:text-foreground"
+      onClick={onClick}
+      disabled={disabled}
+      className="flex h-9 w-9 items-center justify-center rounded-full text-muted transition-colors hover:bg-surface-2 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
     >
       <Icon className="h-[18px] w-[18px]" />
     </button>

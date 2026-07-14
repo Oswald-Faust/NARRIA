@@ -2,11 +2,11 @@
 
 import { useEffect, useRef, useState, use } from "react";
 import Link from "next/link";
-import { FolderKanban, ScanText, GitCompareArrows, MessageSquare, Sparkles, Paperclip, Settings, Loader2 } from "lucide-react";
-import { GradientHeader } from "@/components/ui/gradient-header";
+import { ScanText, GitCompareArrows, MessageSquare, Sparkles, Paperclip, Loader2 } from "lucide-react";
 import { Card, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { LoadingBlock } from "@/components/ui/spinner";
 
 interface SessionItem { kind: "analysis" | "comparison" | "chat"; id: string; title: string; ownerId: string; createdAt: string }
 interface ProjectDetail {
@@ -26,8 +26,13 @@ const fmtRelative = (d: string) => {
   return `il y a ${Math.floor(h / 24)}j`;
 };
 
-const sessionHref = (s: SessionItem) =>
-  s.kind === "analysis" ? `/historique/analyses/${s.id}` : s.kind === "comparison" ? `/historique/comparaisons/${s.id}` : `/chat?c=${s.id}`;
+// Une session de chat se rouvre DANS le projet ; les rapports gardent leur page dédiée.
+const sessionHref = (s: SessionItem, projectId: string) =>
+  s.kind === "analysis"
+    ? `/historique/analyses/${s.id}`
+    : s.kind === "comparison"
+      ? `/historique/comparaisons/${s.id}`
+      : `/projets/${projectId}/chat?c=${s.id}`;
 
 const sessionIcon = (kind: SessionItem["kind"]) =>
   kind === "analysis" ? <ScanText className="h-4 w-4 text-soft-purple" /> : kind === "comparison" ? <GitCompareArrows className="h-4 w-4 text-soft-pink" /> : <MessageSquare className="h-4 w-4 text-yellow" />;
@@ -75,31 +80,19 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
   }
 
   if (loadError && !project) return <Card className="mx-auto max-w-lg text-sm text-red-400">{loadError}</Card>;
-  if (!project) return <p className="text-muted">Chargement…</p>;
+  if (!project) return <LoadingBlock />;
 
   const canLaunch = project.role === "owner" || project.role === "co-admin" || project.role === "collaborateur";
-  const canManage = project.role === "owner" || project.role === "co-admin";
   const sessions = tab === "moi" ? project.sessions.filter((s) => s.ownerId === project.viewerId) : project.sessions;
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6">
-      <GradientHeader
-        title={project.name}
-        subtitle={`${project.type} · ${project.category || "—"} · Créé le ${new Date(project.createdAt).toLocaleDateString("fr-FR")} · ${project.members.length} collaborateur(s)`}
-        icon={<FolderKanban className="h-6 w-6" />}
-        action={canManage ? (
-          <Link href={`/projets/${id}/membres`}>
-            <Button variant="secondary"><Settings className="h-4 w-4" /> Gérer les collaborateurs</Button>
-          </Link>
-        ) : undefined}
-      />
-
+    <div className="space-y-6">
       <div>
         <p className="mb-2 text-sm font-semibold text-muted">Outils du projet</p>
         <div className="grid gap-4 sm:grid-cols-3">
-          <ToolCard icon={<ScanText className="h-5 w-5 text-soft-purple" />} count={project.counts.analyses} label="Analyse de texte" href={canLaunch ? `/analyser?projectId=${id}` : undefined} cta="Lancer" />
-          <ToolCard icon={<GitCompareArrows className="h-5 w-5 text-soft-pink" />} count={project.counts.comparisons} label="Comparer deux textes" href={canLaunch ? `/comparer?projectId=${id}` : undefined} cta="Lancer" />
-          <ToolCard icon={<MessageSquare className="h-5 w-5 text-yellow" />} count={project.counts.chats} label="NARR'IA Chat" href={`/chat?projectId=${id}`} cta="Ouvrir" />
+          <ToolCard icon={<ScanText className="h-5 w-5 text-soft-purple" />} count={project.counts.analyses} label="Analyse de texte" href={canLaunch ? `/projets/${id}/analyser` : undefined} cta="Lancer" />
+          <ToolCard icon={<GitCompareArrows className="h-5 w-5 text-soft-pink" />} count={project.counts.comparisons} label="Comparer deux textes" href={canLaunch ? `/projets/${id}/comparer` : undefined} cta="Lancer" />
+          <ToolCard icon={<MessageSquare className="h-5 w-5 text-yellow" />} count={project.counts.chats} label="NARR'IA Chat" href={`/projets/${id}/chat`} cta="Ouvrir" />
         </div>
       </div>
 
@@ -125,7 +118,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
                     <p className="truncate text-sm font-semibold text-foreground">{s.title}</p>
                     <p className="text-xs text-muted">{fmtRelative(s.createdAt)}</p>
                   </div>
-                  <Link href={sessionHref(s)}><Button variant="secondary" size="sm">Voir</Button></Link>
+                  <Link href={sessionHref(s, id)}><Button variant="secondary" size="sm">Voir</Button></Link>
                 </div>
               ))}
             </div>

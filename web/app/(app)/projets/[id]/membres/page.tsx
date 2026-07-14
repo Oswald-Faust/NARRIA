@@ -1,17 +1,16 @@
 "use client";
 
 import { useEffect, useRef, useState, use } from "react";
-import Link from "next/link";
-import { Users, Mail, Copy, RefreshCw, Trash2, ArrowLeft } from "lucide-react";
-import { GradientHeader } from "@/components/ui/gradient-header";
+import { Mail, Copy, RefreshCw, Trash2 } from "lucide-react";
 import { Card, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { LoadingBlock } from "@/components/ui/spinner";
 
 interface ProjectDetail {
   id: string; name: string; confidential: boolean; inviteLinkToken: string | null;
-  members: { userId: string; role: string }[];
+  members: { userId: string; role: string; name: string; email: string }[];
   pendingInvitations: { id: string; email: string; role: string }[];
 }
 
@@ -147,20 +146,14 @@ export default function ProjectMembersPage({ params }: { params: Promise<{ id: s
     }
   }
 
-  if (!project) return <p className="text-muted">Chargement…</p>;
+  if (!project) return <LoadingBlock />;
 
   const inviteLinkUrl = project.inviteLinkToken
     ? `${typeof window !== "undefined" ? window.location.origin : ""}/projets/rejoindre/${project.inviteLinkToken}`
     : null;
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
-      <GradientHeader title="Gérer les collaborateurs" subtitle={project.name} icon={<Users className="h-6 w-6" />} />
-
-      <Link href={`/projets/${id}`} className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-foreground">
-        <ArrowLeft className="h-4 w-4" /> Retour au projet
-      </Link>
-
+    <div className="max-w-3xl space-y-6">
       {error && <p className="text-sm text-red-400">{error}</p>}
 
       <Card className="space-y-3">
@@ -195,7 +188,10 @@ export default function ProjectMembersPage({ params }: { params: Promise<{ id: s
         <CardTitle>Membres</CardTitle>
         {project.members.map((m) => (
           <div key={m.userId} className="flex items-center justify-between text-sm">
-            <span className="text-foreground">{m.userId}</span>
+            <div className="min-w-0">
+              <p className="truncate font-medium text-foreground">{m.name || m.email || "Utilisateur inconnu"}</p>
+              <p className="truncate text-xs text-muted">{m.email || m.userId}</p>
+            </div>
             {m.role === "owner" ? (
               <Badge tone="purple">owner</Badge>
             ) : (

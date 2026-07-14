@@ -5,6 +5,7 @@ import { BookMarked } from "lucide-react";
 import { GradientHeader } from "@/components/ui/gradient-header";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { LoadingBlock } from "@/components/ui/spinner";
 
 interface Fn { code: string; name: string; description: string; african?: boolean }
 interface Family { id: string; name: string; functions: Fn[] }
@@ -34,7 +35,7 @@ export default function RepertoirePage() {
       .flatMap((f) => f.functions.map((fn) => ({ ...fn, familyName: f.name })));
   }, [data, active]);
 
-  if (!data) return <p className="text-muted">Chargement du répertoire…</p>;
+  if (!data) return <LoadingBlock label="Chargement du répertoire" />;
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">

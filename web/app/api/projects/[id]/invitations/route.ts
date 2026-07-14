@@ -5,9 +5,10 @@ import { connectDB } from "@/lib/db/mongoose";
 import { Project } from "@/lib/db/models/project";
 import { ProjectInvitation } from "@/lib/db/models/project-invitation";
 import { User } from "@/lib/db/models/user";
-import { getProjectRole, canManageProject } from "@/lib/projects/permissions";
+import { getProjectRole, canManageProject, generateInviteLinkToken } from "@/lib/projects/permissions";
 import { createNotification } from "@/lib/notifications";
 import { sendProjectInvitationEmail } from "@/lib/email/brevo";
+import { getAppBaseUrl } from "@/lib/app-url";
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
@@ -36,10 +37,11 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   if (!project) return NextResponse.json({ error: "Projet introuvable." }, { status: 404 });
 
   const existing = await ProjectInvitation.findOne({ projectId: id, email, status: "pending" });
+  const token = existing?.token ?? generateInviteLinkToken();
   const invitation = existing
     ? await ProjectInvitation.findOneAndUpdate(
         { _id: existing._id },
-        { $set: { role: inviteRole, invitedByUserId: session.user.id } },
+        { $set: { role: inviteRole, invitedByUserId: session.user.id, token } },
         { new: true },
       )
     : await ProjectInvitation.create({
@@ -47,7 +49,11 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         email,
         role: inviteRole,
         invitedByUserId: session.user.id,
+        token,
       });
+
+  const inviterName = session.user.name ?? "Un membre NARR'IA";
+  const joinUrl = `${getAppBaseUrl()}/projets/invitation/${token}`;
 
   const invitedUser = await User.findOne({ email }).lean();
   if (invitedUser) {
@@ -55,17 +61,16 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       ownerId: String(invitedUser._id),
       type: "project",
       title: `Invitation à rejoindre « ${project.name} »`,
-      body: `${session.user.name ?? "Un membre"} vous invite en tant que ${inviteRole}.`,
-      href: `/projets/${id}`,
+      body: `${inviterName} vous invite en tant que ${inviteRole}.`,
+      href: `/projets/invitation/${token}`,
     });
   }
 
-  if (project.notifyOnInvite) {
-    try {
-      await sendProjectInvitationEmail(email, project.name, session.user.name ?? "Un membre NARR'IA");
-    } catch (e) {
-      console.error("[projects] envoi de l'invitation par e-mail échoué:", e);
-    }
+  // L'e-mail d'invitation part toujours immédiatement (plus d'option « Notifier »).
+  try {
+    await sendProjectInvitationEmail(email, project.name, inviterName, joinUrl, inviteRole);
+  } catch (e) {
+    console.error("[projects] envoi de l'invitation par e-mail échoué:", e);
   }
 
   return NextResponse.json({ id: String(invitation._id), email, role: inviteRole });

@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Bell, ScanText, GitCompareArrows, LogIn, Trash2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { LoadingBlock } from "@/components/ui/spinner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input, Label, Textarea } from "@/components/ui/input";
@@ -46,7 +47,7 @@ export default function AdminUserDetailPage() {
       .finally(() => setLoading(false));
   }, [id]);
 
-  if (loading) return <Card>Chargement…</Card>;
+  if (loading) return <LoadingBlock />;
   if (!data) return <Card>Utilisateur introuvable.</Card>;
 
   const { user, usage } = data;

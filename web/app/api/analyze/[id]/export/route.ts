@@ -4,10 +4,15 @@ import { auth } from "@/auth";
 import { connectDB } from "@/lib/db/mongoose";
 import { Analysis } from "@/lib/db/models/analysis";
 import { renderAnalysisHtmlReport } from "@/lib/reports/analysis-html-report";
+import { renderAnalysisMarkdownReport } from "@/lib/reports/analysis-md-report";
+import type { AnalysisReportData } from "@/components/analyse/analysis-report";
 import { canAccessSession } from "@/lib/projects/permissions";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
+
+const FORMATS = ["html", "pdf", "json", "md"] as const;
+type ExportFormat = (typeof FORMATS)[number];
 
 function slugify(s: string): string {
   return (
@@ -30,10 +35,11 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   if (!Types.ObjectId.isValid(id)) {
     return NextResponse.json({ error: "Identifiant d'analyse invalide." }, { status: 400 });
   }
-  const format = new URL(req.url).searchParams.get("format") ?? "html";
-  if (format !== "html" && format !== "pdf") {
-    return NextResponse.json({ error: "Format non supporté (html ou pdf)." }, { status: 400 });
+  const formatParam = new URL(req.url).searchParams.get("format") ?? "html";
+  if (!FORMATS.includes(formatParam as ExportFormat)) {
+    return NextResponse.json({ error: "Format non supporté (html, pdf, json ou md)." }, { status: 400 });
   }
+  const format = formatParam as ExportFormat;
 
   await connectDB();
   const doc = await Analysis.findById(id).lean();
@@ -42,7 +48,8 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   }
 
   const graph = doc.graph as { nodes: Array<Record<string, unknown>> };
-  const html = renderAnalysisHtmlReport({
+  const reportData: AnalysisReportData & { dateHuman: string } = {
+    id: String(doc._id),
     title: doc.title,
     author: doc.author,
     mode: doc.mode,
@@ -65,9 +72,45 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     costUsd: doc.costUsd,
     tokensTotal: doc.costTokens,
     dateHuman: new Date(doc.createdAt as Date).toLocaleString("fr-FR"),
-  });
+  };
 
   const filename = `${slugify(doc.title)}_${doc._id}`;
+
+  if (format === "json") {
+    const payload = {
+      schema: "narria.analysis/2.0",
+      id: String(doc._id),
+      generatedAt: new Date(doc.createdAt as Date).toISOString(),
+      title: doc.title,
+      author: doc.author,
+      mode: doc.mode,
+      summary: doc.summary,
+      genre: doc.genre,
+      tradition: doc.tradition,
+      mainActants: doc.mainActants ?? null,
+      thematicKeywords: doc.thematicKeywords ?? [],
+      costUsd: doc.costUsd,
+      tokensTotal: doc.costTokens,
+      graph: doc.graph ?? null,
+    };
+    return new NextResponse(JSON.stringify(payload, null, 2), {
+      headers: {
+        "Content-Type": "application/json; charset=utf-8",
+        "Content-Disposition": `attachment; filename="${filename}.json"`,
+      },
+    });
+  }
+
+  if (format === "md") {
+    return new NextResponse(renderAnalysisMarkdownReport(reportData), {
+      headers: {
+        "Content-Type": "text/markdown; charset=utf-8",
+        "Content-Disposition": `attachment; filename="${filename}.md"`,
+      },
+    });
+  }
+
+  const html = renderAnalysisHtmlReport(reportData);
 
   if (format === "html") {
     return new NextResponse(html, {

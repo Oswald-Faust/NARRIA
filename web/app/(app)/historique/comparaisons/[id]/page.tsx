@@ -3,10 +3,11 @@
 import { useEffect, useState } from "react";
 import { use } from "react";
 import Link from "next/link";
-import { GitCompareArrows, Loader2, ArrowLeft } from "lucide-react";
+import { GitCompareArrows, ArrowLeft } from "lucide-react";
 import { GradientHeader } from "@/components/ui/gradient-header";
 import { Card, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { LoadingBlock } from "@/components/ui/spinner";
 import { ComparisonReport, type ComparisonReportData } from "@/components/comparer/comparison-report";
 
 const srjTone = (level: string) =>
@@ -41,11 +42,7 @@ export default function ComparisonDetailPage({ params }: { params: Promise<{ id:
         <ArrowLeft className="h-4 w-4" /> Retour à l&apos;historique
       </Link>
 
-      {loading && (
-        <Card className="flex items-center gap-2 text-muted">
-          <Loader2 className="h-4 w-4 animate-spin" /> Chargement de la comparaison…
-        </Card>
-      )}
+      {loading && <LoadingBlock />}
 
       {error && <Card className="text-sm text-red-400">{error}</Card>}
 

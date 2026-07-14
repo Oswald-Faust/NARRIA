@@ -64,21 +64,30 @@ export async function PUT(
 
   const { id } = await params;
   const body = await req.json().catch(() => null);
-  const messages = Array.isArray(body?.messages) ? (body.messages as UIMessage[]) : [];
-  const title = typeof body?.title === "string" && body.title.trim()
-    ? body.title.trim()
-    : titleFromMessages(messages);
+  const hasMessages = Array.isArray(body?.messages);
+  const messages = hasMessages ? (body.messages as UIMessage[]) : [];
+  const title = typeof body?.title === "string" ? body.title.trim() : "";
+  const update: {
+    title?: string;
+    messages?: UIMessage[];
+    lastMessageAt?: Date;
+  } = {};
+
+  if (title) {
+    update.title = title;
+  } else if (!hasMessages) {
+    update.title = titleFromMessages(messages);
+  }
+
+  if (hasMessages) {
+    update.messages = messages;
+    update.lastMessageAt = messages.length > 0 ? new Date() : new Date(0);
+  }
 
   await connectDB();
   const conversation = await ChatConversation.findOneAndUpdate(
     { _id: id, ownerId: session.user.id },
-    {
-      $set: {
-        title,
-        messages,
-        lastMessageAt: messages.length > 0 ? new Date() : new Date(0),
-      },
-    },
+    { $set: update },
     { new: true },
   ).lean();
 

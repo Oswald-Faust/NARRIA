@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { LogIn, ScanText, GitCompareArrows, MessageSquareText } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { LoadingBlock } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
 
 interface Event {
@@ -42,7 +43,7 @@ export default function AdminActivityPage() {
     <Card className="p-0">
       <h3 className="border-b border-border px-5 py-3 font-heading text-sm font-bold">Journal d&apos;activité (60 derniers évènements)</h3>
       {loading ? (
-        <p className="p-5 text-sm text-muted">Chargement…</p>
+        <LoadingBlock />
       ) : events.length === 0 ? (
         <p className="p-5 text-sm text-muted">Aucune activité enregistrée.</p>
       ) : (

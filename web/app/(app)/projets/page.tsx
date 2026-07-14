@@ -8,6 +8,9 @@ import { Card, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { LoadingBlock } from "@/components/ui/spinner";
+
+type Scope = "all" | "personal" | "collaboration";
 
 interface ProjectItem {
   id: string;
@@ -23,6 +26,7 @@ const fmt = (d: string) => new Date(d).toLocaleDateString("fr-FR", { day: "2-dig
 
 export default function ProjectsPage() {
   const [tab, setTab] = useState<"tous" | "archives">("tous");
+  const [scope, setScope] = useState<Scope>("all");
   const [q, setQ] = useState("");
   const [projects, setProjects] = useState<ProjectItem[]>([]);
   const [nPersonal, setNPersonal] = useState(0);
@@ -73,7 +77,12 @@ export default function ProjectsPage() {
       />
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Card className="flex items-center gap-4">
+        <button
+          type="button"
+          onClick={() => setScope((s) => (s === "personal" ? "all" : "personal"))}
+          aria-pressed={scope === "personal"}
+          className={`flex items-center gap-4 rounded-2xl border bg-surface p-5 text-left transition-colors hover:border-soft-purple ${scope === "personal" ? "border-soft-purple ring-1 ring-soft-purple/40" : "border-border"}`}
+        >
           <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-soft-purple/15">
             <FolderKanban className="h-5 w-5 text-soft-purple" />
           </div>
@@ -81,8 +90,13 @@ export default function ProjectsPage() {
             <p className="font-heading text-2xl font-bold text-foreground">{nPersonal}</p>
             <p className="text-sm text-muted">Projets personnels</p>
           </div>
-        </Card>
-        <Card className="flex items-center gap-4">
+        </button>
+        <button
+          type="button"
+          onClick={() => setScope((s) => (s === "collaboration" ? "all" : "collaboration"))}
+          aria-pressed={scope === "collaboration"}
+          className={`flex items-center gap-4 rounded-2xl border bg-surface p-5 text-left transition-colors hover:border-soft-pink ${scope === "collaboration" ? "border-soft-pink ring-1 ring-soft-pink/40" : "border-border"}`}
+        >
           <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-soft-pink/15">
             <Users className="h-5 w-5 text-soft-pink" />
           </div>
@@ -90,7 +104,7 @@ export default function ProjectsPage() {
             <p className="font-heading text-2xl font-bold text-foreground">{nCollaborations}</p>
             <p className="text-sm text-muted">Collaborations</p>
           </div>
-        </Card>
+        </button>
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -112,10 +126,14 @@ export default function ProjectsPage() {
       </div>
 
       {loading ? (
-        <p className="text-muted">Chargement…</p>
+        <LoadingBlock />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
-          {projects.map((p) => (
+          {projects
+            .filter((p) =>
+              scope === "all" ? true : scope === "personal" ? p.role === "owner" : p.role !== "owner",
+            )
+            .map((p) => (
             <Card key={p.id} className="space-y-2">
               <div className="flex items-start justify-between gap-2">
                 <div>

@@ -4,7 +4,11 @@ import { connectDB } from "@/lib/db/mongoose";
 import { Project, PROJECT_TYPES } from "@/lib/db/models/project";
 import { ProjectMember } from "@/lib/db/models/project-member";
 import { ProjectInvitation } from "@/lib/db/models/project-invitation";
+import { User } from "@/lib/db/models/user";
 import { generateInviteLinkToken } from "@/lib/projects/permissions";
+import { createNotification } from "@/lib/notifications";
+import { sendProjectInvitationEmail } from "@/lib/email/brevo";
+import { getAppBaseUrl } from "@/lib/app-url";
 
 export async function GET(req: Request) {
   const session = await auth();
@@ -61,7 +65,6 @@ export async function POST(req: Request) {
   const category: string = body?.category?.trim() ?? "";
   const summary: string = body?.summary?.trim() ?? "";
   const confidential: boolean = body?.confidential !== false;
-  const notifyOnInvite: boolean = body?.notifyOnInvite === true;
   const invitations: { email: string; role: string }[] = Array.isArray(body?.invitations) ? body.invitations : [];
 
   await connectDB();
@@ -73,17 +76,38 @@ export async function POST(req: Request) {
     category,
     summary,
     confidential,
-    notifyOnInvite,
     inviteLinkToken: generateInviteLinkToken(),
   });
 
   await ProjectMember.create({ projectId: project._id, userId: ownerId, role: "owner" });
 
+  const inviterName = session.user.name ?? "Un membre NARR'IA";
+  const baseUrl = getAppBaseUrl();
   for (const inv of invitations) {
     const email = inv.email?.trim().toLowerCase();
     const role = ["co-admin", "collaborateur", "lecteur"].includes(inv.role) ? inv.role : "collaborateur";
     if (!email) continue;
-    await ProjectInvitation.create({ projectId: project._id, email, role, invitedByUserId: ownerId });
+    const token = generateInviteLinkToken();
+    await ProjectInvitation.create({ projectId: project._id, email, role, invitedByUserId: ownerId, token });
+
+    // Notification in-app pour un utilisateur déjà inscrit avec cette adresse.
+    const invitedUser = await User.findOne({ email }).lean();
+    if (invitedUser) {
+      await createNotification({
+        ownerId: String(invitedUser._id),
+        type: "project",
+        title: `Invitation à rejoindre « ${project.name} »`,
+        body: `${inviterName} vous invite en tant que ${role}.`,
+        href: `/projets/invitation/${token}`,
+      });
+    }
+
+    // L'e-mail d'invitation part toujours immédiatement (plus d'option « Notifier »).
+    try {
+      await sendProjectInvitationEmail(email, project.name, inviterName, `${baseUrl}/projets/invitation/${token}`, role);
+    } catch (e) {
+      console.error("[projects] envoi de l'invitation par e-mail échoué:", e);
+    }
   }
 
   return NextResponse.json({ id: String(project._id) });

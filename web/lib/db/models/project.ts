@@ -29,7 +29,6 @@ const ProjectSchema = new Schema(
     category: { type: String, default: "" },
     summary: { type: String, default: "" },
     confidential: { type: Boolean, default: true },
-    notifyOnInvite: { type: Boolean, default: false },
     inviteLinkToken: { type: String, required: true, unique: true },
     inviteLinkRole: {
       type: String,

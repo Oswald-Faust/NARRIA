@@ -5,6 +5,7 @@ import {
   Users, ScanText, GitCompareArrows, MessageSquareText, Coins, Cpu, LogIn, ShieldAlert,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { LoadingBlock } from "@/components/ui/spinner";
 import { StatCard } from "@/components/admin/stat-card";
 import { ActivityChart, type SeriesPoint } from "@/components/admin/bar-chart";
 import { formatUsd } from "@/lib/pricing";
@@ -32,7 +33,7 @@ export default function AdminOverviewPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  if (loading) return <Card>Chargement du tableau de bord…</Card>;
+  if (loading) return <LoadingBlock />;
   if (!data) return <Card>Impossible de charger les statistiques.</Card>;
 
   return (

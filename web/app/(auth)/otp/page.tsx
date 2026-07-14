@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { Button } from "@/components/ui/button";
+import { LoadingBlock } from "@/components/ui/spinner";
 import { koba } from "@/lib/fonts";
 
 const OTP_PENDING_AUTH_KEY = "narria.pending-auth";
@@ -143,7 +144,7 @@ export default function OtpPage() {
       }
       subtitle="Un code à 5 chiffres a été envoyé à votre adresse e-mail. Saisissez-le pour finaliser votre inscription."
     >
-      <Suspense fallback={<p className="text-muted">Chargement…</p>}>
+      <Suspense fallback={<LoadingBlock />}>
         <OtpForm />
       </Suspense>
     </AuthShell>

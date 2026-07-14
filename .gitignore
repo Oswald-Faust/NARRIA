@@ -13,3 +13,4 @@ config.json
 narria-token.txt
 api-key.txt
 *.log
+.vercel

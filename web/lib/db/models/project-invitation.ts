@@ -7,6 +7,8 @@ const ProjectInvitationSchema = new Schema(
     role: { type: String, enum: ["co-admin", "collaborateur", "lecteur"], required: true },
     status: { type: String, enum: ["pending", "accepted", "revoked"], default: "pending" },
     invitedByUserId: { type: String, required: true },
+    // Jeton secret nominatif inséré dans le lien du mail d'invitation (acceptation en un clic).
+    token: { type: String, unique: true, sparse: true, index: true },
   },
   { timestamps: true },
 );
