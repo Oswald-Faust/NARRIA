@@ -126,8 +126,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   try {
     pdf = await htmlToPdf(html);
   } catch (e) {
-    const message = e instanceof Error ? e.message : "Erreur inconnue lors de la génération du PDF.";
-    console.error("[export] Génération PDF échouée:", message);
+    console.error("[export] Génération PDF échouée:", e);
     return NextResponse.json(
       { error: "Génération du PDF impossible pour le moment. Réessayez ou téléchargez le format HTML." },
       { status: 500 },

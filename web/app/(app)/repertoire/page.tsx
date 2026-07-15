@@ -11,6 +11,12 @@ interface Fn { code: string; name: string; description: string; african?: boolea
 interface Family { id: string; name: string; functions: Fn[] }
 interface RepData { total: number; families: number; african: number; repertoire: { families: Family[] } }
 
+/** Titre court d'une famille : « Famille 1 — Rupture initiale (…) » → « Rupture initiale ». */
+function familyTitle(name: string): string {
+  const afterDash = name.includes("—") ? name.split("—").slice(1).join("—") : name;
+  return afterDash.replace(/\([^)]*\)/g, "").trim();
+}
+
 function Stat({ value, label }: { value: number; label: string }) {
   return (
     <Card className="text-center">
@@ -62,9 +68,10 @@ export default function RepertoirePage() {
           <button
             key={f.id}
             onClick={() => setActive(f.id)}
-            className={`rounded-full px-4 py-1.5 text-sm font-medium ${active === f.id ? "bg-accent text-white" : "bg-surface-2 text-muted hover:text-foreground"}`}
+            className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-medium ${active === f.id ? "bg-accent text-white" : "bg-surface-2 text-muted hover:text-foreground"}`}
           >
-            {f.id}
+            <span className={`font-bold ${active === f.id ? "text-white" : "text-soft-purple"}`}>{f.id}</span>
+            <span className="opacity-90">{familyTitle(f.name)}</span>
           </button>
         ))}
       </div>

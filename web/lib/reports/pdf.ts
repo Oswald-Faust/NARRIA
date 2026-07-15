@@ -43,6 +43,10 @@ function findLocalChrome(): string | null {
 
 async function launchBrowser(): Promise<Browser> {
   if (isServerless) {
+    // @sparticuz/chromium : pas de rendu graphique côté serveur (WebGL inutile pour un PDF,
+    // et évite d'extraire swiftshader), binaire résolu depuis l'archive embarquée
+    // (cf. serverExternalPackages).
+    chromium.setGraphicsMode = false;
     return puppeteer.launch({
       args: chromium.args,
       executablePath: await chromium.executablePath(),
