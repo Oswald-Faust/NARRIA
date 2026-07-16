@@ -14,23 +14,29 @@ const PRODUCT_LINKS = [
   {
     href: "/produit/etudiants",
     icon: GraduationCap,
+    label: "Étudiants",
     title: "NARR'IA pour les étudiants",
     desc: "Fiches, dissertations et schémas actantiels prêts à rendre.",
-    color: "text-yellow",
+    color: "text-[#8a5a10] dark:text-yellow",
+    iconClass: "bg-yellow/15 text-[#8a5a10] dark:text-yellow",
   },
   {
     href: "/produit/recherche",
     icon: FlaskConical,
+    label: "Recherche",
     title: "NARR'IA pour la recherche",
     desc: "Corpus, scores reproductibles et exports citables.",
-    color: "text-soft-purple",
+    color: "text-purple dark:text-soft-purple",
+    iconClass: "bg-purple/15 text-purple dark:text-soft-purple",
   },
   {
     href: "/produit/fun",
     icon: PartyPopper,
+    label: "Fun",
     title: "NARR'IA pour le fun",
     desc: "Films, séries, fanfictions : dissèque tout ce qui raconte.",
-    color: "text-soft-pink",
+    color: "text-pink dark:text-soft-pink",
+    iconClass: "bg-pink/15 text-pink dark:text-soft-pink",
   },
 ] as const;
 
@@ -78,13 +84,26 @@ export function LandingNavbar({ isAuthed }: { isAuthed: boolean }) {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const openProduct = () => {
+  // Nettoie le timer de fermeture au démontage.
+  useEffect(() => () => {
     if (closeTimer.current) clearTimeout(closeTimer.current);
+  }, []);
+
+  const cancelClose = () => {
+    if (closeTimer.current) {
+      clearTimeout(closeTimer.current);
+      closeTimer.current = null;
+    }
+  };
+  const openProduct = () => {
+    cancelClose();
     setProductOpen(true);
   };
+  // Fermeture temporisée (grâce de 140 ms) — laisse le temps de traverser
+  // le pont bouton→panneau sans que le menu ne clignote.
   const scheduleClose = () => {
-    if (closeTimer.current) clearTimeout(closeTimer.current);
-    closeTimer.current = setTimeout(() => setProductOpen(false), 180);
+    cancelClose();
+    closeTimer.current = setTimeout(() => setProductOpen(false), 140);
   };
 
   return (
@@ -111,7 +130,22 @@ export function LandingNavbar({ isAuthed }: { isAuthed: boolean }) {
 
         <nav className="hidden items-center gap-1 md:flex">
           {/* Produit : dropdown */}
-          <div className="relative" onMouseEnter={openProduct} onMouseLeave={scheduleClose}>
+          <div
+            className="relative"
+            onPointerEnter={(e) => {
+              if (e.pointerType !== "touch") openProduct();
+            }}
+            onPointerLeave={(e) => {
+              if (e.pointerType !== "touch") scheduleClose();
+            }}
+            onBlur={(e) => {
+              // Ferme si le focus quitte entièrement le menu (navigation clavier).
+              if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+                cancelClose();
+                setProductOpen(false);
+              }
+            }}
+          >
             <button
               type="button"
               aria-expanded={productOpen}
@@ -127,12 +161,15 @@ export function LandingNavbar({ isAuthed }: { isAuthed: boolean }) {
               <ChevronDown className={cn("h-3.5 w-3.5 transition-transform duration-300", productOpen && "rotate-180")} />
             </button>
 
+            {/* Panneau (design d'origine). Handlers portés uniquement par le
+                conteneur .lp-menu — le panneau en est un descendant DOM, donc
+                une seule source d'événements, pas de double-déclenchement au
+                passage bouton→panneau. Le pont pt-3.5 (14 px) recouvre tout
+                gap sous-pixel sous le bouton. */}
             <div
               role="menu"
-              onMouseEnter={openProduct}
-              onMouseLeave={scheduleClose}
               className={cn(
-                "absolute left-1/2 top-full w-[380px] -translate-x-1/2 pt-3 transition-all duration-300",
+                "absolute left-1/2 top-full w-[380px] -translate-x-1/2 pt-3.5 transition-all duration-300",
                 productOpen
                   ? "pointer-events-auto translate-y-0 opacity-100"
                   : "pointer-events-none -translate-y-2 opacity-0",
@@ -239,7 +276,9 @@ export function LandingNavbar({ isAuthed }: { isAuthed: boolean }) {
               onClick={() => setOpen(false)}
               className="flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-lp-ink/6"
             >
-              <p.icon className={cn("h-4.5 w-4.5", p.color)} />
+              <span className={cn("flex h-8 w-8 shrink-0 items-center justify-center rounded-lg", p.iconClass)}>
+                <p.icon className="h-4.5 w-4.5" />
+              </span>
               <span className="text-sm font-medium text-lp-ink/85">{p.title}</span>
             </Link>
           ))}
