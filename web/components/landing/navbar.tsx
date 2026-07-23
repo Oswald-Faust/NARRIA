@@ -45,6 +45,7 @@ const LINKS = [
   { href: "/#score", label: "Score SNS" },
   { href: "/#projets", label: "Projets" },
   { href: "/#tarifs", label: "Tarifs" },
+  { href: "/contact", label: "Contact" },
 ];
 
 const noopSubscribe = () => () => {};

@@ -698,9 +698,11 @@ export function Footer() {
               <Link href="/#score" className="block transition-colors hover:text-lp-ink">Score SNS</Link>
               <Link href="/#projets" className="block transition-colors hover:text-lp-ink">Projets</Link>
               <Link href="/#tarifs" className="block transition-colors hover:text-lp-ink">Tarifs</Link>
+              <Link href="/contact" className="block font-medium text-pink transition-colors hover:text-soft-pink">Contact</Link>
             </div>
             <div className="space-y-3">
-              <div className="text-[11px] font-bold uppercase tracking-widest text-lp-ink/35">Compte</div>
+              <div className="text-[11px] font-bold uppercase tracking-widest text-lp-ink/35">Contact & Compte</div>
+              <a href="mailto:contact@narria.tech" className="block transition-colors hover:text-lp-ink">contact@narria.tech</a>
               <Link href="/login" className="block transition-colors hover:text-lp-ink">Connexion</Link>
               <Link href="/register" className="block transition-colors hover:text-lp-ink">Inscription</Link>
             </div>

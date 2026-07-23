@@ -168,3 +168,84 @@ export async function sendProjectInvitationEmail(
   const { subject, text, html } = buildProjectInvitationEmail(projectName, inviterName, joinUrl, role);
   await sendMail({ to: email, subject, text, html });
 }
+
+export type ContactFormData = {
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+  organization?: string;
+  phone?: string;
+};
+
+export function buildContactEmail(data: ContactFormData): { subject: string; text: string; html: string } {
+  const mailSubject = `[NARR'IA Contact] ${data.subject} — ${data.name}`;
+
+  const textLines = [
+    "Nouveau message reçu depuis le formulaire de contact de NARR'IA :",
+    "",
+    `Nom : ${data.name}`,
+    `Email : ${data.email}`,
+    data.organization ? `Organisation : ${data.organization}` : null,
+    data.phone ? `Téléphone : ${data.phone}` : null,
+    `Sujet : ${data.subject}`,
+    "",
+    "Message :",
+    data.message,
+  ].filter((line): line is string => line !== null);
+
+  const text = textLines.join("\n");
+
+  const safeName = escapeHtml(data.name);
+  const safeEmail = escapeHtml(data.email);
+  const safeSubject = escapeHtml(data.subject);
+  const safeMessage = escapeHtml(data.message).replace(/\n/g, "<br/>");
+  const safeOrg = data.organization ? escapeHtml(data.organization) : null;
+  const safePhone = data.phone ? escapeHtml(data.phone) : null;
+
+  const html = `
+  <div style="margin:0;padding:0;background:#f4eff7;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4eff7;padding:24px 0;">
+      <tr><td align="center">
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:18px;overflow:hidden;box-shadow:0 8px 30px rgba(132,59,144,0.10);font-family:Arial,Helvetica,sans-serif;">
+          <tr>
+            <td style="background:linear-gradient(135deg,#843b90,#da3861);padding:28px 32px;">
+              <span style="color:#ffffff;font-size:22px;font-weight:800;letter-spacing:-0.02em;">NARR'IA</span>
+              <p style="margin:6px 0 0;color:rgba(255,255,255,0.85);font-size:14px;">Formulaire de contact web</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:32px;color:#2a2233;line-height:1.6;">
+              <p style="margin:0 0 20px;font-size:16px;font-weight:700;">Nouveau message de contact reçu :</p>
+              <table role="presentation" width="100%" style="margin-bottom:20px;border-collapse:collapse;font-size:14px;">
+                <tr><td style="padding:6px 0;color:#6c6c6c;width:120px;vertical-align:top;">Nom :</td><td style="padding:6px 0;font-weight:600;color:#16111f;">${safeName}</td></tr>
+                <tr><td style="padding:6px 0;color:#6c6c6c;vertical-align:top;">Email :</td><td style="padding:6px 0;font-weight:600;"><a href="mailto:${safeEmail}" style="color:#843b90;">${safeEmail}</a></td></tr>
+                ${safeOrg ? `<tr><td style="padding:6px 0;color:#6c6c6c;vertical-align:top;">Organisation :</td><td style="padding:6px 0;color:#16111f;">${safeOrg}</td></tr>` : ""}
+                ${safePhone ? `<tr><td style="padding:6px 0;color:#6c6c6c;vertical-align:top;">Téléphone :</td><td style="padding:6px 0;color:#16111f;">${safePhone}</td></tr>` : ""}
+                <tr><td style="padding:6px 0;color:#6c6c6c;vertical-align:top;">Sujet :</td><td style="padding:6px 0;font-weight:700;color:#da3861;">${safeSubject}</td></tr>
+              </table>
+              <div style="background:#f9f6fc;border-left:4px solid #843b90;padding:18px;border-radius:10px;margin-top:16px;">
+                <p style="margin:0;font-size:14px;color:#221338;line-height:1.7;">${safeMessage}</p>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:18px 32px;border-top:1px solid #ece2f0;color:#9a90a3;font-size:12px;">
+              NARR'IA · narria.tech — Plateforme de Narratologie Computationnelle
+            </td>
+          </tr>
+        </table>
+      </td></tr>
+    </table>
+  </div>
+  `;
+
+  return { subject: mailSubject, text, html };
+}
+
+export async function sendContactNotificationEmail(data: ContactFormData) {
+  const { subject, text, html } = buildContactEmail(data);
+  const targetEmail = "contact@narria.tech";
+  await sendMail({ to: targetEmail, subject, text, html });
+}
+
