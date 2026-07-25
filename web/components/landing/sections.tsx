@@ -555,7 +555,7 @@ export function Pricing() {
                     ))}
                   </ul>
                   <Link
-                    href={plan.id === "enterprise" ? "mailto:contact@narria.app" : "/register"}
+                    href={plan.id === "enterprise" ? "mailto:contact@narria.tech" : "/register"}
                     className={cn(
                       "lp-shine mt-7 inline-flex h-11 items-center justify-center gap-2 rounded-full text-sm font-semibold transition-all",
                       meta.highlight

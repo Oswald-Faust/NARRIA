@@ -231,7 +231,7 @@ export default async function RecherchePage() {
                       <ArrowRight className="h-4 w-4" />
                     </Link>
                     <Link
-                      href="mailto:contact@narria.app"
+                      href="mailto:contact@narria.tech"
                       className="inline-flex h-12 items-center rounded-full border border-white/20 bg-white/5 px-8 text-sm font-semibold text-white/85 transition-all hover:-translate-y-0.5 hover:bg-white/10"
                     >
                       Parler à l&apos;équipe

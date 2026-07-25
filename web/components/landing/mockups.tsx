@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 
 /** Cadre « navigateur » sombre autour d'un mockup. */
 export function BrowserFrame({
-  url = "narria.app/analyser",
+  url = "narria.tech/analyser",
   children,
   className,
 }: {
@@ -200,7 +200,7 @@ function FnChip({ code, label, accent = false }: { code: string; label: string; 
 /* ── Mockup principal : rapport d'analyse ─────────────────────────────── */
 export function AnalysisMockup() {
   return (
-    <BrowserFrame url="narria.app/analyser/rapport">
+    <BrowserFrame url="narria.tech/analyser/rapport">
       <div className="grid gap-0 md:grid-cols-[190px_1fr]">
         {/* Sidebar miniature */}
         <aside className="hidden flex-col gap-1 border-r border-white/8 bg-gradient-to-b from-[#3a1d63]/60 to-[#1a0e35]/80 p-4 md:flex">
