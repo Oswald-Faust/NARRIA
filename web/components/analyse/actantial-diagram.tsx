@@ -26,7 +26,11 @@ export function ActantialDiagram({ actants }: ActantialDiagramProps) {
           AXE DU DÉSIR
         </text>
 
-        <line x1={130 + boxW / 2 + 5} y1={80} x2={W - 130 - boxW / 2 - 5} y2={80} stroke="var(--color-pink)" strokeWidth={2} />
+        {/* Axe de communication : deux segments de part et d'autre de l'OBJET
+            (destinateur → objet → destinataire) ; le trait ne traverse pas la case. */}
+        <line x1={130 + boxW / 2 + 5} y1={80} x2={W / 2 - boxW / 2 - 5} y2={80} stroke="var(--color-pink)" strokeWidth={2} />
+        <polygon points={`${W / 2 - boxW / 2 - 3},75 ${W / 2 - boxW / 2 - 3},85 ${W / 2 - boxW / 2 + 5},80`} fill="var(--color-pink)" />
+        <line x1={W / 2 + boxW / 2 + 5} y1={80} x2={W - 130 - boxW / 2 - 5} y2={80} stroke="var(--color-pink)" strokeWidth={2} />
         <polygon points={`${W - 130 - boxW / 2 - 3},75 ${W - 130 - boxW / 2 - 3},85 ${W - 130 - boxW / 2 + 5},80`} fill="var(--color-pink)" />
         <text x={W / 2} y={35} textAnchor="middle" fontFamily="sans-serif" fontSize={9} fill="var(--color-pink)" fontWeight="bold">
           AXE DE COMMUNICATION

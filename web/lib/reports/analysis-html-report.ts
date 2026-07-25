@@ -35,7 +35,9 @@ function renderActantialSvg(actants: MainActants): string {
     <line x1="${W / 2}" y1="${H - 80 - boxH / 2 - 5}" x2="${W / 2}" y2="${80 + boxH / 2 + 5}" stroke="${BRAND.purple}" stroke-width="3"/>
     <polygon points="${W / 2 - 6},${80 + boxH / 2 + 10} ${W / 2 + 6},${80 + boxH / 2 + 10} ${W / 2},${80 + boxH / 2 + 2}" fill="${BRAND.purple}"/>
     <text x="${W / 2 + 10}" y="${H / 2}" font-family="Helvetica" font-size="9" fill="${BRAND.purple}" font-weight="bold">AXE DU DÉSIR</text>
-    <line x1="${130 + boxW / 2 + 5}" y1="80" x2="${W - 130 - boxW / 2 - 5}" y2="80" stroke="${BRAND.pink}" stroke-width="2"/>
+    <line x1="${130 + boxW / 2 + 5}" y1="80" x2="${W / 2 - boxW / 2 - 5}" y2="80" stroke="${BRAND.pink}" stroke-width="2"/>
+    <polygon points="${W / 2 - boxW / 2 - 3},75 ${W / 2 - boxW / 2 - 3},85 ${W / 2 - boxW / 2 + 5},80" fill="${BRAND.pink}"/>
+    <line x1="${W / 2 + boxW / 2 + 5}" y1="80" x2="${W - 130 - boxW / 2 - 5}" y2="80" stroke="${BRAND.pink}" stroke-width="2"/>
     <polygon points="${W - 130 - boxW / 2 - 3},75 ${W - 130 - boxW / 2 - 3},85 ${W - 130 - boxW / 2 + 5},80" fill="${BRAND.pink}"/>
     <text x="${W / 2}" y="35" text-anchor="middle" font-family="Helvetica" font-size="9" fill="${BRAND.pink}" font-weight="bold">AXE DE COMMUNICATION</text>
     <line x1="${130 + boxW / 2 + 5}" y1="${H - 80}" x2="${W / 2 - boxW / 2 - 5}" y2="${H - 80}" stroke="#7a7a7a" stroke-width="2"/>

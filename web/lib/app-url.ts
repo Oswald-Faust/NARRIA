@@ -1,4 +1,11 @@
 /**
+ * Domaine public canonique du site — utilisé pour les métadonnées SEO
+ * (metadataBase, robots.txt, sitemap.xml), indépendamment de l'environnement
+ * de déploiement : Google doit toujours voir narria.tech, jamais l'URL Vercel.
+ */
+export const SITE_URL = "https://narria.tech";
+
+/**
  * URL de base publique de l'application, pour construire des liens absolus (e-mails, etc.).
  * Priorité : NEXTAUTH_URL / AUTH_URL (déjà configurés pour Auth.js), puis VERCEL_URL,
  * enfin localhost en dernier recours.
