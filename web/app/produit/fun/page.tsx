@@ -115,7 +115,7 @@ export default async function FunPage() {
                 href="#idees"
                 className="inline-flex h-12 items-center rounded-full border border-lp-ink/15 bg-lp-ink/5 px-7 text-sm font-semibold text-lp-ink/85 transition-all hover:-translate-y-0.5 hover:bg-lp-ink/10"
               >
-                Idées de soirée
+                À tester ce soir
               </a>
             </div>
           </div>
@@ -147,6 +147,12 @@ export default async function FunPage() {
               </Reveal>
             ))}
           </div>
+          {/* Provenance des scores (correctif n° 10) : ces valeurs illustrent le
+              propos, elles ne sortent pas d'une exécution du moteur. Le premier
+              utilisateur qui referait la comparaison obtiendrait un autre chiffre. */}
+          <p className="mx-auto mt-8 max-w-2xl px-4 text-center text-xs leading-5 text-lp-ink/40">
+            Exemples illustratifs. Lance la comparaison toi-même pour obtenir le score réel de ton duo.
+          </p>
         </section>
 
         {/* ── Marquee des matchs ────────────────────────────────────────── */}

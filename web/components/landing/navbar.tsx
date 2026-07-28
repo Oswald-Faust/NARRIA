@@ -16,7 +16,7 @@ const PRODUCT_LINKS = [
     icon: GraduationCap,
     label: "Étudiants",
     title: "NARR'IA pour les étudiants",
-    desc: "Fiches, dissertations et schémas actantiels prêts à rendre.",
+    desc: "Fiches, schémas actantiels, révisions guidées — l'interprétation reste à toi.",
     color: "text-[#8a5a10] dark:text-yellow",
     iconClass: "bg-yellow/15 text-[#8a5a10] dark:text-yellow",
   },

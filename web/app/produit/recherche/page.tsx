@@ -9,6 +9,7 @@ import { koba } from "@/lib/fonts";
 import { LandingNavbar } from "@/components/landing/navbar";
 import { Reveal, AnimatedWords } from "@/components/landing/reveal";
 import { Footer } from "@/components/landing/sections";
+import { CiteNarria } from "@/components/landing/cite-narria";
 
 export const metadata: Metadata = {
   title: "NARR'IA pour la recherche — La narratologie, enfin computationnelle",
@@ -24,7 +25,7 @@ const STATS = [
   { value: "53", label: "fonctions narratives formalisées" },
   { value: "5", label: "sous-scores structurels pondérés" },
   { value: "0,40", label: "seuil d'appariement documenté" },
-  { value: "10⁻⁶", label: "tolérance de reproductibilité" },
+  { value: "10⁻⁶", label: "reproductibilité, à extraction identique" },
 ];
 
 const SNS_TERMS = [
@@ -172,10 +173,12 @@ export default async function RecherchePage() {
               <div className="mt-10 flex gap-4 rounded-2xl border border-lp-ink/10 bg-lp-ink/3 p-6">
                 <Quote className="h-6 w-6 shrink-0 text-purple dark:text-soft-purple" />
                 <p className="text-[15px] leading-7 text-lp-ink/65">
-                  Deux exécutions sur le même couple d&apos;œuvres produisent le même score à
-                  10⁻⁶ près : les mesures de graphe sont déterministes, et l&apos;extraction
-                  narrative est contrainte par un répertoire fermé de 53 fonctions — dont 7
-                  spécifiques aux traditions orales africaines, hors du canon proppien.
+                  À structures narratives extraites identiques, deux exécutions produisent le
+                  même score à 10⁻⁶ près : les mesures de graphe sont déterministes, et
+                  l&apos;extraction narrative est contrainte par un répertoire fermé de 53
+                  fonctions — dont 7 spécifiques aux traditions orales africaines, hors du canon
+                  proppien. La variance d&apos;extraction elle-même est mesurée et publiée dans
+                  chaque rapport.
                 </p>
               </div>
             </Reveal>
@@ -210,6 +213,9 @@ export default async function RecherchePage() {
         </section>
 
         {/* ── CTA ───────────────────────────────────────────────────────── */}
+        {/* ── Citer NARR'IA (correctif n° 14) ─────────────────────────── */}
+        <CiteNarria />
+
         <section className="pb-24 sm:pb-32">
           <div className="mx-auto max-w-6xl px-4 sm:px-6">
             <Reveal effect="zoom">
@@ -237,6 +243,13 @@ export default async function RecherchePage() {
                       Parler à l&apos;équipe
                     </Link>
                   </div>
+                  <p className="mt-6 text-sm text-white/60">
+                    Laboratoires et équipes :{" "}
+                    <Link href="/#tarifs" className="font-semibold text-white underline-offset-4 hover:underline">
+                      découvrez la formule Équipe
+                    </Link>
+                    .
+                  </p>
                 </div>
               </div>
             </Reveal>

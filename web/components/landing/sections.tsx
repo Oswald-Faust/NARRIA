@@ -3,11 +3,10 @@ import type { CSSProperties } from "react";
 import {
   ArrowRight, BookMarked, FileText, GitCompareArrows,
   MessageSquareText, ScanText, Scale, GraduationCap, PenTool, Building2,
-  Upload, Network, Gauge, Check, TriangleAlert, MailPlus, FolderKanban,
+  Upload, Network, Gauge, TriangleAlert, MailPlus, FolderKanban,
   Users, History,
 } from "lucide-react";
 import { koba } from "@/lib/fonts";
-import { SUBSCRIPTION_PLANS } from "@/lib/subscriptions";
 import { cn } from "@/lib/utils";
 import { LogoFull } from "@/components/brand/logo";
 import { Reveal } from "./reveal";
@@ -502,80 +501,6 @@ export function Audiences() {
   );
 }
 
-/* ── Tarifs ───────────────────────────────────────────────────────────── */
-const PLAN_PRICES: Record<string, { price: string; note: string; cta: string; highlight?: boolean }> = {
-  starter: { price: "0 €", note: "pour toujours", cta: "Commencer gratuitement" },
-  pro: { price: "29 €", note: "par mois", cta: "Passer en Pro", highlight: true },
-  enterprise: { price: "Sur devis", note: "annuel", cta: "Nous contacter" },
-};
-
-export function Pricing() {
-  const plans = Object.values(SUBSCRIPTION_PLANS);
-  return (
-    <section id="tarifs" className="scroll-mt-28 py-24 sm:py-32">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <SectionHeader
-          eyebrow="Tarifs"
-          title="Des formules à la mesure de vos corpus"
-          sub="Commencez gratuitement, montez en puissance quand vos analyses s'intensifient."
-        />
-        <div className="mt-16 grid gap-5 lg:grid-cols-3">
-          {plans.map((plan, i) => {
-            const meta = PLAN_PRICES[plan.id];
-            return (
-              <Reveal key={plan.id} delay={i * 0.12} effect={meta.highlight ? "zoom" : "up"}>
-                <div
-                  className={cn(
-                    "relative flex h-full flex-col rounded-3xl border p-7 transition-all duration-500 hover:-translate-y-1.5",
-                    meta.highlight
-                      ? "border-pink/50 bg-gradient-to-b from-pink/12 to-purple/8 shadow-[0_30px_90px_-30px_rgba(218,56,97,0.55)]"
-                      : "border-lp-ink/10 bg-lp-ink/3 hover:border-lp-ink/20",
-                  )}
-                >
-                  {meta.highlight && (
-                    <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-pink px-3.5 py-1 text-[11px] font-bold uppercase tracking-wider text-white shadow-lg">
-                      Populaire
-                    </span>
-                  )}
-                  <h3 className="font-heading text-lg font-bold text-lp-ink">{plan.label}</h3>
-                  <p className="mt-1 text-[13px] leading-5 text-lp-ink/55">{plan.tagline}</p>
-                  <div className="mt-6 flex items-baseline gap-2">
-                    <span className={`${koba.className} text-4xl tracking-wide text-lp-ink`}>{meta.price}</span>
-                    <span className="text-sm text-lp-ink/45">{meta.note}</span>
-                  </div>
-                  <div className="mt-1 text-xs text-lp-ink/40">
-                    {plan.quotaDaily} analyses / jour · {plan.quotaMonthly} / mois
-                  </div>
-                  <ul className="mt-6 flex-1 space-y-2.5">
-                    {plan.features.map((f) => (
-                      <li key={f} className="flex items-start gap-2.5 text-sm text-lp-ink/70">
-                        <Check className={cn("mt-0.5 h-4 w-4 shrink-0", meta.highlight ? "text-pink dark:text-soft-pink" : "text-purple dark:text-soft-purple")} />
-                        {f}
-                      </li>
-                    ))}
-                  </ul>
-                  <Link
-                    href={plan.id === "enterprise" ? "mailto:contact@narria.tech" : "/register"}
-                    className={cn(
-                      "lp-shine mt-7 inline-flex h-11 items-center justify-center gap-2 rounded-full text-sm font-semibold transition-all",
-                      meta.highlight
-                        ? "bg-pink text-white hover:bg-soft-pink"
-                        : "border border-lp-ink/15 bg-lp-ink/5 text-lp-ink hover:border-lp-ink/30 hover:bg-lp-ink/10",
-                    )}
-                  >
-                    {meta.cta}
-                    <ArrowRight className="h-4 w-4" />
-                  </Link>
-                </div>
-              </Reveal>
-            );
-          })}
-        </div>
-      </div>
-    </section>
-  );
-}
-
 /* ── FAQ ──────────────────────────────────────────────────────────────── */
 const FAQ = [
   {
@@ -691,6 +616,9 @@ export function Footer() {
               <Link href="/produit/etudiants" className="block transition-colors hover:text-lp-ink">Pour les étudiants</Link>
               <Link href="/produit/recherche" className="block transition-colors hover:text-lp-ink">Pour la recherche</Link>
               <Link href="/produit/fun" className="block transition-colors hover:text-lp-ink">Pour le fun</Link>
+              <Link href="/expertise" className="block transition-colors hover:text-lp-ink">Expertise</Link>
+              <Link href="/campus" className="block transition-colors hover:text-lp-ink">Campus</Link>
+              <Link href="/produit/repertoire" className="block transition-colors hover:text-lp-ink">Les 53 fonctions</Link>
             </div>
             <div className="space-y-3">
               <div className="text-[11px] font-bold uppercase tracking-widest text-lp-ink/35">Découvrir</div>
@@ -709,7 +637,17 @@ export function Footer() {
           </nav>
         </div>
         <div className="mt-10 flex flex-col gap-4 border-t border-lp-ink/8 pt-6 text-xs leading-5 text-lp-ink/35 md:flex-row md:items-center md:justify-between">
-          <p>© {new Date().getFullYear()} NARR&apos;IA. Tous droits réservés.</p>
+          <div className="space-y-2">
+            <p>© {new Date().getFullYear()} NARR&apos;IA. Tous droits réservés.</p>
+            {/* Socle juridique — présent sur toutes les pages (correctif P0 n° 3). */}
+            <p className="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <Link href="/mentions-legales" className="transition-colors hover:text-lp-ink">Mentions légales</Link>
+              <span aria-hidden>·</span>
+              <Link href="/confidentialite" className="transition-colors hover:text-lp-ink">Confidentialité</Link>
+              <span aria-hidden>·</span>
+              <Link href="/cgu" className="transition-colors hover:text-lp-ink">CGU</Link>
+            </p>
+          </div>
           <p className="max-w-xl">
             NARR&apos;IA est un outil d&apos;aide à l&apos;analyse narrative. Ses résultats
             constituent des indices, non des preuves légales.

@@ -4,6 +4,7 @@
  * comparison-report.tsx`). Sert aussi de source au PDF.
  */
 import { badge, escapeHtml, htmlShell, srjBadgeColor, tensionBars } from "./report-theme";
+import { ENGINE_PARAMETERS, ENGINE_VERSION } from "@/lib/engine/version";
 
 export interface ComparisonReportWork {
   title: string;
@@ -272,6 +273,17 @@ ${genreHtml}
 </table>
 
 ${coverageHtml}
+
+<h2 class="section">Paramètres du moteur</h2>
+<table>
+  <thead><tr><th>Paramètre</th><th>Valeur</th></tr></thead>
+  <tbody>
+    <tr><td>Version du moteur</td><td><strong>${ENGINE_VERSION}</strong></td></tr>
+    <tr><td>Seuil d'appariement</td><td>${ENGINE_PARAMETERS.matchThreshold}</td></tr>
+    <tr><td>Seuil de contenu</td><td>${ENGINE_PARAMETERS.contentThreshold}</td></tr>
+    <tr><td>Profil de pondération</td><td>${ENGINE_PARAMETERS.weightProfile}</td></tr>
+  </tbody>
+</table>
 
 <h2 class="section">Limites et avertissements</h2>
 <div class="callout callout--warn">

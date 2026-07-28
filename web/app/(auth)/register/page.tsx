@@ -8,6 +8,7 @@ import { AuthShell } from "@/components/auth/auth-shell";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
 import { SocialAuth } from "@/components/auth/social-auth";
+import { PasswordStrength, PASSWORD_MIN_LENGTH } from "@/components/auth/password-strength";
 import { koba } from "@/lib/fonts";
 
 const OTP_PENDING_AUTH_KEY = "narria.pending-auth";
@@ -15,6 +16,7 @@ const OTP_PENDING_AUTH_KEY = "narria.pending-auth";
 export default function RegisterPage() {
   const router = useRouter();
   const [show, setShow] = useState(false);
+  const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -100,7 +102,10 @@ export default function RegisterPage() {
               name="password"
               type={show ? "text" : "password"}
               required
-              placeholder="8 caractères minimum"
+              minLength={PASSWORD_MIN_LENGTH}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder={`${PASSWORD_MIN_LENGTH} caractères minimum`}
               className="px-10"
             />
             <button
@@ -111,6 +116,7 @@ export default function RegisterPage() {
               {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           </div>
+          <PasswordStrength password={password} />
         </div>
         <div>
           <Label>Confirmer le mot de passe</Label>
@@ -126,9 +132,21 @@ export default function RegisterPage() {
           </div>
         </div>
 
-        <label className="flex items-center gap-2 text-xs text-muted">
-          <input type="checkbox" name="cgu" required className="accent-pink" />
-          En créant un compte, vous acceptez nos CGU.
+        {/* Consentement explicite au socle juridique (correctif P0 n° 3) : libellé et
+            liens imposés — la case ne doit pas être pré-cochée. */}
+        <label className="flex items-start gap-2.5 text-xs leading-5 text-muted">
+          <input type="checkbox" name="cgu" required className="mt-0.5 accent-pink" />
+          <span>
+            J&apos;accepte les{" "}
+            <Link href="/cgu" target="_blank" className="font-medium text-soft-pink hover:underline">
+              Conditions générales d&apos;utilisation
+            </Link>{" "}
+            et la{" "}
+            <Link href="/confidentialite" target="_blank" className="font-medium text-soft-pink hover:underline">
+              Politique de confidentialité
+            </Link>
+            .
+          </span>
         </label>
 
         {error && <p className="text-sm text-red-400">{error}</p>}

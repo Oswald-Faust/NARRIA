@@ -5,7 +5,8 @@ export const registerSchema = z
     nomComplet: z.string().min(2, "Nom complet requis"),
     prenom: z.string().min(1, "Prénom requis"),
     email: z.string().email("Adresse e-mail invalide"),
-    password: z.string().min(8, "8 caractères minimum"),
+    // Minimum relevé de 8 à 12 caractères (correctif n° 17).
+    password: z.string().min(12, "12 caractères minimum"),
     confirmPassword: z.string(),
     cgu: z.literal(true, { message: "Vous devez accepter les CGU" }),
   })

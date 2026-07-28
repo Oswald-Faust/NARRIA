@@ -40,7 +40,7 @@ function FicheMockup() {
           <strong className="text-soft-purple">Opposants :</strong> la naissance, M. de Rênal, le tribunal
         </p>
         <p>
-          <strong className="text-yellow">Fonctions clés :</strong> FN1 situation initiale → FN8 transgression →
+          <strong className="text-yellow">Fonctions clés :</strong> FN1 situation initiale → FN8 méfait →
           FN12 épreuve → FN30 châtiment
         </p>
       </div>
@@ -65,7 +65,7 @@ const USE_CASES = [
   {
     icon: Drama,
     title: "Le schéma actantiel, déjà tracé",
-    desc: "Sujet, objet, adjuvants, opposants : le diagramme est généré et exportable, prêt à appuyer ton commentaire composé.",
+    desc: "Sujet, objet, adjuvants, opposants : le diagramme est généré et exportable en PNG et SVG, prêt à insérer dans une copie ou des slides.",
     effect: "up" as const,
   },
   {
@@ -148,7 +148,7 @@ export default async function EtudiantsPage() {
                 </a>
               </div>
               <p className="lp-enter mt-5 text-xs text-lp-ink/40" style={enter(1.3)}>
-                Aucune carte bancaire · 20 analyses gratuites par jour
+                Aucune carte bancaire · 5 analyses gratuites par jour
               </p>
             </div>
 
@@ -229,10 +229,10 @@ export default async function EtudiantsPage() {
                 <div className="relative">
                   <BookOpenCheck className="mx-auto h-10 w-10 text-yellow" />
                   <h2 className={`${koba.className} mx-auto mt-5 max-w-2xl text-balance text-3xl leading-tight tracking-wide text-white sm:text-4xl`}>
-                    Ta prochaine fiche de lecture se rédige toute seule.
+                    Ta prochaine fiche de lecture démarre sans page blanche.
                   </h2>
                   <p className="mx-auto mt-4 max-w-lg text-[15px] leading-7 text-white/70">
-                    Compte gratuit, 20 analyses par jour. Largement de quoi finir le semestre.
+                    Compte gratuit : 5 analyses par jour et 3 œuvres longues par mois. De quoi finir le semestre.
                   </p>
                   <Link
                     href={ctaHref}

@@ -3,6 +3,7 @@
  * au format texte portable (GitHub-flavored Markdown).
  */
 import type { ComparisonHtmlReportData, ComparisonReportWork } from "./comparison-html-report";
+import { ENGINE_PARAMETERS, ENGINE_VERSION } from "@/lib/engine/version";
 
 const ACTANT_ROLES: Array<[keyof NonNullable<ComparisonReportWork["mainActants"]>, string]> = [
   ["protagoniste", "Protagoniste"],
@@ -146,6 +147,18 @@ export function renderComparisonMarkdownReport(data: ComparisonHtmlReportData): 
     out.push(...data.warnings.map((w) => `- ${w}`), "");
   }
 
-  out.push(`---`, `NARR'IA · narria.tech`);
+  out.push(
+    `## Paramètres du moteur`,
+    "",
+    `| Paramètre | Valeur |`,
+    `| --- | --- |`,
+    `| Version du moteur | ${ENGINE_VERSION} |`,
+    `| Seuil d'appariement | ${ENGINE_PARAMETERS.matchThreshold} |`,
+    `| Seuil de contenu | ${ENGINE_PARAMETERS.contentThreshold} |`,
+    `| Profil de pondération | ${ENGINE_PARAMETERS.weightProfile} |`,
+    "",
+  );
+
+  out.push(`---`, `NARR'IA · narria.tech · moteur v${ENGINE_VERSION}`);
   return out.join("\n");
 }

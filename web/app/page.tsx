@@ -4,8 +4,9 @@ import { LandingNavbar } from "@/components/landing/navbar";
 import { Hero } from "@/components/landing/hero";
 import {
   MarqueeStrip, HowItWorks, BentoFeatures, ProjectsSection, ScoreSection,
-  Audiences, Pricing, Faq, FinalCta, Footer, SectionDivider,
+  Audiences, Faq, FinalCta, Footer, SectionDivider,
 } from "@/components/landing/sections";
+import { Pricing } from "@/components/landing/pricing";
 
 export const metadata: Metadata = {
   title: "NARR'IA — Le vol d'intrigue ne passe plus inaperçu",
