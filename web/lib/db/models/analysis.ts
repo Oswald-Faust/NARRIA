@@ -10,6 +10,12 @@ const AnalysisSchema = new Schema(
     wordCount: { type: Number, default: 0 },
     nNodes: { type: Number, default: 0 },
     graph: { type: Schema.Types.Mixed, required: true },
+    /**
+     * Empreinte du texte source + modèle + version du moteur. Permet de
+     * réutiliser un graphe déjà extrait plutôt que de relancer le LLM, qui
+     * produirait un découpage légèrement différent (cf. extraction-key.ts).
+     */
+    extractionKey: { type: String, default: null, index: true },
     costTokens: { type: Number, default: 0 },
     costUsd: { type: Number, default: 0 },
     summary: { type: String, default: "" },

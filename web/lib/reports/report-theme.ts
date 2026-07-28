@@ -65,6 +65,19 @@ export function tensionBars(profile: number[]): string {
 const BASE_CSS = `
 :root { color-scheme: light; }
 * { box-sizing: border-box; }
+/* Écart fonction/contenu : la fonction narrative coïncide sans que les épisodes
+   racontent la même chose — procédé commun, non emprunt (point 5 des bêta-tests). */
+.trope {
+  margin-top: 6px;
+  padding: 4px 6px;
+  border: 1px solid ${BRAND.yellow}66;
+  border-left: 3px solid ${BRAND.yellow};
+  border-radius: 4px;
+  background: ${BRAND.yellow}18;
+  color: #8a5a10;
+  font-size: 10px;
+  line-height: 1.35;
+}
 body {
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   color: ${BRAND.ink};

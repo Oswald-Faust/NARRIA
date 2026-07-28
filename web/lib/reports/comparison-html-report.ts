@@ -4,6 +4,7 @@
  * comparison-report.tsx`). Sert aussi de source au PDF.
  */
 import { badge, escapeHtml, htmlShell, srjBadgeColor, tensionBars } from "./report-theme";
+import { isTropeCoincidence } from "@/lib/engine/comparison/content-similarity";
 import { ENGINE_PARAMETERS, ENGINE_VERSION } from "@/lib/engine/version";
 
 export interface ComparisonReportWork {
@@ -168,7 +169,11 @@ export function renderComparisonHtmlReport(data: ComparisonHtmlReportData): stri
           <td></td>
           <td>${refDetail}</td>
           <td>${candDetail}</td>
-          <td>${typeof c.contentSimilarity === "number" ? `contenu ${(c.contentSimilarity * 100).toFixed(0)} %` : ""}</td>
+          <td>${typeof c.contentSimilarity === "number" ? `contenu ${(c.contentSimilarity * 100).toFixed(0)} %` : ""}${
+            isTropeCoincidence(c.similarity ?? 0, c.contentSimilarity)
+              ? `<div class="trope">⚠ coïncidence de trope — la fonction concorde, pas le fond</div>`
+              : ""
+          }</td>
         </tr>`
                 : "";
             return `

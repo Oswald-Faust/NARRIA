@@ -12,12 +12,13 @@ import type {
   ComparisonResult,
   Correspondence,
   CoverageReport,
+  InclusionReport,
   GenreVerdict,
   AlertVerdict,
   Modalities,
   SrjLevel,
 } from "../models";
-import { functionSequence, tensionProfile } from "../models";
+import { tensionProfile } from "../models";
 import { DEFAULT_FUNCTION_IDF, nodeSpecificityWeight, type FunctionIdf } from "./function-idf";
 import {
   CONTENT_MATCH_THRESHOLD,
@@ -25,6 +26,8 @@ import {
   canonicalizeActant,
   type ContentSimilarityFn,
 } from "./content-similarity";
+import { maxWeightAssignment } from "./assignment";
+import { compareTexts } from "./text-overlap";
 import { compareGenres, genreKey, type GenreComparison } from "./genre";
 import { evaluateAgainstBaseline, BASELINE_ALERT_Z } from "./baseline";
 
@@ -54,7 +57,25 @@ export interface CompareOptions {
   contentSimilarity?: ContentSimilarityFn;
   /** Table de spécificité des fonctions ; permet d'injecter des fréquences de corpus (cf. P1-4). */
   functionIdf?: FunctionIdf;
+  /**
+   * Textes sources. Facultatifs : sans eux, seule l'inclusion structurelle est
+   * mesurée. Fournis, ils permettent de détecter la reprise littérale, qui ne
+   * dépend pas du découpage en nœuds produit par le modèle.
+   */
+  texts?: { ref: string; cand: string };
 }
+
+/**
+ * Seuils de détection du confinement.
+ * - Structurel : part de l'œuvre courte que l'autre doit expliquer.
+ * - Textuel : reprise littérale, exigeante car un tel recouvrement de n-grammes
+ *   de 5 mots ne s'observe pas par hasard.
+ * - Taille : en deçà de ce rapport, les œuvres sont jugées de volume comparable
+ *   et la notion d'inclusion ne s'applique pas.
+ */
+export const INCLUSION_STRUCTURAL_THRESHOLD = 0.8;
+export const INCLUSION_TEXTUAL_THRESHOLD = 0.5;
+export const INCLUSION_SIZE_RATIO = 0.7;
 
 type Meta = Record<string, unknown>;
 function asObj(v: unknown): Record<string, unknown> {
@@ -171,52 +192,62 @@ function scoreIsomorphism(
   const weightCand = (n: NarrativeNode) =>
     nodeSpecificityWeight(n.functionCode, occCand.get(n.functionCode ?? "") ?? 1, idf);
 
-  // 1. Candidats d'appariement : étiquette + structure locale ET contenu.
-  type Candidate = {
-    ref: NarrativeNode;
-    cand: NarrativeNode;
-    similarity: number;
-    content: number;
-  };
-  const candidates: Candidate[] = [];
-  for (const cNode of gCand.nodes) {
-    for (const rNode of gRef.nodes) {
+  // 1. Matrice des appariements admissibles : étiquette + structure locale ET
+  //    contenu. Une paire inadmissible reçoit un gain nul.
+  const simMatrix: number[][] = [];
+  const contentMatrix: number[][] = [];
+  const gain: number[][] = [];
+  for (let i = 0; i < gRef.nodes.length; i++) {
+    simMatrix.push(new Array(gCand.nodes.length).fill(0));
+    contentMatrix.push(new Array(gCand.nodes.length).fill(0));
+    gain.push(new Array(gCand.nodes.length).fill(0));
+    for (let j = 0; j < gCand.nodes.length; j++) {
+      const rNode = gRef.nodes[i];
+      const cNode = gCand.nodes[j];
       const similarity = nodeSimilarity(rNode, cNode);
       if (similarity < MATCH_THRESHOLD) continue;
       const content = contentSimilarity(rNode, cNode);
       if (content < CONTENT_MATCH_THRESHOLD) continue;
-      candidates.push({ ref: rNode, cand: cNode, similarity, content });
+      simMatrix[i][j] = similarity;
+      contentMatrix[i][j] = content;
+      // Le score final est `poids apparié / poids total` : maximiser la somme
+      // des poids appariés maximise donc directement S_ISO. Le facteur de
+      // qualité, infinitésimal, ne fait que départager les optima équivalents.
+      gain[i][j] = (weightRef(rNode) + weightCand(cNode)) * (1 + 1e-6 * (similarity + content));
     }
   }
 
-  // 2. Appariement injectif glouton : les meilleures paires d'abord, chaque nœud
-  //    ne servant qu'une fois. Les nœuds restants sont des orphelins comptabilisés.
-  candidates.sort((a, b) =>
-    b.similarity - a.similarity || b.content - a.content || a.cand.nodeId.localeCompare(b.cand.nodeId),
-  );
+  // 2. Appariement injectif OPTIMAL (hongrois) : le glouton qu'il remplace
+  //    laissait des nœuds orphelins alors qu'un appariement les expliquait,
+  //    parce qu'une paire localement meilleure consommait le nœud dont ils
+  //    avaient besoin — défaut relevé par les bêta-testeurs sur des graphes jumeaux.
+  const assignment = maxWeightAssignment(gain);
   const usedRef = new Set<string>();
   const usedCand = new Set<string>();
   const correspondences: Correspondence[] = [];
   let matchedWeight = 0;
 
-  for (const c of candidates) {
-    if (usedRef.has(c.ref.nodeId) || usedCand.has(c.cand.nodeId)) continue;
-    usedRef.add(c.ref.nodeId);
-    usedCand.add(c.cand.nodeId);
-    const wRef = weightRef(c.ref);
-    const wCand = weightCand(c.cand);
+  for (let i = 0; i < assignment.length; i++) {
+    const j = assignment[i];
+    if (j < 0) continue;
+    const rNode = gRef.nodes[i];
+    const cNode = gCand.nodes[j];
+    usedRef.add(rNode.nodeId);
+    usedCand.add(cNode.nodeId);
+    const wRef = weightRef(rNode);
+    const wCand = weightCand(cNode);
     matchedWeight += wRef + wCand;
     correspondences.push({
-      candNode: c.cand.nodeId,
-      candFunction: c.cand.functionCode || "—",
-      refNode: c.ref.nodeId,
-      refFunction: c.ref.functionCode || "—",
-      similarity: c.similarity,
-      refExcerpt: c.ref.textExcerpt ?? "",
-      candExcerpt: c.cand.textExcerpt ?? "",
-      refActants: c.ref.actants ?? [],
-      candActants: c.cand.actants ?? [],
-      contentSimilarity: c.content,
+      candNode: cNode.nodeId,
+      candFunction: cNode.functionCode || "—",
+      refNode: rNode.nodeId,
+      refFunction: rNode.functionCode || "—",
+      similarity: simMatrix[i][j],
+      refExcerpt: rNode.textExcerpt ?? "",
+      candExcerpt: cNode.textExcerpt ?? "",
+      refActants: rNode.actants ?? [],
+      candActants: cNode.actants ?? [],
+      contentSimilarity: contentMatrix[i][j],
       specificity: (wRef + wCand) / 2,
     });
   }
@@ -285,50 +316,56 @@ function scoreGed(
  *    L'ancien `LCS / min(m, n)` saturait dès que la séquence courte était
  *    incluse dans la longue — situation ordinaire entre deux récits d'action —
  *    et le facteur de longueur qui compensait ce biais devient inutile.
- * 3. Le résultat est modulé par la spécificité ABSOLUE des fonctions alignées.
- *    C'est le cœur de A1 : une normalisation par les poids seule s'annule au
- *    numérateur et au dénominateur, si bien que deux récits alignés sur six
- *    fonctions banales obtenaient encore 0,87. Le facteur mesure ce que
- *    l'alignement vaut, et non seulement sa proportion.
+ * 3. L'alignement porte sur les NŒUDS et non sur les seules étiquettes : deux
+ *    épisodes ne s'alignent que s'ils portent la même fonction ET racontent
+ *    quelque chose de comparable (même exigence de contenu que S_ISO, P1-5).
+ *
+ *    Ce troisième point remplace la modulation par la spécificité ABSOLUE des
+ *    fonctions alignées, qui traitait le symptôme au prix d'un défaut plus
+ *    grave : elle multipliait le recouvrement par le poids IDF moyen, si bien
+ *    qu'une œuvre comparée à ELLE-MÊME plafonnait à 0,42–0,47 dès que ses
+ *    fonctions étaient courantes. La mesure violait la réflexivité — sim(x, x)
+ *    devait valoir 1 — et écrasait l'écart entre une reprise avérée et une
+ *    identité stricte. L'exigence de contenu atteint le même but sans ce défaut :
+ *    sur une identité le contenu coïncide et l'alignement est complet ; sur deux
+ *    récits indépendants partageant six fonctions génériques, les épisodes ne se
+ *    ressemblent pas et l'alignement s'effondre — ce que la spécificité
+ *    cherchait à obtenir.
  */
-function scoreFunctionSequence(gRef: NarrativeGraph, gCand: NarrativeGraph, idf: FunctionIdf): number {
-  const seqRef = functionSequence(gRef);
-  const seqCand = functionSequence(gCand);
-  if (!seqRef.length || !seqCand.length) return 0;
+function scoreFunctionSequence(
+  gRef: NarrativeGraph,
+  gCand: NarrativeGraph,
+  idf: FunctionIdf,
+  contentSimilarity: ContentSimilarityFn,
+): number {
+  const nodesRef = gRef.nodes.filter((n) => n.functionCode);
+  const nodesCand = gCand.nodes.filter((n) => n.functionCode);
+  if (!nodesRef.length || !nodesCand.length) return 0;
 
-  const m = seqRef.length;
-  const n = seqCand.length;
-  // dp[i][j] = [poids cumulé de la LCS, nombre de fonctions alignées]
+  const m = nodesRef.length;
+  const n = nodesCand.length;
+  // dp[i][j] = poids cumulé de la plus longue sous-séquence commune
   const dpWeight: number[][] = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
-  const dpCount: number[][] = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
   for (let i = 1; i <= m; i++) {
     for (let j = 1; j <= n; j++) {
-      if (seqRef[i - 1] === seqCand[j - 1]) {
-        dpWeight[i][j] = dpWeight[i - 1][j - 1] + idf.weight(seqRef[i - 1]);
-        dpCount[i][j] = dpCount[i - 1][j - 1] + 1;
-      } else if (dpWeight[i - 1][j] >= dpWeight[i][j - 1]) {
-        dpWeight[i][j] = dpWeight[i - 1][j];
-        dpCount[i][j] = dpCount[i - 1][j];
+      const a = nodesRef[i - 1];
+      const b = nodesCand[j - 1];
+      const aligned =
+        a.functionCode === b.functionCode && contentSimilarity(a, b) >= CONTENT_MATCH_THRESHOLD;
+      if (aligned) {
+        dpWeight[i][j] = dpWeight[i - 1][j - 1] + idf.weight(a.functionCode!);
       } else {
-        dpWeight[i][j] = dpWeight[i][j - 1];
-        dpCount[i][j] = dpCount[i][j - 1];
+        dpWeight[i][j] = Math.max(dpWeight[i - 1][j], dpWeight[i][j - 1]);
       }
     }
   }
   const lcsWeight = dpWeight[m][n];
-  const lcsCount = dpCount[m][n];
-  if (lcsCount === 0) return 0;
+  if (lcsWeight === 0) return 0;
 
-  const weightRef = seqRef.reduce((s, c) => s + idf.weight(c), 0);
-  const weightCand = seqCand.reduce((s, c) => s + idf.weight(c), 0);
+  const weightRef = nodesRef.reduce((s, node) => s + idf.weight(node.functionCode!), 0);
+  const weightCand = nodesCand.reduce((s, node) => s + idf.weight(node.functionCode!), 0);
   const total = weightRef + weightCand;
-  const dice = total > 0 ? Math.min(1, (2 * lcsWeight) / total) : 0;
-
-  // Spécificité moyenne des fonctions alignées, rapportée à la fréquence pivot
-  // (poids 1). Plafonnée : aligner des fonctions rares ne peut pas faire dépasser
-  // le recouvrement réellement observé.
-  const specificity = Math.min(1, lcsWeight / lcsCount);
-  return dice * specificity;
+  return total > 0 ? Math.min(1, (2 * lcsWeight) / total) : 0;
 }
 
 function scoreActantialPersistence(gRef: NarrativeGraph, gCand: NarrativeGraph): number {
@@ -384,7 +421,14 @@ function compareActantConfigs(a: Record<string, unknown>, b: Record<string, unkn
   return scores.reduce((s, v) => s + v, 0) / scores.length;
 }
 
-function scoreGreimasAlignment(gRef: NarrativeGraph, gCand: NarrativeGraph): number {
+/**
+ * Alignement des configurations actantielles déclarées en métadonnées.
+ * Retourne `null` — et non une valeur de compromis — lorsque l'un des graphes
+ * n'en porte aucune : l'ancien 0,5 par défaut était une mesure inventée, qui
+ * plafonnait la chaîne actantielle à 0,75 y compris pour une œuvre comparée à
+ * elle-même (graphes heuristiques, dépourvus de `main_actants_*`).
+ */
+function scoreGreimasAlignment(gRef: NarrativeGraph, gCand: NarrativeGraph): number | null {
   const mRef = asObj(gRef.metadata);
   const mCand = asObj(gCand.metadata);
   const refV1 = asObj(mRef.main_actants_v1 ?? mRef.main_actants);
@@ -393,7 +437,7 @@ function scoreGreimasAlignment(gRef: NarrativeGraph, gCand: NarrativeGraph): num
   const candV2 = asObj(mCand.main_actants_v2 ?? mCand.main_actants);
   const hasRef = Object.keys(refV1).length || Object.keys(refV2).length;
   const hasCand = Object.keys(candV1).length || Object.keys(candV2).length;
-  if (!hasRef || !hasCand) return 0.5;
+  if (!hasRef || !hasCand) return null;
   const combos: [Record<string, unknown>, Record<string, unknown>][] = [
     [refV1, candV1], [refV1, candV2], [refV2, candV1], [refV2, candV2],
   ];
@@ -405,7 +449,8 @@ function scoreGreimasAlignment(gRef: NarrativeGraph, gCand: NarrativeGraph): num
 function scoreActantialChain(gRef: NarrativeGraph, gCand: NarrativeGraph): number {
   const chain = scoreActantialPersistence(gRef, gCand);
   const greimas = scoreGreimasAlignment(gRef, gCand);
-  return (chain + greimas) / 2;
+  // Non mesurable : la chaîne se réduit à la persistance, seule grandeur observée.
+  return greimas === null ? chain : (chain + greimas) / 2;
 }
 
 function resample(seq: number[], targetLen: number): number[] {
@@ -606,6 +651,7 @@ function buildVerdict(
   modality: string,
   genre: GenreVerdict,
   coverage: CoverageReport,
+  inclusion: InclusionReport,
 ): string {
   // Mention systématique dès qu'elle s'applique : la divergence de genres porte
   // sur l'INTERPRÉTABILITÉ du score, non sur son intensité — elle vaut donc à
@@ -613,6 +659,20 @@ function buildVerdict(
   const crossGenreClause = genre.crossGenre
     ? ` Les genres détectés diffèrent au demeurant (« ${genre.refGenre} » vs « ${genre.candGenre} »), ce qui prive le score de toute référence d'interprétation.`
     : "";
+
+  // Le confinement PRÉVAUT sur le niveau du SNS. Une œuvre reprise en extrait
+  // obtient mécaniquement un SNS bas — le score compare deux touts de tailles
+  // très inégales — alors que la reprise peut être intégrale. Conclure « pas de
+  // correspondance » sur ce seul score serait un contresens.
+  if (inclusion.detected) {
+    const shorter = inclusion.direction === "ref_in_cand" ? "la référence" : "le candidat";
+    const longer = inclusion.direction === "ref_in_cand" ? "le candidat" : "la référence";
+    const literal =
+      inclusion.textual !== null
+        ? ` La reprise est également littérale : ${(inclusion.textual * 100).toFixed(0)} % des suites de cinq mots ${shorter === "la référence" ? "de la référence" : "du candidat"} se retrouvent dans ${longer === "la référence" ? "la référence" : "le candidat"}.`
+        : "";
+    return `Une œuvre paraît CONTENUE dans l'autre : ${(inclusion.structural * 100).toFixed(0)} % des nœuds narratifs ${shorter === "la référence" ? "de la référence" : "du candidat"} trouvent leur correspondance dans ${longer === "la référence" ? "la référence" : "le candidat"}.${literal} Le SNS de ${sns.toFixed(3)} est ici trompeur s'il est lu seul : il compare deux ensembles de tailles très inégales et se trouve mécaniquement abaissé par cet écart, non par une divergence de structure. Ce cas correspond à un extrait, une version tronquée ou un chapitre repris, et appelle un examen prioritaire.${crossGenreClause}`;
+  }
 
   if (sns < 0.3)
     return `Les deux œuvres présentent des structures narratives substantiellement différentes. Le SNS est faible et ne suggère pas de correspondance structurale significative. Cela n'exclut pas un emprunt textuel de surface, qui serait détecté par un outil distinct.${crossGenreClause}`;
@@ -705,7 +765,22 @@ function decideAlert(
   genre: GenreVerdict,
   coverage: CoverageReport,
   baseline: { zScore: number; corpusSize: number } | null,
+  inclusion: InclusionReport,
 ): AlertVerdict {
+  // Le confinement l'emporte sur toutes les conditions qui suivent : elles sont
+  // calibrées pour des œuvres de tailles comparables et écarteraient à tort le
+  // cas de l'extrait, dont le SNS et la couverture sont bas par construction.
+  if (inclusion.detected) {
+    const literal =
+      inclusion.textual !== null && inclusion.textual >= INCLUSION_TEXTUAL_THRESHOLD
+        ? `, dont ${(inclusion.textual * 100).toFixed(0)} % de reprise littérale`
+        : "";
+    return {
+      triggered: true,
+      reason: `Alerte : une œuvre est probablement contenue dans l'autre — ${(inclusion.structural * 100).toFixed(0)} % des nœuds de la plus courte y trouvent leur correspondance${literal}. Le SNS seul sous-estime ce cas, l'écart de taille l'abaissant mécaniquement.`,
+    };
+  }
+
   if (genre.crossGenre)
     return {
       triggered: false,
@@ -753,6 +828,49 @@ function toGenreVerdict(c: GenreComparison): GenreVerdict {
   };
 }
 
+/**
+ * Confinement d'une œuvre dans l'autre. Le SNS étant symétrique, il ne peut pas
+ * distinguer « ces deux récits n'ont presque rien en commun » de « ce récit est
+ * un extrait de l'autre » : dans les deux cas l'écart de taille effondre le
+ * score. Cette mesure asymétrique lève l'ambiguïté, en croisant les nœuds
+ * appariés de l'œuvre la plus courte et, si les textes sont fournis, la reprise
+ * littérale mesurée par empreintes.
+ */
+function scoreInclusion(
+  coverage: CoverageReport,
+  texts?: { ref: string; cand: string },
+): InclusionReport {
+  // Part de l'œuvre la PLUS COURTE que l'autre explique : c'est elle qui peut
+  // être contenue dans l'autre, et donc elle qui doit être intégralement couverte.
+  const refShare = coverage.refNodes > 0 ? coverage.refMatched / coverage.refNodes : 0;
+  const candShare = coverage.candNodes > 0 ? coverage.candMatched / coverage.candNodes : 0;
+  const candIsShorter = coverage.candNodes <= coverage.refNodes;
+  const structural = candIsShorter ? candShare : refShare;
+
+  const overlap = texts ? compareTexts(texts.ref, texts.cand) : null;
+  const sizeRatio =
+    Math.min(coverage.refNodes, coverage.candNodes) / Math.max(1, Math.max(coverage.refNodes, coverage.candNodes));
+
+  // Un confinement ne se signale que si les tailles diffèrent réellement : entre
+  // deux œuvres de volume comparable, « inclusion » n'aurait aucun sens — c'est
+  // le SNS qui répond. Le signal textuel suffit à lui seul lorsqu'il est massif,
+  // la reprise littérale ne dépendant pas du découpage en nœuds.
+  const asymmetric = sizeRatio <= INCLUSION_SIZE_RATIO;
+  const detected =
+    (asymmetric && structural >= INCLUSION_STRUCTURAL_THRESHOLD) ||
+    (overlap !== null && overlap.containment >= INCLUSION_TEXTUAL_THRESHOLD);
+
+  return {
+    structural,
+    textual: overlap ? overlap.containment : null,
+    textualJaccard: overlap ? overlap.jaccard : null,
+    direction:
+      overlap?.direction ??
+      (!asymmetric ? null : candIsShorter ? "cand_in_ref" : "ref_in_cand"),
+    detected,
+  };
+}
+
 export function compare(
   gRef: NarrativeGraph,
   gCand: NarrativeGraph,
@@ -764,7 +882,7 @@ export function compare(
 
   const { score: sIso, correspondences, coverage } = scoreIsomorphism(gRef, gCand, idf, contentSimilarity);
   const sGed = scoreGed(gRef, gCand, coverage, idf);
-  const sFunc = scoreFunctionSequence(gRef, gCand, idf);
+  const sFunc = scoreFunctionSequence(gRef, gCand, idf, contentSimilarity);
   const sAct = scoreActantialChain(gRef, gCand);
   const sTens = scoreTensionProfile(gRef, gCand);
 
@@ -797,14 +915,16 @@ export function compare(
       }
     : null;
 
-  const verdict = buildVerdict(sns, ss, modality, genre, coverage);
+  const inclusion = scoreInclusion(coverage, options.texts);
+
+  const verdict = buildVerdict(sns, ss, modality, genre, coverage, inclusion);
   const warnings = buildWarnings(sns, gRef, gCand, genre, coverage);
-  const alert = decideAlert(sns, modality, genre, coverage, baseline);
+  const alert = decideAlert(sns, modality, genre, coverage, baseline, inclusion);
 
   return {
     sns, snsNormalized, ss, st, srj, srjLevel,
     sIso, sGed, sFunc, sAct, sTens,
     detectedModality: modality, verdict, correspondences, warnings,
-    coverage, genre, normalizationApplied, baseline, alert,
+    coverage, inclusion, genre, normalizationApplied, baseline, alert,
   };
 }

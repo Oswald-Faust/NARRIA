@@ -20,8 +20,16 @@ import { estimateCostUsd } from "@/lib/pricing";
 
 export const EXTRACTION_MODEL_ID = "claude-sonnet-4-6";
 
-/** Température d'extraction — basse pour limiter la variance inter-exécutions (P2-9). */
-export const EXTRACTION_TEMPERATURE = 0.1;
+/**
+ * Température d'extraction — nulle. Le découpage en nœuds et l'étiquetage des
+ * fonctions relèvent de l'analyse, pas de la génération : rien ne justifie un
+ * échantillonnage aléatoire. Les bêta-testeurs ont montré qu'une même œuvre
+ * produisait 19 puis 27 nœuds d'une exécution à l'autre, créant des orphelins
+ * purement artificiels lors de la comparaison. (Une température nulle réduit
+ * fortement cette dérive sans la supprimer : le cache par empreinte de texte,
+ * en amont, garantit seul la stabilité stricte sur un texte déjà analysé.)
+ */
+export const EXTRACTION_TEMPERATURE = 0;
 
 export interface LlmExtractionUsage {
   inputTokens: number;

@@ -117,3 +117,22 @@ export const contentSimilarity: ContentSimilarityFn = (a, b) => {
  * mot pour mot, que le score structural n'a pas vocation à mesurer.
  */
 export const CONTENT_MATCH_THRESHOLD = 0.1;
+
+/** Au-delà : la correspondance de fonction est forte. */
+const TROPE_FUNCTION_MIN = 0.6;
+/** En deçà : les deux épisodes ne racontent pourtant pas la même chose. */
+const TROPE_CONTENT_MAX = 0.35;
+
+/**
+ * Signale un appariement fort par la FONCTION mais faible par le CONTENU.
+ *
+ * Retour des bêta-testeurs (point 5) : un nœud apparié à 80 % de fonction pour
+ * seulement 25 % de contenu réel était affiché correctement, mais « un lecteur
+ * pressé ne retient que le 80 % ». Un tel écart signale une coïncidence de
+ * trope — deux récits mobilisent le même rôle narratif sans rien partager de
+ * ce qu'ils racontent — et non un emprunt. Le rapport doit le dire, plutôt que
+ * de laisser le pourcentage le plus flatteur parler seul.
+ */
+export function isTropeCoincidence(similarity: number, content: number | undefined): boolean {
+  return typeof content === "number" && similarity >= TROPE_FUNCTION_MIN && content <= TROPE_CONTENT_MAX;
+}

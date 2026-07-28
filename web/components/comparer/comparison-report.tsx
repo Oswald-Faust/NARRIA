@@ -6,6 +6,7 @@
 import { Fragment } from "react";
 import { Download, TriangleAlert } from "lucide-react";
 import { Badge, type BadgeProps } from "@/components/ui/badge";
+import { isTropeCoincidence } from "@/lib/engine/comparison/content-similarity";
 import { TensionSparkline } from "./tension-sparkline";
 
 export interface ComparisonWork {
@@ -81,6 +82,13 @@ export interface ComparisonReportData {
   correspondences: ComparisonCorrespondence[];
   warnings: string[];
   coverage?: ComparisonCoverage;
+  /** Confinement d'une œuvre dans l'autre (extrait, version tronquée). */
+  inclusion?: {
+    structural: number;
+    textual: number | null;
+    direction: "cand_in_ref" | "ref_in_cand" | null;
+    detected: boolean;
+  };
   genre?: ComparisonGenre;
   normalizationApplied?: boolean;
 }
@@ -440,6 +448,15 @@ export function ComparisonReport({ data }: { data: ComparisonReportData }) {
                           {typeof c.contentSimilarity === "number"
                             ? `contenu ${(c.contentSimilarity * 100).toFixed(0)} %`
                             : null}
+                          {isTropeCoincidence(c.similarity ?? 0, c.contentSimilarity) ? (
+                            <span
+                              className="mt-1.5 flex items-start gap-1 rounded-md border border-yellow/40 bg-yellow/10 px-1.5 py-1 text-[10px] leading-3.5 text-[#8a5a10] dark:text-yellow"
+                              title="La fonction narrative coïncide, mais les deux épisodes ne racontent pas la même chose : ce rapprochement relève probablement du procédé commun, non de l'emprunt."
+                            >
+                              <TriangleAlert className="mt-px h-3 w-3 shrink-0" />
+                              coïncidence de trope — la fonction concorde, pas le fond
+                            </span>
+                          ) : null}
                         </td>
                       </tr>
                     ) : null}
@@ -450,6 +467,41 @@ export function ComparisonReport({ data }: { data: ComparisonReportData }) {
           </table>
         </div>
       </section>
+
+      {/* 7 bis-a. Confinement : une œuvre contenue dans l'autre.
+          Signalé AVANT la couverture, car dans ce cas les orphelins de l'œuvre
+          longue sont attendus et ne traduisent aucune divergence. */}
+      {data.inclusion?.detected ? (
+        <section className="space-y-3">
+          <SectionTitle>Une œuvre paraît contenue dans l&apos;autre</SectionTitle>
+          <div className="rounded-xl border border-yellow/50 bg-yellow/10 p-4 text-sm text-foreground/90">
+            <p className="flex items-start gap-2 font-semibold text-[#8a5a10] dark:text-yellow">
+              <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" />
+              {data.inclusion.direction === "ref_in_cand"
+                ? "L'œuvre de référence se retrouve dans l'œuvre candidate."
+                : "L'œuvre candidate se retrouve dans l'œuvre de référence."}
+            </p>
+            <ul className="ml-5 mt-2 list-disc space-y-0.5 text-[0.9em]">
+              <li>
+                Nœuds narratifs de la plus courte retrouvés dans l&apos;autre :{" "}
+                <strong>{(data.inclusion.structural * 100).toFixed(0)} %</strong>
+              </li>
+              {typeof data.inclusion.textual === "number" ? (
+                <li>
+                  Reprise littérale (suites de cinq mots) :{" "}
+                  <strong>{(data.inclusion.textual * 100).toFixed(0)} %</strong>
+                </li>
+              ) : null}
+            </ul>
+            <p className="mt-2 text-[0.9em] text-muted">
+              Dans ce cas de figure, l&apos;indice de similarité global est mécaniquement abaissé par
+              l&apos;écart de taille entre les deux œuvres : il ne doit pas être lu comme une absence de
+              correspondance. Extrait, version tronquée ou chapitre repris — un examen prioritaire est
+              recommandé.
+            </p>
+          </div>
+        </section>
+      ) : null}
 
       {/* 7 bis. Couverture de l'appariement (P1-6) */}
       {data.coverage ? (

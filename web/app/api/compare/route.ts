@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { connectDB } from "@/lib/db/mongoose";
 import { Comparison } from "@/lib/db/models/comparison";
-import { analyzeLLM, compare, LlmExtractionError } from "@/lib/engine";
+import { compare, LlmExtractionError } from "@/lib/engine";
+import { analyzeWithCache } from "@/lib/analysis-cache";
 import type { NarrativeGraph } from "@/lib/engine";
 import { EXTRACTION_MODEL_ID } from "@/lib/engine/extraction/llm-extractor";
 import { createNotification } from "@/lib/notifications";
@@ -111,12 +112,16 @@ export async function POST(req: Request) {
             // Parallélise les deux analyses indépendantes (~/2 de latence, marge face à maxDuration).
             // Compromis : si un seul appel échoue, Promise.all rejette et le coût de l'appel *réussi*
             // n'est pas récupérable ici — même trou qu'en séquentiel, sans régression de traçage.
+            // Extraction mise en cache par empreinte de texte : deux textes
+            // identiques produisent le même graphe, au lieu de deux découpages
+            // légèrement différents dont l'écart passait ensuite pour un défaut
+            // de correspondance (nœuds orphelins artificiels).
             [refOutcome, candOutcome] = await Promise.all([
-              analyzeLLM(refText, { title: refTitle, author: refAuthor }, (event) => {
+              analyzeWithCache(refText, { title: refTitle, author: refAuthor }, ownerId, (event) => {
                 refFraction = event.fraction;
                 sendCombinedProgress();
               }),
-              analyzeLLM(candText, { title: candTitle, author: candAuthor }, (event) => {
+              analyzeWithCache(candText, { title: candTitle, author: candAuthor }, ownerId, (event) => {
                 candFraction = event.fraction;
                 sendCombinedProgress();
               }),
@@ -159,7 +164,10 @@ export async function POST(req: Request) {
 
         const totalCost = refCostUsd + candCostUsd;
 
-        const result = compare(gRef, gCand);
+        // Les textes sont transmis au moteur : ils permettent de mesurer la
+        // reprise littérale, seule capable de révéler qu'une œuvre est contenue
+        // dans l'autre — cas où le score structurel, symétrique, est trompeur.
+        const result = compare(gRef, gCand, { texts: { ref: refText, cand: candText } });
 
         send({ type: "progress", percent: 99, message: "Enregistrement de la comparaison…" });
 
@@ -181,6 +189,7 @@ export async function POST(req: Request) {
           correspondences: result.correspondences,
           warnings: result.warnings,
           coverage: result.coverage,
+          inclusion: result.inclusion,
           genre: result.genre,
           normalizationApplied: result.normalizationApplied,
           baseline: result.baseline,

@@ -20,6 +20,8 @@ const ComparisonSchema = new Schema(
     // Correctifs P1-6 / P1-7 / P2-8 de la note interne du 27/07/2026 : couverture
     // d'appariement, confrontation des genres et décision d'alerte explicitée.
     coverage: { type: Schema.Types.Mixed, default: null },
+    /** Confinement d'une œuvre dans l'autre (extrait, version tronquée). */
+    inclusion: { type: Schema.Types.Mixed, default: null },
     genre: { type: Schema.Types.Mixed, default: null },
     normalizationApplied: { type: Boolean, default: null },
     baseline: { type: Schema.Types.Mixed, default: null },

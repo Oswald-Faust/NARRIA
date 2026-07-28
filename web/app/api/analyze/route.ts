@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
-import { connectDB } from "@/lib/db/mongoose";
 import { Analysis } from "@/lib/db/models/analysis";
-import { analyzeLLM, functionSequence, LlmExtractionError } from "@/lib/engine";
+import { functionSequence, LlmExtractionError } from "@/lib/engine";
 import { EXTRACTION_MODEL_ID } from "@/lib/engine/extraction/llm-extractor";
+import { analyzeWithCache } from "@/lib/analysis-cache";
 import { createNotification } from "@/lib/notifications";
 import { recordUsage } from "@/lib/usage";
 import { describeExtractionProgress } from "@/lib/progress-messages";
@@ -58,8 +58,12 @@ export async function POST(req: Request) {
       try {
         let graph;
         let usage;
+        let cacheKey: string;
         try {
-          ({ graph, usage } = await analyzeLLM(text, { title, author }, (event) => {
+          // Cache d'extraction : un texte déjà analysé par la même version du
+          // moteur réutilise son graphe au lieu d'être ré-extrait, qui
+          // produirait un découpage légèrement différent — et serait refacturé.
+          const outcome = await analyzeWithCache(text, { title, author }, ownerId, (event) => {
             const percent = Math.round(event.fraction * 100);
             const message =
               event.stage === "merging"
@@ -68,7 +72,11 @@ export async function POST(req: Request) {
                   ? "Analyse via IA terminée…"
                   : describeExtractionProgress(percent, event.chunkIndex, event.chunkTotal);
             send({ type: "progress", percent, message });
-          }));
+          });
+          ({ graph, usage, key: cacheKey } = outcome);
+          if (outcome.fromCache) {
+            send({ type: "progress", percent: 99, message: "Texte déjà analysé — graphe réutilisé." });
+          }
         } catch (e) {
           let partial: { inputTokens?: number; outputTokens?: number; costUsd?: number } | undefined;
           if (e instanceof LlmExtractionError) {
@@ -96,7 +104,6 @@ export async function POST(req: Request) {
         const wordCount = text.trim().split(/\s+/).length;
         const meta = graph.metadata as Record<string, unknown>;
 
-        await connectDB();
         const doc = await Analysis.create({
           ownerId,
           title,
@@ -105,6 +112,7 @@ export async function POST(req: Request) {
           wordCount,
           nNodes: graph.nodes.length,
           graph,
+          extractionKey: cacheKey,
           costTokens: usage.inputTokens + usage.outputTokens,
           costUsd: usage.costUsd,
           summary: meta.summary,

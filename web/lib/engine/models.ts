@@ -89,6 +89,29 @@ export interface CoverageReport {
   ratio: number;
 }
 
+/**
+ * Confinement d'une œuvre dans l'autre — mesure ASYMÉTRIQUE, complémentaire du
+ * SNS qui est symétrique par construction.
+ *
+ * Un Dice compare deux touts : une œuvre confrontée à son propre dixième obtient
+ * un score bas, alors qu'il y a reprise intégrale. Le confinement répond à
+ * l'autre question : « quelle part de la plus courte se retrouve dans la plus
+ * longue ». Structurel (nœuds appariés) et textuel (empreintes de 5 mots), il
+ * rend visible le cas de l'extrait, de l'édition tronquée ou du chapitre repris.
+ */
+export interface InclusionReport {
+  /** Part des nœuds de l'œuvre la plus courte expliqués par l'autre ∈ [0, 1]. */
+  structural: number;
+  /** Recouvrement littéral par n-grammes ; `null` si les textes ne sont pas fournis. */
+  textual: number | null;
+  /** Similarité textuelle globale (Jaccard) ; `null` si les textes ne sont pas fournis. */
+  textualJaccard: number | null;
+  /** Sens du confinement, `null` si les deux œuvres sont de taille comparable. */
+  direction: "cand_in_ref" | "ref_in_cand" | null;
+  /** Vrai quand le confinement est assez net pour être signalé dans le verdict. */
+  detected: boolean;
+}
+
 /** Confrontation des genres détectés (correctifs P0-2 et P1-7, anomalies A3 et A4). */
 export interface GenreVerdict {
   refGenre: string;
@@ -130,6 +153,8 @@ export interface ComparisonResult {
   correspondences: Correspondence[];
   warnings: string[];
   coverage: CoverageReport;
+  /** Confinement d'une œuvre dans l'autre (cas de l'extrait ou de la troncature). */
+  inclusion: InclusionReport;
   genre: GenreVerdict;
   /** Vrai si la normalisation par genre a effectivement été appliquée à SNS_N. */
   normalizationApplied: boolean;
