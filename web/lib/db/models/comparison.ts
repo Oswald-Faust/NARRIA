@@ -17,6 +17,13 @@ const ComparisonSchema = new Schema(
     verdict: String,
     correspondences: { type: Schema.Types.Mixed, default: [] },
     warnings: { type: [String], default: [] },
+    // Correctifs P1-6 / P1-7 / P2-8 de la note interne du 27/07/2026 : couverture
+    // d'appariement, confrontation des genres et décision d'alerte explicitée.
+    coverage: { type: Schema.Types.Mixed, default: null },
+    genre: { type: Schema.Types.Mixed, default: null },
+    normalizationApplied: { type: Boolean, default: null },
+    baseline: { type: Schema.Types.Mixed, default: null },
+    alert: { type: Schema.Types.Mixed, default: null },
     costUsd: Number,
     refGraph: { type: Schema.Types.Mixed },
     candGraph: { type: Schema.Types.Mixed },

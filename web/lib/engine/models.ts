@@ -21,6 +21,12 @@ export interface NarrativeNode {
   tension: number;
   phase: string | null;
   textExcerpt: string;
+  /**
+   * Vecteur sémantique de l'extrait et des actants, calculé à l'extraction
+   * (point 5 de la note du 27/07/2026). Absent si aucun fournisseur d'embeddings
+   * n'est configuré : le seuil de contenu retombe alors sur la mesure lexicale.
+   */
+  embedding?: number[];
 }
 
 export interface NarrativeEdge {
@@ -54,6 +60,57 @@ export interface Correspondence {
   refNode: string;
   refFunction: string;
   similarity: number;
+  /**
+   * Contenu réel des deux nœuds appariés (correctif P0-3 de la note interne du
+   * 27/07/2026) : sans lui, le tableau des correspondances affiche des
+   * appariements invérifiables — « n012 (F20) ↔ n007 (F20), 80 % » ne dit pas
+   * si les deux scènes racontent la même chose.
+   */
+  refExcerpt: string;
+  candExcerpt: string;
+  refActants: string[];
+  candActants: string[];
+  /** Recouvrement de contenu mesuré entre les deux nœuds (cf. P1-5). */
+  contentSimilarity: number;
+  /** Poids de spécificité de la fonction appariée (cf. P1-4). */
+  specificity: number;
+}
+
+/** Couverture de l'appariement (correctif P1-6, anomalie A5). */
+export interface CoverageReport {
+  refNodes: number;
+  candNodes: number;
+  /** Nombre de nœuds de chaque graphe effectivement appariés (appariement injectif). */
+  refMatched: number;
+  candMatched: number;
+  refOrphans: number;
+  candOrphans: number;
+  /** (refMatched + candMatched) / (refNodes + candNodes) ∈ [0, 1]. */
+  ratio: number;
+}
+
+/** Confrontation des genres détectés (correctifs P0-2 et P1-7, anomalies A3 et A4). */
+export interface GenreVerdict {
+  refGenre: string;
+  candGenre: string;
+  /** `null` quand au moins un genre est absent : rien ne peut être affirmé. */
+  sameGenre: boolean | null;
+  /** Vrai uniquement lorsque les deux genres sont connus ET distincts. */
+  crossGenre: boolean;
+}
+
+/** Situation du score dans la distribution nulle de son genre (correctif P2-8). */
+export interface BaselineVerdict {
+  genreKey: string;
+  corpusSize: number;
+  zScore: number;
+  percentile: number;
+}
+
+/** Décision d'alerte, explicitée et traçable (§5 de la note : « la paire B ne déclenche plus aucune alerte »). */
+export interface AlertVerdict {
+  triggered: boolean;
+  reason: string;
 }
 
 export interface ComparisonResult {
@@ -72,6 +129,12 @@ export interface ComparisonResult {
   verdict: string;
   correspondences: Correspondence[];
   warnings: string[];
+  coverage: CoverageReport;
+  genre: GenreVerdict;
+  /** Vrai si la normalisation par genre a effectivement été appliquée à SNS_N. */
+  normalizationApplied: boolean;
+  baseline: BaselineVerdict | null;
+  alert: AlertVerdict;
 }
 
 export interface LlmAnalysisMetadata {
@@ -88,4 +151,12 @@ export interface LlmAnalysisMetadata {
   costUsd: number;
   tokensTotal: number;
   mergeInfo?: { nChunks: number; nNodesBeforeDedup: number; nNodesAfterDedup: number; nDuplicatesRemoved: number };
+  /** Variance inter-exécutions de l'extraction (correctif P2-9, anomalie A6). */
+  extractionVariance?: {
+    passes: number;
+    nodeCounts: number[];
+    nodeCountSd: number;
+    consensusNodes: number;
+    agreementRatio: number;
+  };
 }

@@ -2,12 +2,7 @@
  * Module 2 — Extraction heuristique du graphe narratif. Port fidèle de
  * `narria/m2_extraction/extractor.py` (chemin local, sans LLM).
  */
-import type {
-  NarrativeGraph,
-  NarrativeNode,
-  NarrativeEdge,
-  Modalities,
-} from "../models";
+import type { NarrativeGraph, NarrativeNode, Modalities } from "../models";
 import type { NarrativeSegment } from "../segmentation/segmenter";
 
 function escapeRegExp(s: string): string {

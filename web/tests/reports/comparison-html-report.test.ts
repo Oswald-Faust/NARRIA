@@ -16,7 +16,6 @@ const baseData: ComparisonHtmlReportData = {
     mode: "llm",
     summary: "Un renard flatte un corbeau pour lui dérober son fromage.",
     genre: "Fable apologue",
-    tradition: "Classique gréco-latine",
     thematicKeywords: ["vanité", "flatterie", "ruse"],
     mainActants: {
       protagoniste: "Renard",
@@ -38,7 +37,6 @@ const baseData: ComparisonHtmlReportData = {
     mode: "llm",
     summary: "Un corbeau séduit par la flatterie laisse tomber son fromage.",
     genre: "Fable morale",
-    tradition: "Classique occidentale",
     thematicKeywords: ["flatterie", "vanité", "naïveté"],
     mainActants: {
       protagoniste: "Renard",

@@ -180,6 +180,11 @@ export async function POST(req: Request) {
           verdict: result.verdict,
           correspondences: result.correspondences,
           warnings: result.warnings,
+          coverage: result.coverage,
+          genre: result.genre,
+          normalizationApplied: result.normalizationApplied,
+          baseline: result.baseline,
+          alert: result.alert,
           costUsd: totalCost,
           refGraph: gRef,
           candGraph: gCand,
@@ -187,7 +192,10 @@ export async function POST(req: Request) {
         });
 
         const pct = Math.round((result.sns ?? 0) * 100);
-        const high = result.srjLevel === "Critique" || result.srjLevel === "Élevé";
+        // §5 de la note interne du 27/07/2026 : l'alerte ne découle plus mécaniquement
+        // du niveau SRJ (lui-même dérivé d'un SNS non discriminant) mais de la décision
+        // explicite du moteur — couverture, genres et baseline compris.
+        const high = result.alert.triggered;
         await createNotification({
           ownerId,
           type: high ? "ip" : "comparison",

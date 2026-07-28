@@ -46,7 +46,6 @@ function buildReportWork(g: NarrativeGraph | undefined, fallbackTitle: string): 
     mode: typeof meta.mode === "string" ? meta.mode : "heuristic",
     summary: typeof meta.summary === "string" ? meta.summary : "",
     genre: typeof meta.genre === "string" ? meta.genre : "",
-    tradition: typeof meta.tradition === "string" ? meta.tradition : "",
     thematicKeywords: Array.isArray(meta.thematicKeywords) ? (meta.thematicKeywords as string[]) : [],
     mainActants: actants
       ? {
@@ -92,6 +91,11 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     verdict?: string;
     correspondences?: Array<Record<string, unknown>>;
     warnings?: string[];
+    coverage?: Record<string, number> | null;
+    genre?: { refGenre?: string; candGenre?: string; sameGenre?: boolean | null; crossGenre?: boolean } | null;
+    normalizationApplied?: boolean | null;
+    baseline?: Record<string, unknown> | null;
+    alert?: { triggered?: boolean; reason?: string } | null;
     refGraph?: NarrativeGraph;
     candGraph?: NarrativeGraph;
     createdAt?: Date;
@@ -112,7 +116,34 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     candNode: String(c.candNode ?? c.cand_node ?? "—"),
     candFunction: String(c.candFunction ?? c.cand_function ?? "—"),
     similarity: typeof c.similarity === "number" ? c.similarity : 0,
+    // Contenu réel des nœuds appariés (P0-3) — absent des comparaisons antérieures au 28/07/2026.
+    refExcerpt: typeof c.refExcerpt === "string" ? c.refExcerpt : undefined,
+    candExcerpt: typeof c.candExcerpt === "string" ? c.candExcerpt : undefined,
+    refActants: Array.isArray(c.refActants) ? (c.refActants as string[]) : undefined,
+    candActants: Array.isArray(c.candActants) ? (c.candActants as string[]) : undefined,
+    contentSimilarity: typeof c.contentSimilarity === "number" ? c.contentSimilarity : undefined,
   }));
+
+  const coverage = doc.coverage
+    ? {
+        refNodes: Number(doc.coverage.refNodes ?? 0),
+        candNodes: Number(doc.coverage.candNodes ?? 0),
+        refMatched: Number(doc.coverage.refMatched ?? 0),
+        candMatched: Number(doc.coverage.candMatched ?? 0),
+        refOrphans: Number(doc.coverage.refOrphans ?? 0),
+        candOrphans: Number(doc.coverage.candOrphans ?? 0),
+        ratio: Number(doc.coverage.ratio ?? 0),
+      }
+    : undefined;
+
+  const genre = doc.genre
+    ? {
+        refGenre: String(doc.genre.refGenre ?? ""),
+        candGenre: String(doc.genre.candGenre ?? ""),
+        sameGenre: doc.genre.sameGenre ?? null,
+        crossGenre: Boolean(doc.genre.crossGenre),
+      }
+    : undefined;
 
   const reportData: ComparisonHtmlReportData = {
     dateHuman: new Date(doc.createdAt ?? new Date()).toLocaleString("fr-FR"),
@@ -133,9 +164,12 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     verdict: doc.verdict ?? "",
     correspondences,
     warnings: doc.warnings ?? [],
+    coverage,
+    genre,
+    normalizationApplied: doc.normalizationApplied ?? undefined,
   };
 
-  const filename = `${slugify(`${refTitle}_vs_${candTitle}`)}_${doc._id}`;
+  const filename =`${slugify(`${refTitle}_vs_${candTitle}`)}_${doc._id}`;
 
   if (format === "json") {
     const payload = {
@@ -163,6 +197,11 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
       verdict: reportData.verdict,
       correspondences,
       warnings: reportData.warnings,
+      coverage: coverage ?? null,
+      genre: genre ?? null,
+      normalizationApplied: doc.normalizationApplied ?? null,
+      baseline: doc.baseline ?? null,
+      alert: doc.alert ?? null,
       graphs: { ref: doc.refGraph ?? null, cand: doc.candGraph ?? null },
     };
     return new NextResponse(JSON.stringify(payload, null, 2), {

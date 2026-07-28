@@ -25,7 +25,7 @@ export function renderAnalysisMarkdownReport(analysis: AnalysisReportData & { da
     out.push(`## Synthèse de l'analyse`, "");
     if (analysis.summary) out.push(analysis.summary, "");
     if (analysis.genre) out.push(`**Genre :** ${analysis.genre}`);
-    if (analysis.tradition) out.push(`**Tradition narrative :** ${analysis.tradition}`);
+    if (analysis.tradition) out.push(`**Filiation narrative du texte :** ${analysis.tradition}`);
     if (analysis.thematicKeywords && analysis.thematicKeywords.length > 0) {
       out.push(`**Thématiques :** ${analysis.thematicKeywords.join(", ")}`);
     }

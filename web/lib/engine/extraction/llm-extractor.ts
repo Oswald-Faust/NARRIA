@@ -5,12 +5,23 @@
 import { streamObject } from "ai";
 import { anthropic } from "@ai-sdk/anthropic";
 import { SYSTEM_PROMPT_NARRATOLOGY, buildUserPrompt, type PromptMeta } from "./llm-prompts";
-import { LlmAnalysisSchema, enforceCulturalRestriction, type LlmAnalysis, type LlmNode } from "./llm-schema";
+import {
+  LlmAnalysisSchema,
+  enforceCulturalRestriction,
+  sanitizeAnalysisIdentity,
+  type LlmAnalysis,
+  type LlmNode,
+} from "./llm-schema";
 import { needsChunking, chunkText, mergePartialGraphs, type TextChunk } from "./chunker";
+import { consensusMerge, configuredConsensusPasses, type ExtractionVariance } from "./consensus";
+import { attachNodeEmbeddings } from "../comparison/embeddings";
 import type { NarrativeGraph, NarrativeNode, NarrativeEdge, LlmAnalysisMetadata } from "../models";
 import { estimateCostUsd } from "@/lib/pricing";
 
 export const EXTRACTION_MODEL_ID = "claude-sonnet-4-6";
+
+/** Température d'extraction — basse pour limiter la variance inter-exécutions (P2-9). */
+export const EXTRACTION_TEMPERATURE = 0.1;
 
 export interface LlmExtractionUsage {
   inputTokens: number;
@@ -51,6 +62,10 @@ async function analyzeChunk(
     prompt: buildUserPrompt(text, meta),
     schema: LlmAnalysisSchema,
     maxRetries: 2,
+    // Correctif P2-9 (anomalie A6) : le découpage en nœuds variait de 35 à 33 puis
+    // de 25 à 29 entre deux exécutions sur les mêmes textes. Une température basse
+    // réduit cette dérive d'échantillonnage à la source.
+    temperature: EXTRACTION_TEMPERATURE,
   });
 
   if (onProgress) {
@@ -79,13 +94,70 @@ async function analyzeChunk(
   const usage = await result.usage;
   onProgress?.(1);
 
-  const analysis = enforceCulturalRestriction(object);
+  // Ordre imposé : le filtre identitaire passe AVANT le filet culturel, pour que
+  // l'attribution des fonctions FN* ne puisse jamais s'appuyer sur une inférence
+  // relative à l'auteur (note interne du 27/07/2026, anomalie A8).
+  const analysis = enforceCulturalRestriction(sanitizeAnalysisIdentity(object));
   const inputTokens = usage?.inputTokens ?? 0;
   const outputTokens = usage?.outputTokens ?? 0;
 
   return {
     analysis,
     usage: { inputTokens, outputTokens, costUsd: estimateCostUsd(EXTRACTION_MODEL_ID, { inputTokens, outputTokens }) },
+  };
+}
+
+/**
+ * Extraction d'un bloc, stabilisée par consensus (P2-9). Avec
+ * `EXTRACTION_CONSENSUS_PASSES = 1` (défaut), se réduit exactement à un appel
+ * unique ; au-delà, k extractions sont agrégées et seuls les nœuds confirmés par
+ * la majorité des passes sont conservés. Le coût LLM est multiplié par k : le
+ * réglage est volontairement explicite.
+ */
+async function analyzeChunkStabilized(
+  text: string,
+  meta: PromptMeta,
+  onProgress?: (chunkFraction: number) => void,
+): Promise<{ analysis: LlmAnalysis; usage: LlmExtractionUsage; variance: ExtractionVariance }> {
+  const passes = configuredConsensusPasses();
+  const analyses: LlmAnalysis[] = [];
+  let usage: LlmExtractionUsage = { inputTokens: 0, outputTokens: 0, costUsd: 0 };
+
+  for (let p = 0; p < passes; p++) {
+    const outcome = await analyzeChunk(text, meta, (f) => onProgress?.((p + f) / passes));
+    analyses.push(outcome.analysis);
+    usage = {
+      inputTokens: usage.inputTokens + outcome.usage.inputTokens,
+      outputTokens: usage.outputTokens + outcome.usage.outputTokens,
+      costUsd: usage.costUsd + outcome.usage.costUsd,
+    };
+  }
+
+  const { analysis, variance } = consensusMerge(analyses);
+  return { analysis, usage, variance };
+}
+
+/** Agrège les variances des blocs d'un même texte en une mesure unique. */
+function aggregateVariance(parts: ExtractionVariance[]): ExtractionVariance {
+  if (parts.length === 1) return parts[0];
+  const passes = parts[0]?.passes ?? 1;
+  const nodeCounts = parts.reduce<number[]>((acc, v) => {
+    v.nodeCounts.forEach((c, i) => (acc[i] = (acc[i] ?? 0) + c));
+    return acc;
+  }, []);
+  const consensusNodes = parts.reduce((s, v) => s + v.consensusNodes, 0);
+  const pivotNodes = parts.reduce((s, v) => s + (v.agreementRatio > 0 ? v.consensusNodes / v.agreementRatio : 0), 0);
+  const mean = nodeCounts.reduce((s, v) => s + v, 0) / Math.max(1, nodeCounts.length);
+  const nodeCountSd =
+    nodeCounts.length < 2
+      ? 0
+      : Math.sqrt(nodeCounts.reduce((s, v) => s + (v - mean) ** 2, 0) / nodeCounts.length);
+  return {
+    passes,
+    nodeCounts,
+    nodeCountSd,
+    consensusNodes,
+    agreementRatio: pivotNodes > 0 ? consensusNodes / pivotNodes : 1,
   };
 }
 
@@ -158,13 +230,15 @@ export async function analyzeLLM(
   let merged: LlmAnalysis;
   let totalUsage: LlmExtractionUsage = { inputTokens: 0, outputTokens: 0, costUsd: 0 };
   let mergeInfo: LlmAnalysisMetadata["mergeInfo"];
+  const variances: ExtractionVariance[] = [];
 
   if (!needsChunking(text)) {
-    const { analysis, usage } = await analyzeChunk(text, promptMeta, (f) =>
+    const { analysis, usage, variance } = await analyzeChunkStabilized(text, promptMeta, (f) =>
       onProgress?.({ stage: "extracting", fraction: f }),
     );
     merged = analysis;
     totalUsage = usage;
+    variances.push(variance);
   } else {
     const chunks: TextChunk[] = chunkText(text);
     const partials: LlmAnalysis[] = [];
@@ -172,7 +246,7 @@ export async function analyzeLLM(
     for (let i = 0; i < chunks.length; i++) {
       const chunk = chunks[i];
       try {
-        const { analysis, usage } = await analyzeChunk(chunk.text, promptMeta, (chunkFraction) => {
+        const { analysis, usage, variance } = await analyzeChunkStabilized(chunk.text, promptMeta, (chunkFraction) => {
           const globalFraction = (i + chunkFraction) / chunks.length;
           onProgress?.({
             stage: "extracting",
@@ -182,6 +256,7 @@ export async function analyzeLLM(
           });
         });
         partials.push(analysis);
+        variances.push(variance);
         totalUsage = {
           inputTokens: totalUsage.inputTokens + usage.inputTokens,
           outputTokens: totalUsage.outputTokens + usage.outputTokens,
@@ -202,7 +277,12 @@ export async function analyzeLLM(
     mergeInfo = mergedResult.mergeInfo;
   }
 
-  const nodes = merged.nodes.map(toNarrativeNode);
+  // Point 5 de la note : les vecteurs sémantiques sont calculés une fois ici et
+  // transportés dans le graphe, pour que la comparaison reste synchrone et
+  // fonctionne sur des graphes rechargés depuis la base. Sans fournisseur
+  // configuré, les nœuds ressortent inchangés et le seuil de contenu retombe sur
+  // le recouvrement lexical.
+  const nodes = await attachNodeEmbeddings(merged.nodes.map(toNarrativeNode));
 
   const metadata: LlmAnalysisMetadata = {
     mode: "llm",
@@ -215,6 +295,9 @@ export async function analyzeLLM(
     costUsd: totalUsage.costUsd,
     tokensTotal: totalUsage.inputTokens + totalUsage.outputTokens,
     mergeInfo,
+    // P2-9 : la variance inter-exécutions est mesurée et publiée, plutôt que
+    // réputée limitée à S_ACT et ST comme l'affirmait la note méthodologique.
+    extractionVariance: aggregateVariance(variances),
   };
 
   const graph: NarrativeGraph = {

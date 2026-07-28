@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { sanitizeIdentityInference, sanitizeProseIdentityInference } from "./identity-filter";
 
 const ModalitiesSchema = z.object({
   vouloir: z.number().min(0).max(1),
@@ -69,6 +70,37 @@ const AFRICAN_TO_WESTERN_FALLBACK: Record<string, [string, string]> = {
   FNCOMM: ["F49", "Sentence morale"],
 };
 
+/**
+ * Filtre de sortie anti-inférence identitaire (correctif P0-1, anomalie A8).
+ * Appliqué AVANT `enforceCulturalRestriction` : la filiation textuelle qui
+ * conditionne l'attribution des fonctions FN* ne doit jamais reposer sur une
+ * spéculation quant à l'auteur. Si le seul indice avancé par le LLM était une
+ * inférence sur la personne, le champ devient vide et le filet culturel
+ * recode les FN* — comportement conservateur voulu.
+ */
+export function sanitizeAnalysisIdentity(data: LlmAnalysis): LlmAnalysis {
+  const tradition = sanitizeIdentityInference(data.tradition);
+  const summary = sanitizeProseIdentityInference(data.summary);
+  const stylistic = sanitizeProseIdentityInference(
+    typeof data.formal_features.stylistic_signature === "string" ? data.formal_features.stylistic_signature : "",
+  );
+
+  if (!tradition.removed.length && !summary.removed.length && !stylistic.removed.length) return data;
+
+  console.warn(
+    `[NARR'IA] Filtre identitaire : ${
+      [...tradition.removed, ...summary.removed, ...stylistic.removed].length
+    } segment(s) retiré(s) de l'analyse (inférence sur l'auteur).`,
+  );
+
+  return {
+    ...data,
+    tradition: tradition.value,
+    summary: summary.value,
+    formal_features: { ...data.formal_features, stylistic_signature: stylistic.value },
+  };
+}
+
 function isAfrodescendantTradition(tradition: string): boolean {
   const t = tradition.trim().toLowerCase();
   return (
@@ -99,7 +131,9 @@ export function enforceCulturalRestriction(data: LlmAnalysis): LlmAnalysis {
       ...node,
       function_code: fallback[0],
       function_name: fallback[1],
-      _cultural_correction: `Fonction ${oldCode} (africaine) recodée en ${fallback[0]} car la tradition '${data.tradition}' n'est pas afrodescendante`,
+      _cultural_correction: data.tradition
+        ? `Fonction ${oldCode} (africaine) recodée en ${fallback[0]} car la filiation textuelle relevée ('${data.tradition}') n'est pas afrodescendante`
+        : `Fonction ${oldCode} (africaine) recodée en ${fallback[0]} : aucune filiation textuelle afrodescendante relevée dans le texte`,
     };
   });
 
@@ -107,7 +141,7 @@ export function enforceCulturalRestriction(data: LlmAnalysis): LlmAnalysis {
 
   if (correctionsCount > 0) {
     result.cultural_corrections_note =
-      ` [Filet de sécurité culturelle : ${correctionsCount} fonction(s) africaine(s) recodée(s) en équivalent occidental car la tradition détectée n'est pas afrodescendante.]`.trim();
+      ` [Filet de sécurité culturelle : ${correctionsCount} fonction(s) africaine(s) recodée(s) en équivalent occidental car la filiation textuelle relevée n'est pas afrodescendante.]`.trim();
   }
 
   return result;

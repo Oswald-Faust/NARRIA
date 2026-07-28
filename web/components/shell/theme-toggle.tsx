@@ -1,15 +1,21 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import { useTheme } from "next-themes";
 import { Sun, Moon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+// Détection d'hydratation sans `setState` dans un effet : le rendu serveur lit
+// `false`, le client `true`. Les callbacks sont hissés hors du composant pour
+// que React ne se réabonne pas à chaque rendu.
+const noopSubscribe = () => () => {};
+const getClientSnapshot = () => true;
+const getServerSnapshot = () => false;
+
 /** Segment soleil / lune (clair / sombre) repris de la topbar Figma. */
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  const mounted = useSyncExternalStore(noopSubscribe, getClientSnapshot, getServerSnapshot);
 
   const current = mounted ? theme : "dark";
 

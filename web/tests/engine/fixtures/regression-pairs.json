@@ -1,0 +1,1201 @@
+{
+  "_note": "Jeu de référence permanent du harnais de régression (§5 de la note interne du 27/07/2026). Graphes narratifs synthétiques reproduisant les caractéristiques des deux paires des tests bêta des 26-27 juillet 2026 — les textes des bêta-testeurs eux-mêmes ne sont pas réutilisables hors calibration. Paire A : œuvres dérivées (même univers, personnages communs, scènes reprises quasi mot pour mot). Paire B : œuvres indépendantes (aucun univers, personnage, cadre ni genre commun) partageant les fonctions génériques F13/F20/F22/F28/F31/F41, un arc tensif identique et des tailles inégales. NE PAS MODIFIER sans recalibrer le harnais.",
+  "pairA": {
+    "label": "dérivée",
+    "ref": {
+      "graphId": "g_fixture_a_ref",
+      "metadata": {
+        "title": "L'élève et la note",
+        "author": "Testeur bêta (fixture)",
+        "mode": "llm",
+        "genre": "récit d'apprentissage scolaire",
+        "summary": "L'élève et la note — fixture de régression NARR'IA.",
+        "formal_features": {
+          "form": "prose",
+          "register": "narratif_neutre",
+          "narrative_length_category": "moyen",
+          "approximate_word_count": 4000,
+          "has_explicit_morality": false,
+          "has_narrator_intervention": false,
+          "uses_dialogue": true,
+          "stylistic_signature": "sobre"
+        },
+        "main_actants_v1": {
+          "protagoniste": "Halim",
+          "objet": "la note du trimestre",
+          "destinateur": "—",
+          "destinataire": "Halim",
+          "adjuvant": "—",
+          "opposant": "Madame Sow"
+        },
+        "main_actants_v2": {
+          "protagoniste": "Madame Sow",
+          "objet": "la note du trimestre",
+          "destinateur": "—",
+          "destinataire": "Madame Sow",
+          "adjuvant": "—",
+          "opposant": "Halim"
+        }
+      },
+      "nodes": [
+        {
+          "nodeId": "n001",
+          "segmentId": "seg_n001",
+          "functionCode": "F03",
+          "functionFamily": "Rupture initiale",
+          "functionName": "Manque",
+          "actants": [
+            "Halim",
+            "Madame Sow"
+          ],
+          "modalities": {
+            "vouloir": 0.7,
+            "devoir": 0.4,
+            "pouvoir": 0.5,
+            "savoir": 0.4
+          },
+          "tension": 0.15,
+          "phase": "Exposition",
+          "textExcerpt": "Halim découvre la note rouge inscrite en marge de sa copie de mathématiques."
+        },
+        {
+          "nodeId": "n002",
+          "segmentId": "seg_n002",
+          "functionCode": "F02",
+          "functionFamily": "Rupture initiale",
+          "functionName": "Désir / Quête",
+          "actants": [
+            "Halim"
+          ],
+          "modalities": {
+            "vouloir": 0.7,
+            "devoir": 0.4,
+            "pouvoir": 0.5,
+            "savoir": 0.4
+          },
+          "tension": 0.401,
+          "phase": "Exposition",
+          "textExcerpt": "Il se promet de faire remonter cette moyenne avant le conseil de classe."
+        },
+        {
+          "nodeId": "n003",
+          "segmentId": "seg_n003",
+          "functionCode": "F10",
+          "functionFamily": "Quête et cheminement",
+          "functionName": "Rencontre",
+          "actants": [
+            "Halim",
+            "Bintou"
+          ],
+          "modalities": {
+            "vouloir": 0.7,
+            "devoir": 0.4,
+            "pouvoir": 0.5,
+            "savoir": 0.4
+          },
+          "tension": 0.072,
+          "phase": "Exposition",
+          "textExcerpt": "Bintou l'attend devant la salle de permanence et propose de réviser ensemble."
+        },
+        {
+          "nodeId": "n004",
+          "segmentId": "seg_n004",
+          "functionCode": "F13",
+          "functionFamily": "Quête et cheminement",
+          "functionName": "Cheminement",
+          "actants": [
+            "Halim",
+            "Bintou"
+          ],
+          "modalities": {
+            "vouloir": 0.7,
+            "devoir": 0.4,
+            "pouvoir": 0.5,
+            "savoir": 0.4
+          },
+          "tension": 0.543,
+          "phase": "Complication",
+          "textExcerpt": "Ils traversent la cour déserte jusqu'à la bibliothèque du deuxième étage."
+        },
+        {
+          "nodeId": "n005",
+          "segmentId": "seg_n005",
+          "functionCode": "F22",
+          "functionFamily": "Obstacles et conflits",
+          "functionName": "Menace",
+          "actants": [
+            "Madame Sow",
+            "Halim"
+          ],
+          "modalities": {
+            "vouloir": 0.7,
+            "devoir": 0.4,
+            "pouvoir": 0.5,
+            "savoir": 0.4
+          },
+          "tension": 0.694,
+          "phase": "Complication",
+          "textExcerpt": "Madame Sow annonce que le prochain contrôle comptera double."
+        },
+        {
+          "nodeId": "n006",
+          "segmentId": "seg_n006",
+          "functionCode": "F05",
+          "functionFamily": "Rupture initiale",
+          "functionName": "Transgression",
+          "actants": [
+            "Halim"
+          ],
+          "modalities": {
+            "vouloir": 0.7,
+            "devoir": 0.4,
+            "pouvoir": 0.5,
+            "savoir": 0.4
+          },
+          "tension": 0.486,
+          "phase": "Complication",
+          "textExcerpt": "Halim recopie le corrigé trouvé dans le casier de Bintou."
+        },
+        {
+          "nodeId": "n007",
+          "segmentId": "seg_n007",
+          "functionCode": "F28",
+          "functionFamily": "Obstacles et conflits",
+          "functionName": "Épreuve principale",
+          "actants": [
+            "Halim",
+            "Madame Sow"
+          ],
+          "modalities": {
+            "vouloir": 0.7,
+            "devoir": 0.4,
+            "pouvoir": 0.5,
+            "savoir": 0.4
+          },
+          "tension": 0.977,
+          "phase": "Climax",
+          "textExcerpt": "Le contrôle du vendredi décide de tout : deux heures, feuille blanche."
+        },
+        {
+          "nodeId": "n008",
+          "segmentId": "seg_n008",
+          "functionCode": "F31",
+          "functionFamily": "Pivot et reconnaissance",
+          "functionName": "Révélation",
+          "actants": [
+            "Madame Sow",
+            "Halim"
+          ],
+          "modalities": {
+            "vouloir": 0.7,
+            "devoir": 0.4,
+            "pouvoir": 0.5,
+            "savoir": 0.4
+          },
+          "tension": 0.648,
+          "phase": "Climax",
+          "textExcerpt": "Madame Sow reconnaît sa propre écriture dans la copie qu'elle corrige."
+        },
+        {
+          "nodeId": "n009",
+          "segmentId": "seg_n009",
+          "functionCode": "F42",
+          "functionFamily": "Résolution",
+          "functionName": "Échec",
+          "actants": [
+            "Halim"
+          ],
+          "modalities": {
+            "vouloir": 0.7,
+            "devoir": 0.4,
+            "pouvoir": 0.5,
+            "savoir": 0.4
+          },
+          "tension": 0.883,
+          "phase": "Résolution",
+          "textExcerpt": "La note tombe : zéro, et une convocation chez le proviseur."
+        },
+        {
+          "nodeId": "n010",
+          "segmentId": "seg_n010",
+          "functionCode": "F54",
+          "functionFamily": "Liaisons et relations",
+          "functionName": "Retour",
+          "actants": [
+            "Halim",
+            "Bintou"
+          ],
+          "modalities": {
+            "vouloir": 0.7,
+            "devoir": 0.4,
+            "pouvoir": 0.5,
+            "savoir": 0.4
+          },
+          "tension": 0.43,
+          "phase": "Résolution",
+          "textExcerpt": "Halim revient s'asseoir près de Bintou, la copie pliée dans la poche."
+        }
+      ],
+      "edges": [
+        {
+          "edgeId": "e_000",
+          "source": "n001",
+          "target": "n002",
+          "transitionType": "sequential",
+          "weight": 1
+        },
+        {
+          "edgeId": "e_001",
+          "source": "n002",
+          "target": "n003",
+          "transitionType": "sequential",
+          "weight": 1
+        },
+        {
+          "edgeId": "e_002",
+          "source": "n003",
+          "target": "n004",
+          "transitionType": "sequential",
+          "weight": 1
+        },
+        {
+          "edgeId": "e_003",
+          "source": "n004",
+          "target": "n005",
+          "transitionType": "sequential",
+          "weight": 1
+        },
+        {
+          "edgeId": "e_004",
+          "source": "n005",
+          "target": "n006",
+          "transitionType": "sequential",
+          "weight": 1
+        },
+        {
+          "edgeId": "e_005",
+          "source": "n006",
+          "target": "n007",
+          "transitionType": "sequential",
+          "weight": 1
+        },
+        {
+          "edgeId": "e_006",
+          "source": "n007",
+          "target": "n008",
+          "transitionType": "sequential",
+          "weight": 1
+        },
+        {
+          "edgeId": "e_007",
+          "source": "n008",
+          "target": "n009",
+          "transitionType": "sequential",
+          "weight": 1
+        },
+        {
+          "edgeId": "e_008",
+          "source": "n009",
+          "target": "n010",
+          "transitionType": "sequential",
+          "weight": 1
+        }
+      ]
+    },
+    "cand": {
+      "graphId": "g_fixture_a_cand",
+      "metadata": {
+        "title": "J'aurais dû me méfier",
+        "author": "Testeur bêta (fixture)",
+        "mode": "llm",
+        "genre": "récit d'apprentissage scolaire",
+        "summary": "J'aurais dû me méfier — fixture de régression NARR'IA.",
+        "formal_features": {
+          "form": "prose",
+          "register": "narratif_neutre",
+          "narrative_length_category": "moyen",
+          "approximate_word_count": 4000,
+          "has_explicit_morality": false,
+          "has_narrator_intervention": false,
+          "uses_dialogue": true,
+          "stylistic_signature": "sobre"
+        },
+        "main_actants_v1": {
+          "protagoniste": "Halim",
+          "objet": "la note du trimestre",
+          "destinateur": "—",
+          "destinataire": "Halim",
+          "adjuvant": "—",
+          "opposant": "Madame Sow"
+        },
+        "main_actants_v2": {
+          "protagoniste": "Madame Sow",
+          "objet": "la note du trimestre",
+          "destinateur": "—",
+          "destinataire": "Madame Sow",
+          "adjuvant": "—",
+          "opposant": "Halim"
+        }
+      },
+      "nodes": [
+        {
+          "nodeId": "n001",
+          "segmentId": "seg_n001",
+          "functionCode": "F03",
+          "functionFamily": "Rupture initiale",
+          "functionName": "Manque",
+          "actants": [
+            "Halim",
+            "Madame Sow"
+          ],
+          "modalities": {
+            "vouloir": 0.7,
+            "devoir": 0.4,
+            "pouvoir": 0.5,
+            "savoir": 0.4
+          },
+          "tension": 0.15,
+          "phase": "Exposition",
+          "textExcerpt": "Halim découvre la note rouge inscrite en marge de sa copie de mathématiques."
+        },
+        {
+          "nodeId": "n002",
+          "segmentId": "seg_n002",
+          "functionCode": "F02",
+          "functionFamily": "Rupture initiale",
+          "functionName": "Désir / Quête",
+          "actants": [
+            "Halim"
+          ],
+          "modalities": {
+            "vouloir": 0.7,
+            "devoir": 0.4,
+            "pouvoir": 0.5,
+            "savoir": 0.4
+          },
+          "tension": 0.415,
+          "phase": "Exposition",
+          "textExcerpt": "Il se jure de faire remonter cette moyenne avant le conseil de classe."
+        },
+        {
+          "nodeId": "n003",
+          "segmentId": "seg_n003",
+          "functionCode": "F10",
+          "functionFamily": "Quête et cheminement",
+          "functionName": "Rencontre",
+          "actants": [
+            "Halim",
+            "Bintou"
+          ],
+          "modalities": {
+            "vouloir": 0.7,
+            "devoir": 0.4,
+            "pouvoir": 0.5,
+            "savoir": 0.4
+          },
+          "tension": 0.1,
+          "phase": "Complication",
+          "textExcerpt": "Bintou l'attend devant la salle de permanence et lui propose de réviser ensemble."
+        },
+        {
+          "nodeId": "n004",
+          "segmentId": "seg_n004",
+          "functionCode": "F22",
+          "functionFamily": "Obstacles et conflits",
+          "functionName": "Menace",
+          "actants": [
+            "Madame Sow",
+            "Halim"
+          ],
+          "modalities": {
+            "vouloir": 0.7,
+            "devoir": 0.4,
+            "pouvoir": 0.5,
+            "savoir": 0.4
+          },
+          "tension": 0.625,
+          "phase": "Complication",
+          "textExcerpt": "Madame Sow annonce que le prochain contrôle comptera double."
+        },
+        {
+          "nodeId": "n005",
+          "segmentId": "seg_n005",
+          "functionCode": "F05",
+          "functionFamily": "Rupture initiale",
+          "functionName": "Transgression",
+          "actants": [
+            "Halim"
+          ],
+          "modalities": {
+            "vouloir": 0.7,
+            "devoir": 0.4,
+            "pouvoir": 0.5,
+            "savoir": 0.4
+          },
+          "tension": 0.43,
+          "phase": "Complication",
+          "textExcerpt": "Halim recopie le corrigé qu'il a trouvé dans le casier de Bintou."
+        },
+        {
+          "nodeId": "n006",
+          "segmentId": "seg_n006",
+          "functionCode": "F28",
+          "functionFamily": "Obstacles et conflits",
+          "functionName": "Épreuve principale",
+          "actants": [
+            "Halim",
+            "Madame Sow"
+          ],
+          "modalities": {
+            "vouloir": 0.7,
+            "devoir": 0.4,
+            "pouvoir": 0.5,
+            "savoir": 0.4
+          },
+          "tension": 0.935,
+          "phase": "Complication",
+          "textExcerpt": "Le contrôle du vendredi décide de tout : deux heures, une feuille blanche."
+        },
+        {
+          "nodeId": "n007",
+          "segmentId": "seg_n007",
+          "functionCode": "F31",
+          "functionFamily": "Pivot et reconnaissance",
+          "functionName": "Révélation",
+          "actants": [
+            "Madame Sow",
+            "Halim"
+          ],
+          "modalities": {
+            "vouloir": 0.7,
+            "devoir": 0.4,
+            "pouvoir": 0.5,
+            "savoir": 0.4
+          },
+          "tension": 0.62,
+          "phase": "Climax",
+          "textExcerpt": "Madame Sow reconnaît sa propre écriture dans la copie qu'elle corrige."
+        },
+        {
+          "nodeId": "n008",
+          "segmentId": "seg_n008",
+          "functionCode": "F42",
+          "functionFamily": "Résolution",
+          "functionName": "Échec",
+          "actants": [
+            "Halim"
+          ],
+          "modalities": {
+            "vouloir": 0.7,
+            "devoir": 0.4,
+            "pouvoir": 0.5,
+            "savoir": 0.4
+          },
+          "tension": 0.925,
+          "phase": "Résolution",
+          "textExcerpt": "La note tombe : un zéro, et une convocation chez le proviseur."
+        },
+        {
+          "nodeId": "n009",
+          "segmentId": "seg_n009",
+          "functionCode": "F54",
+          "functionFamily": "Liaisons et relations",
+          "functionName": "Retour",
+          "actants": [
+            "Halim",
+            "Bintou"
+          ],
+          "modalities": {
+            "vouloir": 0.7,
+            "devoir": 0.4,
+            "pouvoir": 0.5,
+            "savoir": 0.4
+          },
+          "tension": 0.43,
+          "phase": "Résolution",
+          "textExcerpt": "Halim revient s'asseoir près de Bintou, la copie pliée dans sa poche."
+        }
+      ],
+      "edges": [
+        {
+          "edgeId": "e_000",
+          "source": "n001",
+          "target": "n002",
+          "transitionType": "sequential",
+          "weight": 1
+        },
+        {
+          "edgeId": "e_001",
+          "source": "n002",
+          "target": "n003",
+          "transitionType": "sequential",
+          "weight": 1
+        },
+        {
+          "edgeId": "e_002",
+          "source": "n003",
+          "target": "n004",
+          "transitionType": "sequential",
+          "weight": 1
+        },
+        {
+          "edgeId": "e_003",
+          "source": "n004",
+          "target": "n005",
+          "transitionType": "sequential",
+          "weight": 1
+        },
+        {
+          "edgeId": "e_004",
+          "source": "n005",
+          "target": "n006",
+          "transitionType": "sequential",
+          "weight": 1
+        },
+        {
+          "edgeId": "e_005",
+          "source": "n006",
+          "target": "n007",
+          "transitionType": "sequential",
+          "weight": 1
+        },
+        {
+          "edgeId": "e_006",
+          "source": "n007",
+          "target": "n008",
+          "transitionType": "sequential",
+          "weight": 1
+        },
+        {
+          "edgeId": "e_007",
+          "source": "n008",
+          "target": "n009",
+          "transitionType": "sequential",
+          "weight": 1
+        }
+      ]
+    }
+  },
+  "pairB": {
+    "label": "indépendante",
+    "ref": {
+      "graphId": "g_fixture_b_ref",
+      "metadata": {
+        "title": "La Lame de Kaelen",
+        "author": "Testeur bêta (fixture)",
+        "mode": "llm",
+        "genre": "power fantasy shonen",
+        "summary": "La Lame de Kaelen — fixture de régression NARR'IA.",
+        "formal_features": {
+          "form": "prose",
+          "register": "narratif_neutre",
+          "narrative_length_category": "moyen",
+          "approximate_word_count": 4000,
+          "has_explicit_morality": false,
+          "has_narrator_intervention": false,
+          "uses_dialogue": true,
+          "stylistic_signature": "sobre"
+        },
+        "main_actants_v1": {
+          "protagoniste": "Kaelen",
+          "objet": "la lame ancestrale",
+          "destinateur": "—",
+          "destinataire": "Kaelen",
+          "adjuvant": "—",
+          "opposant": "le dragon Vharok"
+        },
+        "main_actants_v2": {
+          "protagoniste": "le dragon Vharok",
+          "objet": "la lame ancestrale",
+          "destinateur": "—",
+          "destinataire": "le dragon Vharok",
+          "adjuvant": "—",
+          "opposant": "Kaelen"
+        }
+      },
+      "nodes": [
+        {
+          "nodeId": "n001",
+          "segmentId": "seg_n001",
+          "functionCode": "F01",
+          "functionFamily": "Rupture initiale",
+          "functionName": "Départ",
+          "actants": [
+            "Kaelen"
+          ],
+          "modalities": {
+            "vouloir": 0.7,
+            "devoir": 0.4,
+            "pouvoir": 0.5,
+            "savoir": 0.4
+          },
+          "tension": 0.25,
+          "phase": "Exposition",
+          "textExcerpt": "Kaelen quitte le village de bergers avant l'aube, la besace sur l'épaule."
+        },
+        {
+          "nodeId": "n002",
+          "segmentId": "seg_n002",
+          "functionCode": "F02",
+          "functionFamily": "Rupture initiale",
+          "functionName": "Désir / Quête",
+          "actants": [
+            "Kaelen"
+          ],
+          "modalities": {
+            "vouloir": 0.7,
+            "devoir": 0.4,
+            "pouvoir": 0.5,
+            "savoir": 0.4
+          },
+          "tension": 0.101,
+          "phase": "Exposition",
+          "textExcerpt": "Il veut forger la lame ancestrale dont parlent les chants du clan."
+        },
+        {
+          "nodeId": "n003",
+          "segmentId": "seg_n003",
+          "functionCode": "F10",
+          "functionFamily": "Quête et cheminement",
+          "functionName": "Rencontre",
+          "actants": [
+            "Kaelen",
+            "maître Orwen"
+          ],
+          "modalities": {
+            "vouloir": 0.7,
+            "devoir": 0.4,
+            "pouvoir": 0.5,
+            "savoir": 0.4
+          },
+          "tension": 0.492,
+          "phase": "Exposition",
+          "textExcerpt": "Le vieux forgeron Orwen l'accueille dans son atelier de la montagne."
+        },
+        {
+          "nodeId": "n004",
+          "segmentId": "seg_n004",
+          "functionCode": "F13",
+          "functionFamily": "Quête et cheminement",
+          "functionName": "Cheminement",
+          "actants": [
+            "Kaelen"
+          ],
+          "modalities": {
+            "vouloir": 0.7,
+            "devoir": 0.4,
+            "pouvoir": 0.5,
+            "savoir": 0.4
+          },
+          "tension": 0.333,
+          "phase": "Complication",
+          "textExcerpt": "La marche vers les cols gelés dure onze jours."
+        },
+        {
+          "nodeId": "n005",
+          "segmentId": "seg_n005",
+          "functionCode": "F15",
+          "functionFamily": "Quête et cheminement",
+          "functionName": "Épreuve qualifiante",
+          "actants": [
+            "Kaelen",
+            "maître Orwen"
+          ],
+          "modalities": {
+            "vouloir": 0.7,
+            "devoir": 0.4,
+            "pouvoir": 0.5,
+            "savoir": 0.4
+          },
+          "tension": 0.574,
+          "phase": "Complication",
+          "textExcerpt": "Orwen lui fait battre le fer trois nuits sans dormir."
+        },
+        {
+          "nodeId": "n006",
+          "segmentId": "seg_n006",
+          "functionCode": "F22",
+          "functionFamily": "Obstacles et conflits",
+          "functionName": "Menace",
+          "actants": [
+            "le dragon Vharok"
+          ],
+          "modalities": {
+            "vouloir": 0.7,
+            "devoir": 0.4,
+            "pouvoir": 0.5,
+            "savoir": 0.4
+          },
+          "tension": 0.755,
+          "phase": "Complication",
+          "textExcerpt": "Le dragon Vharok survole la vallée et brûle les greniers."
+        },
+        {
+          "nodeId": "n007",
+          "segmentId": "seg_n007",
+          "functionCode": "F20",
+          "functionFamily": "Obstacles et conflits",
+          "functionName": "Combat",
+          "actants": [
+            "Kaelen",
+            "les pillards"
+          ],
+          "modalities": {
+            "vouloir": 0.7,
+            "devoir": 0.4,
+            "pouvoir": 0.5,
+            "savoir": 0.4
+          },
+          "tension": 0.515,
+          "phase": "Complication",
+          "textExcerpt": "Les pillards attaquent le convoi ; Kaelen dégaine pour la première fois."
+        },
+        {
+          "nodeId": "n008",
+          "segmentId": "seg_n008",
+          "functionCode": "F24",
+          "functionFamily": "Obstacles et conflits",
+          "functionName": "Blessure",
+          "actants": [
+            "Kaelen"
+          ],
+          "modalities": {
+            "vouloir": 0.7,
+            "devoir": 0.4,
+            "pouvoir": 0.5,
+            "savoir": 0.4
+          },
+          "tension": 0.886,
+          "phase": "Complication",
+          "textExcerpt": "Une griffe lui ouvre l'épaule jusqu'à l'os."
+        },
+        {
+          "nodeId": "n009",
+          "segmentId": "seg_n009",
+          "functionCode": "F13",
+          "functionFamily": "Quête et cheminement",
+          "functionName": "Cheminement",
+          "actants": [
+            "Kaelen"
+          ],
+          "modalities": {
+            "vouloir": 0.7,
+            "devoir": 0.4,
+            "pouvoir": 0.5,
+            "savoir": 0.4
+          },
+          "tension": 0.757,
+          "phase": "Climax",
+          "textExcerpt": "Il gravit seul le flanc du volcan, la lame inachevée dans le dos."
+        },
+        {
+          "nodeId": "n010",
+          "segmentId": "seg_n010",
+          "functionCode": "F28",
+          "functionFamily": "Obstacles et conflits",
+          "functionName": "Épreuve principale",
+          "actants": [
+            "Kaelen",
+            "le dragon Vharok"
+          ],
+          "modalities": {
+            "vouloir": 0.7,
+            "devoir": 0.4,
+            "pouvoir": 0.5,
+            "savoir": 0.4
+          },
+          "tension": 0.965,
+          "phase": "Climax",
+          "textExcerpt": "Le duel contre Vharok embrase toute la caldeira."
+        },
+        {
+          "nodeId": "n011",
+          "segmentId": "seg_n011",
+          "functionCode": "F31",
+          "functionFamily": "Pivot et reconnaissance",
+          "functionName": "Révélation",
+          "actants": [
+            "Kaelen",
+            "maître Orwen"
+          ],
+          "modalities": {
+            "vouloir": 0.7,
+            "devoir": 0.4,
+            "pouvoir": 0.5,
+            "savoir": 0.4
+          },
+          "tension": 0.473,
+          "phase": "Résolution",
+          "textExcerpt": "Orwen révèle que la lame appartenait au père de Kaelen."
+        },
+        {
+          "nodeId": "n012",
+          "segmentId": "seg_n012",
+          "functionCode": "F41",
+          "functionFamily": "Résolution",
+          "functionName": "Triomphe",
+          "actants": [
+            "Kaelen"
+          ],
+          "modalities": {
+            "vouloir": 0.7,
+            "devoir": 0.4,
+            "pouvoir": 0.5,
+            "savoir": 0.4
+          },
+          "tension": 0.48,
+          "phase": "Résolution",
+          "textExcerpt": "Kaelen brandit la lame reforgée devant le clan rassemblé."
+        }
+      ],
+      "edges": [
+        {
+          "edgeId": "e_000",
+          "source": "n001",
+          "target": "n002",
+          "transitionType": "sequential",
+          "weight": 1
+        },
+        {
+          "edgeId": "e_001",
+          "source": "n002",
+          "target": "n003",
+          "transitionType": "sequential",
+          "weight": 1
+        },
+        {
+          "edgeId": "e_002",
+          "source": "n003",
+          "target": "n004",
+          "transitionType": "sequential",
+          "weight": 1
+        },
+        {
+          "edgeId": "e_003",
+          "source": "n004",
+          "target": "n005",
+          "transitionType": "sequential",
+          "weight": 1
+        },
+        {
+          "edgeId": "e_004",
+          "source": "n005",
+          "target": "n006",
+          "transitionType": "sequential",
+          "weight": 1
+        },
+        {
+          "edgeId": "e_005",
+          "source": "n006",
+          "target": "n007",
+          "transitionType": "sequential",
+          "weight": 1
+        },
+        {
+          "edgeId": "e_006",
+          "source": "n007",
+          "target": "n008",
+          "transitionType": "sequential",
+          "weight": 1
+        },
+        {
+          "edgeId": "e_007",
+          "source": "n008",
+          "target": "n009",
+          "transitionType": "sequential",
+          "weight": 1
+        },
+        {
+          "edgeId": "e_008",
+          "source": "n009",
+          "target": "n010",
+          "transitionType": "sequential",
+          "weight": 1
+        },
+        {
+          "edgeId": "e_009",
+          "source": "n010",
+          "target": "n011",
+          "transitionType": "sequential",
+          "weight": 1
+        },
+        {
+          "edgeId": "e_010",
+          "source": "n011",
+          "target": "n012",
+          "transitionType": "sequential",
+          "weight": 1
+        }
+      ]
+    },
+    "cand": {
+      "graphId": "g_fixture_b_cand",
+      "metadata": {
+        "title": "Davis Nice",
+        "author": "Testeur bêta (fixture)",
+        "mode": "llm",
+        "genre": "thriller existentiel",
+        "summary": "Davis Nice — fixture de régression NARR'IA.",
+        "formal_features": {
+          "form": "prose",
+          "register": "narratif_neutre",
+          "narrative_length_category": "moyen",
+          "approximate_word_count": 4000,
+          "has_explicit_morality": false,
+          "has_narrator_intervention": false,
+          "uses_dialogue": true,
+          "stylistic_signature": "sobre"
+        },
+        "main_actants_v1": {
+          "protagoniste": "Davis",
+          "objet": "le silence",
+          "destinateur": "—",
+          "destinataire": "Davis",
+          "adjuvant": "—",
+          "opposant": "la cellule dormante"
+        },
+        "main_actants_v2": {
+          "protagoniste": "la cellule dormante",
+          "objet": "le silence",
+          "destinateur": "—",
+          "destinataire": "la cellule dormante",
+          "adjuvant": "—",
+          "opposant": "Davis"
+        }
+      },
+      "nodes": [
+        {
+          "nodeId": "n001",
+          "segmentId": "seg_n001",
+          "functionCode": "F02",
+          "functionFamily": "Rupture initiale",
+          "functionName": "Désir / Quête",
+          "actants": [
+            "Davis"
+          ],
+          "modalities": {
+            "vouloir": 0.7,
+            "devoir": 0.4,
+            "pouvoir": 0.5,
+            "savoir": 0.4
+          },
+          "tension": 0,
+          "phase": "Exposition",
+          "textExcerpt": "Davis voulait seulement que le bruit s'arrête, une fois, une seule."
+        },
+        {
+          "nodeId": "n002",
+          "segmentId": "seg_n002",
+          "functionCode": "F13",
+          "functionFamily": "Quête et cheminement",
+          "functionName": "Cheminement",
+          "actants": [
+            "Davis"
+          ],
+          "modalities": {
+            "vouloir": 0.7,
+            "devoir": 0.4,
+            "pouvoir": 0.5,
+            "savoir": 0.4
+          },
+          "tension": 0.395,
+          "phase": "Exposition",
+          "textExcerpt": "Il longe les quais jusqu'au hangar 7, sans se retourner."
+        },
+        {
+          "nodeId": "n003",
+          "segmentId": "seg_n003",
+          "functionCode": "F22",
+          "functionFamily": "Obstacles et conflits",
+          "functionName": "Menace",
+          "actants": [
+            "la cellule dormante"
+          ],
+          "modalities": {
+            "vouloir": 0.7,
+            "devoir": 0.4,
+            "pouvoir": 0.5,
+            "savoir": 0.4
+          },
+          "tension": 0.3,
+          "phase": "Complication",
+          "textExcerpt": "La cellule dormante a fixé la date : jeudi, dix-huit heures."
+        },
+        {
+          "nodeId": "n004",
+          "segmentId": "seg_n004",
+          "functionCode": "F20",
+          "functionFamily": "Obstacles et conflits",
+          "functionName": "Combat",
+          "actants": [
+            "Davis",
+            "le porteur"
+          ],
+          "modalities": {
+            "vouloir": 0.7,
+            "devoir": 0.4,
+            "pouvoir": 0.5,
+            "savoir": 0.4
+          },
+          "tension": 0.705,
+          "phase": "Complication",
+          "textExcerpt": "La neutralisation du porteur prend quatre secondes et ne fait aucun bruit."
+        },
+        {
+          "nodeId": "n005",
+          "segmentId": "seg_n005",
+          "functionCode": "F24",
+          "functionFamily": "Obstacles et conflits",
+          "functionName": "Blessure",
+          "actants": [
+            "Davis"
+          ],
+          "modalities": {
+            "vouloir": 0.7,
+            "devoir": 0.4,
+            "pouvoir": 0.5,
+            "savoir": 0.4
+          },
+          "tension": 0.52,
+          "phase": "Complication",
+          "textExcerpt": "Il ne sent la coupure au poignet qu'une heure plus tard."
+        },
+        {
+          "nodeId": "n006",
+          "segmentId": "seg_n006",
+          "functionCode": "F13",
+          "functionFamily": "Quête et cheminement",
+          "functionName": "Cheminement",
+          "actants": [
+            "Davis"
+          ],
+          "modalities": {
+            "vouloir": 0.7,
+            "devoir": 0.4,
+            "pouvoir": 0.5,
+            "savoir": 0.4
+          },
+          "tension": 0.865,
+          "phase": "Complication",
+          "textExcerpt": "Le trajet de retour, en métro, dure quarante minutes exactement."
+        },
+        {
+          "nodeId": "n007",
+          "segmentId": "seg_n007",
+          "functionCode": "F28",
+          "functionFamily": "Obstacles et conflits",
+          "functionName": "Épreuve principale",
+          "actants": [
+            "Davis",
+            "la cellule dormante"
+          ],
+          "modalities": {
+            "vouloir": 0.7,
+            "devoir": 0.4,
+            "pouvoir": 0.5,
+            "savoir": 0.4
+          },
+          "tension": 0.73,
+          "phase": "Climax",
+          "textExcerpt": "Jeudi, dix-huit heures : il reste devant la porte du hangar."
+        },
+        {
+          "nodeId": "n008",
+          "segmentId": "seg_n008",
+          "functionCode": "F31",
+          "functionFamily": "Pivot et reconnaissance",
+          "functionName": "Révélation",
+          "actants": [
+            "Davis"
+          ],
+          "modalities": {
+            "vouloir": 0.7,
+            "devoir": 0.4,
+            "pouvoir": 0.5,
+            "savoir": 0.4
+          },
+          "tension": 0.835,
+          "phase": "Résolution",
+          "textExcerpt": "Ce qu'il comprend alors ne concerne personne d'autre que lui."
+        },
+        {
+          "nodeId": "n009",
+          "segmentId": "seg_n009",
+          "functionCode": "F41",
+          "functionFamily": "Résolution",
+          "functionName": "Triomphe",
+          "actants": [
+            "Davis"
+          ],
+          "modalities": {
+            "vouloir": 0.7,
+            "devoir": 0.4,
+            "pouvoir": 0.5,
+            "savoir": 0.4
+          },
+          "tension": 0.27,
+          "phase": "Résolution",
+          "textExcerpt": "Davis ressort du hangar et le bruit, enfin, s'est arrêté."
+        }
+      ],
+      "edges": [
+        {
+          "edgeId": "e_000",
+          "source": "n001",
+          "target": "n002",
+          "transitionType": "sequential",
+          "weight": 1
+        },
+        {
+          "edgeId": "e_001",
+          "source": "n002",
+          "target": "n003",
+          "transitionType": "sequential",
+          "weight": 1
+        },
+        {
+          "edgeId": "e_002",
+          "source": "n003",
+          "target": "n004",
+          "transitionType": "sequential",
+          "weight": 1
+        },
+        {
+          "edgeId": "e_003",
+          "source": "n004",
+          "target": "n005",
+          "transitionType": "sequential",
+          "weight": 1
+        },
+        {
+          "edgeId": "e_004",
+          "source": "n005",
+          "target": "n006",
+          "transitionType": "sequential",
+          "weight": 1
+        },
+        {
+          "edgeId": "e_005",
+          "source": "n006",
+          "target": "n007",
+          "transitionType": "sequential",
+          "weight": 1
+        },
+        {
+          "edgeId": "e_006",
+          "source": "n007",
+          "target": "n008",
+          "transitionType": "sequential",
+          "weight": 1
+        },
+        {
+          "edgeId": "e_007",
+          "source": "n008",
+          "target": "n009",
+          "transitionType": "sequential",
+          "weight": 1
+        }
+      ]
+    }
+  }
+}

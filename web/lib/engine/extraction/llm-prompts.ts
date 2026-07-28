@@ -64,9 +64,24 @@ Tu dois analyser le récit fourni par l'utilisateur et produire un graphe narrat
 Règles de rigueur :
 - N'invente jamais d'extrait textuel — cite toujours le texte réel
 - Si une fonction peut être interprétée de plusieurs manières, privilégie la plus conservatrice
-- Pour les récits africains francophones, sois attentif aux fonctions FN* qui capturent des dimensions invisibles aux grilles occidentales
+- Pour les récits inscrits dans une oralité africaine francophone, sois attentif aux fonctions FN* qui capturent des dimensions invisibles aux grilles occidentales
 - Si le texte ne contient pas de trame narrative claire (description, essai, dialogue non narratif), indique-le dans summary et retourne peu ou pas de nœuds
-- Reste fidèle à la succession chronologique du sjuzet (ordre de présentation dans le texte), pas à la fabula reconstituée`;
+- Reste fidèle à la succession chronologique du sjuzet (ordre de présentation dans le texte), pas à la fabula reconstituée
+
+# INTERDICTION ABSOLUE — aucune inférence sur la personne de l'auteur
+
+Tu analyses un TEXTE, jamais une personne. Tu ne produis, dans aucun champ de
+ta réponse, d'énoncé portant sur l'origine géographique, la nationalité,
+l'ethnie, l'appartenance culturelle ou raciale, la religion, le genre ou
+l'identité de l'auteur — ni affirmé, ni présumé, ni suggéré. Sont notamment
+proscrites les formules du type « auteur X présumé », « contexte Y présumé »,
+« auteur non identifié comme Z », « probablement d'origine ... ».
+
+Le champ "tradition" décrit exclusivement la **filiation du texte** : conventions
+génériques mobilisées, régime d'énonciation (oral, écrit, mixte), intertextualité
+repérable, dispositifs formels attestés DANS le texte. Il ne dit rien de qui l'a
+écrit. Si le texte ne porte pas d'indice textuel suffisant, laisse ce champ vide
+plutôt que de spéculer.`;
 
 export interface PromptMeta {
   title?: string;
@@ -85,7 +100,7 @@ const JSON_SCHEMA_BLOCK = [
   "{",
   '  "summary": "Résumé synthétique de l\'intrigue en 2-3 phrases",',
   '  "genre": "Genre narratif détecté (tragédie, quête initiatique, roman d\'apprentissage, etc.)",',
-  '  "tradition": "Tradition narrative dominante (classique occidentale, africaine orale, réaliste moderne, etc.)",',
+  '  "tradition": "Filiation narrative DU TEXTE, déduite de ses seuls indices internes (classique occidentale, oralité africaine, réalisme moderne, etc.). Aucune mention de l\'auteur, de son origine ni de son identité. Vide si le texte ne tranche pas.",',
   '  "formal_features": {',
   '    "form": "prose | vers_libre | vers_metrique | mixte | drame | dialogue",',
   '    "register": "narratif_neutre | poetique | lyrique | dramatique | didactique | comique | satirique | epique",',
@@ -180,11 +195,13 @@ des catégories culturellement situées. Elles désignent des dispositifs
 narratifs propres aux traditions africaines, afro-caribéennes et
 afrodescendantes.
 
-Avant d'attribuer une fonction FN* à un nœud, tu DOIS d'abord déterminer
-la tradition narrative de l'œuvre. Si l'œuvre relève d'une tradition non
-afrodescendante (européenne, asiatique, américaine non afro, etc.), tu
-n'attribues JAMAIS de fonction FN*, même si un élément textuel ressemble
-formellement à un dispositif africain.
+Avant d'attribuer une fonction FN* à un nœud, tu DOIS d'abord établir la
+filiation narrative du TEXTE, à partir de ses seuls indices internes. Si le
+texte ne s'inscrit pas dans une poétique afrodescendante attestée par son
+contenu, tu n'attribues JAMAIS de fonction FN*, même si un élément textuel
+ressemble formellement à un dispositif africain. Cette détermination porte sur
+le texte et jamais sur son auteur : tu ne cherches pas qui a écrit, tu observes
+ce qui est écrit.
 
 Cas typique de faux positif à éviter : la moralité finale d'une fable de
 La Fontaine n'est PAS un FNPROV (Proverbe narratif africain) mais une
@@ -192,15 +209,16 @@ F49 (Sentence morale, fonction occidentale). Une bénédiction parentale
 dans un roman bourgeois européen n'est PAS un FNBENI mais une F44
 (Pardon) ou une F11 (Don/Réception) selon le contexte.
 
-En cas de doute sur la tradition narrative, demande-toi : « cette œuvre
-s'inscrit-elle explicitement dans un héritage narratif africain
-identifiable (auteur africain ou afrodescendant, œuvre référençant des
-cosmogonies, des langues, des dispositifs culturels africains) ? »
-Si la réponse n'est pas un oui clair, écarte les fonctions FN*.
+En cas de doute, demande-toi : « le TEXTE mobilise-t-il explicitement un
+héritage narratif africain identifiable — cosmogonies, langues, proverbes,
+dispositifs d'oralité, figures rituelles nommées dans le texte lui-même ? »
+Si la réponse n'est pas un oui clair, écarte les fonctions FN*. L'identité
+supposée de l'auteur n'entre jamais dans cette décision.
 
-Tu indiques explicitement dans le champ "tradition" si l'œuvre est
-considérée comme afrodescendante (valeur exacte commençant par
-"Africaine" ou "Afro-") ou non.
+Quand ces indices textuels sont présents, tu commences la valeur du champ
+"tradition" par "Africaine" ou "Afro-" (ex. « Africaine orale — récit à
+proverbes »). Sinon tu décris la filiation textuelle observée, ou tu laisses
+le champ vide.
 
 # Autres règles importantes
 

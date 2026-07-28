@@ -12,7 +12,7 @@ interface MongooseCache {
 }
 
 declare global {
-  // eslint-disable-next-line no-var
+  // `var` est requis ici : seul ce mot-clé déclare une propriété sur l'objet global.
   var _mongoose: MongooseCache | undefined;
 }
 

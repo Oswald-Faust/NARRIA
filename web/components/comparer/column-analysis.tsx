@@ -60,7 +60,7 @@ export function ColumnAnalysis({ data }: { data: ColumnAnalysisData }) {
             <p><span className="font-semibold text-foreground">Genre : </span><span className="text-muted">{data.genre}</span></p>
           )}
           {data.tradition && (
-            <p><span className="font-semibold text-foreground">Tradition : </span><span className="text-muted">{data.tradition}</span></p>
+            <p><span className="font-semibold text-foreground">Filiation narrative du texte : </span><span className="text-muted">{data.tradition}</span></p>
           )}
         </div>
       )}

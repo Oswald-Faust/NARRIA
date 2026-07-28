@@ -3,6 +3,7 @@
  * (`narria/m5_reporting/reporter.py`, `generate_html` + `_render_llm_metadata`),
  * recolorée au thème sombre de l'app.
  */
+import { Fragment } from "react";
 import { Download, TriangleAlert } from "lucide-react";
 import { Badge, type BadgeProps } from "@/components/ui/badge";
 import { TensionSparkline } from "./tension-sparkline";
@@ -16,7 +17,6 @@ export interface ComparisonWork {
   tensionProfile: number[];
   summary?: string;
   genre?: string;
-  tradition?: string;
   thematicKeywords?: string[];
   mainActants?: {
     protagoniste: string;
@@ -35,6 +35,30 @@ export interface ComparisonCorrespondence {
   candNode: string;
   candFunction: string;
   similarity: number;
+  /** Contenu réel des nœuds appariés (P0-3) — absent des comparaisons antérieures au 28/07/2026. */
+  refExcerpt?: string;
+  candExcerpt?: string;
+  refActants?: string[];
+  candActants?: string[];
+  contentSimilarity?: number;
+}
+
+/** Couverture d'appariement (P1-6) — absente des comparaisons antérieures au 28/07/2026. */
+export interface ComparisonCoverage {
+  refNodes: number;
+  candNodes: number;
+  refMatched: number;
+  candMatched: number;
+  refOrphans: number;
+  candOrphans: number;
+  ratio: number;
+}
+
+export interface ComparisonGenre {
+  refGenre: string;
+  candGenre: string;
+  sameGenre: boolean | null;
+  crossGenre: boolean;
 }
 
 export interface ComparisonReportData {
@@ -56,6 +80,9 @@ export interface ComparisonReportData {
   verdict: string;
   correspondences: ComparisonCorrespondence[];
   warnings: string[];
+  coverage?: ComparisonCoverage;
+  genre?: ComparisonGenre;
+  normalizationApplied?: boolean;
 }
 
 const ACCENT_PURPLE = "var(--color-soft-purple)";
@@ -132,11 +159,6 @@ function LlmWorkBlock({ work, accent, label }: { work: ComparisonWork; accent: s
           <strong>Genre :</strong> {work.genre}
         </p>
       ) : null}
-      {work.tradition ? (
-        <p className="mb-1 text-sm text-foreground/90">
-          <strong>Tradition :</strong> {work.tradition}
-        </p>
-      ) : null}
       {work.thematicKeywords && work.thematicKeywords.length > 0 ? (
         <p className="mb-1 text-sm text-foreground/90">
           <strong>Thématiques :</strong> {work.thematicKeywords.join(", ")}
@@ -161,6 +183,21 @@ function LlmWorkBlock({ work, accent, label }: { work: ComparisonWork; accent: s
           Analyse LLM : {work.costUsd.toFixed(4)} USD consommés
         </p>
       ) : null}
+    </div>
+  );
+}
+
+/**
+ * Contenu réel d'un nœud apparié (P0-3) : extrait cité et actants. Sans lui,
+ * une ligne du tableau des correspondances est invérifiable — les deux nœuds
+ * peuvent porter la même fonction sans raconter la même chose.
+ */
+function NodeContent({ excerpt, actants }: { excerpt?: string; actants?: string[] }) {
+  if (!excerpt && !actants?.length) return null;
+  return (
+    <div className="space-y-1 text-xs text-foreground/80">
+      {excerpt ? <p className="italic">« {excerpt} »</p> : null}
+      {actants?.length ? <p className="text-muted">Actants : {actants.join(", ")}</p> : null}
     </div>
   );
 }
@@ -199,7 +236,7 @@ function ScoreCard({
 const SNS_COMPONENTS: Array<{ code: string; description: string; key: keyof ComparisonReportData }> = [
   { code: "S_ISO", description: "Isomorphisme de sous-graphes narratifs (NARR'IA-VF2)", key: "sIso" },
   { code: "S_GED", description: "Distance d'édition de graphes narratifs (GED narrative)", key: "sGed" },
-  { code: "S_FUNC", description: "Similarité des séquences de fonctions narratives (DTW)", key: "sFunc" },
+  { code: "S_FUNC", description: "Similarité des séquences de fonctions narratives (LCS pondérée par spécificité)", key: "sFunc" },
   { code: "S_ACT", description: "Similarité des chaînes actantielles", key: "sAct" },
   { code: "S_TENS", description: "Corrélation des signatures tensives", key: "sTens" },
 ];
@@ -248,7 +285,11 @@ export function ComparisonReport({ data }: { data: ComparisonReportData }) {
         <SectionTitle>Scores composites</SectionTitle>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
           <ScoreCard label="SNS" value={data.sns} caption="Similarité narrative" highlight />
-          <ScoreCard label="SNS_N" value={data.snsNormalized} caption="Normalisé / genre" />
+          <ScoreCard
+            label="SNS_N"
+            value={data.snsNormalized}
+            caption={data.normalizationApplied === false ? "Normalisation neutralisée" : "Normalisé / genre"}
+          />
           <ScoreCard label="SS" value={data.ss} caption="Spécificité" />
           <ScoreCard label="ST" value={data.st} caption="Transformation" />
           <ScoreCard label="SRJ" value={data.srj}>
@@ -274,6 +315,16 @@ export function ComparisonReport({ data }: { data: ComparisonReportData }) {
           </p>
           <p className="text-sm text-foreground/90">{data.verdict}</p>
         </div>
+        {data.genre?.crossGenre ? (
+          <div className="flex items-start gap-2 rounded-xl border border-yellow/30 bg-yellow/10 px-4 py-3">
+            <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0 text-yellow" />
+            <p className="text-xs text-foreground/90">
+              <strong>Comparaison inter-genres</strong> — « {data.genre.refGenre} » vs « {data.genre.candGenre} ».
+              La normalisation par genre (SNS_N) a été neutralisée : NARR&apos;IA ne dispose d&apos;aucune référence
+              permettant d&apos;interpréter un score entre genres distincts.
+            </p>
+          </div>
+        ) : null}
       </section>
 
       {/* 5. Détail des composantes du SNS */}
@@ -308,24 +359,31 @@ export function ComparisonReport({ data }: { data: ComparisonReportData }) {
             Note méthodologique sur la lecture des scores
           </h3>
           <p className="mb-2">
-            Les indicateurs primaires de NARR&apos;IA, sur lesquels l&apos;interprétation doit
-            principalement s&apos;appuyer, sont le <strong>SNS</strong> (similarité narrative
-            composite), le <strong>S_ISO</strong> (isomorphisme structural) et le{" "}
-            <strong>S_TENS</strong> (signature tensive), ainsi que le <strong>verdict modal</strong>.
-            Ces indicateurs reposent sur des algorithmes structurellement stables.
+            Le <strong>graphe narratif lui-même</strong> est le produit d&apos;une extraction par
+            modèle de langue : son découpage en nœuds varie d&apos;une exécution à l&apos;autre.{" "}
+            <em>Tous</em> les sous-scores en héritent — S_ISO, S_GED et S_FUNC compris, et non les
+            seuls S_ACT et ST. Des écarts de quelques centièmes entre deux analyses des mêmes textes
+            sont attendus.
           </p>
           <p className="mb-2">
-            Les sous-scores <strong>S_ACT</strong> (chaînes actantielles) et <strong>ST</strong>{" "}
-            (transformations) relèvent d&apos;algorithmes sensibles à la formulation des actants
-            extraits par le LLM et aux métadonnées formelles fournies. Ils constituent des{" "}
-            <em>indicateurs secondaires</em> en cours de calibration empirique. Une certaine
-            variabilité de ces deux scores entre exécutions est attendue et ne remet pas en cause la
-            fiabilité du verdict global.
+            L&apos;interprétation doit s&apos;appuyer d&apos;abord sur le <strong>SNS</strong>, le{" "}
+            <strong>S_ISO</strong> (isomorphisme structural, pondéré par la spécificité des fonctions
+            appariées) et le <strong>taux de couverture</strong>, qui indique quelle proportion des
+            deux récits les correspondances expliquent réellement. Un score composite élevé sur une
+            couverture faible ne signale rien de narrativement consistant.
+          </p>
+          <p className="mb-2">
+            Le <strong>S_TENS</strong> mesure la ressemblance des courbes dramatiques. La courbe
+            exposition-montée-climax-résolution étant commune à la quasi-totalité des récits, un
+            S_TENS élevé indique une convention de genre partagée bien plus souvent qu&apos;un
+            emprunt : il ne doit jamais être lu isolément. <strong>S_ACT</strong> et{" "}
+            <strong>ST</strong> restent particulièrement sensibles à la formulation des actants
+            extraits et demeurent en cours de calibration empirique.
           </p>
           <p>
-            Pour toute analyse rigoureuse, il convient d&apos;interpréter ces deux sous-scores avec
-            prudence et de privilégier l&apos;expertise humaine du narratologue pour qualifier la
-            nature exacte des transformations entre œuvres.
+            Pour toute analyse rigoureuse, il convient de vérifier les correspondances une à une —
+            leur contenu est cité dans le tableau ci-dessous — et de privilégier l&apos;expertise
+            humaine du narratologue pour qualifier la nature exacte des rapports entre œuvres.
           </p>
         </div>
       </section>
@@ -352,28 +410,83 @@ export function ComparisonReport({ data }: { data: ComparisonReportData }) {
                 </tr>
               ) : (
                 correspondences.slice(0, 15).map((c, i) => (
-                  <tr key={i} className="border-t border-border">
-                    <td className="px-4 py-2 text-foreground/90">{i + 1}</td>
-                    <td className="px-4 py-2 text-foreground/90">
-                      <code className="rounded bg-surface-2 px-1 py-0.5 text-[0.85em] font-semibold text-soft-purple">
-                        {c.refNode || "—"}
-                      </code>{" "}
-                      ({c.refFunction || "—"})
-                    </td>
-                    <td className="px-4 py-2 text-foreground/90">
-                      <code className="rounded bg-surface-2 px-1 py-0.5 text-[0.85em] font-semibold text-soft-pink">
-                        {c.candNode || "—"}
-                      </code>{" "}
-                      ({c.candFunction || "—"})
-                    </td>
-                    <td className="px-4 py-2 text-foreground">{((c.similarity ?? 0) * 100).toFixed(1)}%</td>
-                  </tr>
+                  <Fragment key={i}>
+                    <tr className="border-t border-border">
+                      <td className="px-4 py-2 text-foreground/90">{i + 1}</td>
+                      <td className="px-4 py-2 text-foreground/90">
+                        <code className="rounded bg-surface-2 px-1 py-0.5 text-[0.85em] font-semibold text-soft-purple">
+                          {c.refNode || "—"}
+                        </code>{" "}
+                        ({c.refFunction || "—"})
+                      </td>
+                      <td className="px-4 py-2 text-foreground/90">
+                        <code className="rounded bg-surface-2 px-1 py-0.5 text-[0.85em] font-semibold text-soft-pink">
+                          {c.candNode || "—"}
+                        </code>{" "}
+                        ({c.candFunction || "—"})
+                      </td>
+                      <td className="px-4 py-2 text-foreground">{((c.similarity ?? 0) * 100).toFixed(1)}%</td>
+                    </tr>
+                    {c.refExcerpt || c.candExcerpt || c.refActants?.length || c.candActants?.length ? (
+                      <tr className="bg-surface-2/40">
+                        <td />
+                        <td className="px-4 pb-3 align-top">
+                          <NodeContent excerpt={c.refExcerpt} actants={c.refActants} />
+                        </td>
+                        <td className="px-4 pb-3 align-top">
+                          <NodeContent excerpt={c.candExcerpt} actants={c.candActants} />
+                        </td>
+                        <td className="px-4 pb-3 align-top text-[11px] text-muted">
+                          {typeof c.contentSimilarity === "number"
+                            ? `contenu ${(c.contentSimilarity * 100).toFixed(0)} %`
+                            : null}
+                        </td>
+                      </tr>
+                    ) : null}
+                  </Fragment>
                 ))
               )}
             </tbody>
           </table>
         </div>
       </section>
+
+      {/* 7 bis. Couverture de l'appariement (P1-6) */}
+      {data.coverage ? (
+        <section className="space-y-3">
+          <SectionTitle>Couverture de l&apos;appariement</SectionTitle>
+          <div className="rounded-xl border border-border bg-surface-2 p-4 text-sm text-foreground/90">
+            <div className="mb-3 h-2 w-full overflow-hidden rounded-full bg-surface">
+              <div
+                className="h-full rounded-full"
+                style={{
+                  width: `${Math.round(data.coverage.ratio * 100)}%`,
+                  background: data.coverage.ratio < 0.35 ? "var(--color-yellow)" : ACCENT_PURPLE,
+                }}
+              />
+            </div>
+            <p className="mb-1">
+              Taux de couverture global : <strong>{(data.coverage.ratio * 100).toFixed(0)} %</strong>
+            </p>
+            <ul className="ml-5 list-disc space-y-0.5 text-[0.9em]">
+              <li>
+                Œuvre de référence : <strong>{data.coverage.refMatched}/{data.coverage.refNodes}</strong> nœuds
+                appariés — {data.coverage.refOrphans} orphelins
+              </li>
+              <li>
+                Œuvre candidate : <strong>{data.coverage.candMatched}/{data.coverage.candNodes}</strong> nœuds
+                appariés — {data.coverage.candOrphans} orphelins
+              </li>
+            </ul>
+            {data.coverage.ratio < 0.35 ? (
+              <p className="mt-2 text-xs text-yellow">
+                <strong>Couverture faible</strong> — les scores ne portent que sur une portion minoritaire des
+                deux récits : l&apos;essentiel des deux œuvres n&apos;est expliqué par aucune correspondance.
+              </p>
+            ) : null}
+          </div>
+        </section>
+      ) : null}
 
       {/* 8. Limites et avertissements */}
       <section className="space-y-3">

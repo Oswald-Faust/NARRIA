@@ -22,7 +22,8 @@ export function buildWork(g: NarrativeGraph, costUsd: number) {
     tensionProfile: tensionProfile(g),
     summary: typeof meta.summary === "string" ? meta.summary : "",
     genre: typeof meta.genre === "string" ? meta.genre : "",
-    tradition: typeof meta.tradition === "string" ? meta.tradition : "",
+    // `tradition` n'est volontairement PAS transporté vers le rapport de comparaison
+    // (correctif P0-1 de la note interne du 27/07/2026, anomalie A8).
     thematicKeywords: Array.isArray(meta.thematicKeywords) ? (meta.thematicKeywords as string[]) : [],
     mainActants: actants
       ? {

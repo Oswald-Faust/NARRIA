@@ -22,7 +22,6 @@ function buildWork(g: NarrativeGraph | undefined, fallbackTitle: string) {
     tensionProfile: Array.isArray(g?.nodes) ? tensionProfile(g) : [],
     summary: typeof meta.summary === "string" ? meta.summary : "",
     genre: typeof meta.genre === "string" ? meta.genre : "",
-    tradition: typeof meta.tradition === "string" ? meta.tradition : "",
     thematicKeywords: Array.isArray(meta.thematicKeywords) ? (meta.thematicKeywords as string[]) : [],
     mainActants: actants
       ? {
@@ -82,6 +81,12 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     verdict: doc.verdict,
     correspondences: doc.correspondences ?? [],
     warnings: doc.warnings ?? [],
+    // Absents des comparaisons antérieures au 28/07/2026 : le rapport les rend optionnels.
+    coverage: doc.coverage ?? undefined,
+    genre: doc.genre ?? undefined,
+    normalizationApplied: doc.normalizationApplied ?? undefined,
+    baseline: doc.baseline ?? undefined,
+    alert: doc.alert ?? undefined,
     createdAt: doc.createdAt,
   });
 }

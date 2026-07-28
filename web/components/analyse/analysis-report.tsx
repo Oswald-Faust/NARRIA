@@ -60,7 +60,7 @@ export function AnalysisReport({ data }: { data: AnalysisReportData }) {
             )}
             {data.tradition && (
               <p>
-                <span className="font-semibold text-foreground">Tradition narrative : </span>
+                <span className="font-semibold text-foreground">Filiation narrative du texte : </span>
                 <span className="text-muted">{data.tradition}</span>
               </p>
             )}

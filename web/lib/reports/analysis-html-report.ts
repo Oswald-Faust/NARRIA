@@ -84,7 +84,7 @@ export function renderAnalysisHtmlReport(analysis: AnalysisReportData & { dateHu
     const rows: string[] = [];
     if (analysis.summary) rows.push(`<p>${escapeHtml(analysis.summary)}</p>`);
     if (analysis.genre) rows.push(`<p><strong>Genre :</strong> ${escapeHtml(analysis.genre)}</p>`);
-    if (analysis.tradition) rows.push(`<p><strong>Tradition narrative :</strong> ${escapeHtml(analysis.tradition)}</p>`);
+    if (analysis.tradition) rows.push(`<p><strong>Filiation narrative du texte :</strong> ${escapeHtml(analysis.tradition)}</p>`);
     if (analysis.thematicKeywords && analysis.thematicKeywords.length > 0) {
       rows.push(`<div class="chips">${analysis.thematicKeywords.map((k) => badge(k, "pink")).join("")}</div>`);
     }
