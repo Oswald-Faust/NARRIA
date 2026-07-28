@@ -44,6 +44,10 @@ export const LEGAL_ENTITY = {
   denomination: "Faust Oswald",
   /** Site professionnel de l'éditeur. */
   website: "faustoswald.com",
+  /** Forme juridique — fait opposable, non supposable. */
+  legalForm: TO_COMPLETE("forme juridique"),
+  /** Immatriculation — fait opposable, non supposable. */
+  registration: TO_COMPLETE("immatriculation"),
   /** Siège — fait opposable, non supposable. */
   address: TO_COMPLETE("adresse du siège"),
   publicationDirector: "David Adékambi",
