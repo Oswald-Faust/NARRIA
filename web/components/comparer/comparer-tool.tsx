@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
-import { GitCompareArrows, Loader2, FileText, ExternalLink, ScanText, CheckCircle2 } from "lucide-react";
+import { GitCompareArrows, Loader2, FileText, ExternalLink, ScanText, CheckCircle2, TriangleAlert } from "lucide-react";
 import { Card, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input, Textarea, Label } from "@/components/ui/input";
@@ -22,6 +22,41 @@ type ColumnAnalyzeResult = ColumnAnalysisData & { graph: NarrativeGraph };
 
 const srjTone = (level: string) =>
   level === "Critique" ? "danger" : level === "Élevé" ? "pink" : level === "Modéré" ? "neutral" : "success";
+
+/**
+ * Avertissement affiché pendant un traitement long. L'analyse et la comparaison
+ * se déroulent dans un flux ouvert par la page : quitter l'onglet coupe la
+ * requête et perd le travail en cours, sans que rien ne le signale autrement.
+ */
+function KeepOpenNotice({ children }: { children: ReactNode }) {
+  return (
+    <p
+      role="status"
+      className="flex items-start gap-2 rounded-lg border border-yellow/40 bg-yellow/10 px-3 py-2 text-xs leading-5 text-foreground/80"
+    >
+      <TriangleAlert className="mt-0.5 h-3.5 w-3.5 shrink-0 text-yellow" />
+      <span>{children}</span>
+    </p>
+  );
+}
+
+/**
+ * Garde-fou natif : tant qu'un traitement est en cours, le navigateur demande
+ * confirmation avant une fermeture ou un rechargement. Complète l'avertissement
+ * visuel, qui ne protège pas d'un réflexe de fermeture d'onglet.
+ */
+function useWarnBeforeUnload(active: boolean) {
+  useEffect(() => {
+    if (!active) return;
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      // Les navigateurs affichent leur propre message ; seule la prévention compte.
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", onBeforeUnload);
+    return () => window.removeEventListener("beforeunload", onBeforeUnload);
+  }, [active]);
+}
 
 /** État et logique d'une colonne (référence ou candidate) : saisie + analyse individuelle réutilisable. */
 function useComparisonColumn(projectId: string | null) {
@@ -168,7 +203,14 @@ function WorkColumn({
         {column.analyzing ? "Analyse…" : analyzed ? "Ré-analyser" : analyzeLabel}
       </Button>
 
-      {column.analyzing && column.progress && <ProgressBar percent={column.progress.percent} label={column.progress.message} />}
+      {column.analyzing && column.progress && (
+        <div className="space-y-2">
+          <ProgressBar percent={column.progress.percent} label={column.progress.message} />
+          <KeepOpenNotice>
+            Analyse en cours — gardez cet onglet ouvert : quitter la page l&apos;interromprait.
+          </KeepOpenNotice>
+        </div>
+      )}
       {column.error && <p className="text-sm text-red-400">{column.error}</p>}
 
       {column.analysis && <ColumnAnalysis data={column.analysis} />}
@@ -192,6 +234,10 @@ export function ComparerTool({ projectId = null }: { projectId?: string | null }
   useEffect(() => {
     fetch("/api/samples").then((r) => r.json()).then((d) => setSamples(d.samples ?? []));
   }, []);
+
+  // Couvre les trois traitements interruptibles : les deux analyses de colonne
+  // et la comparaison elle-même.
+  useWarnBeforeUnload(loading || ref.analyzing || cand.analyzing);
 
   const bothAnalyzed = ref.graph !== null && cand.graph !== null;
 
@@ -276,7 +322,16 @@ export function ComparerTool({ projectId = null }: { projectId?: string | null }
         </Button>
       </div>
 
-      {loading && progress && <ProgressBar percent={progress.percent} label={progress.message} />}
+      {loading && progress && (
+        <div className="space-y-2">
+          <ProgressBar percent={progress.percent} label={progress.message} />
+          <KeepOpenNotice>
+            Les deux œuvres sont en cours d&apos;analyse : l&apos;opération peut prendre plusieurs
+            minutes. Gardez cet onglet ouvert jusqu&apos;au bout — si vous le fermez ou changez de
+            page, la comparaison sera interrompue et devra être relancée.
+          </KeepOpenNotice>
+        </div>
+      )}
 
       {result && (
         <Card className="space-y-6">
