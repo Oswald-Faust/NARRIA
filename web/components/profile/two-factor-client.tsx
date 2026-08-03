@@ -100,7 +100,7 @@ export function TwoFactorClient({
       {error && <p className="text-sm text-red-400">{error}</p>}
       {message && <p className="text-sm text-emerald-500">{message}</p>}
 
-      <Card className="bg-white p-6">
+      <Card className="p-6">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-soft-pink/15 text-soft-pink">
@@ -124,10 +124,10 @@ export function TwoFactorClient({
       <section className="space-y-4">
         <h2 className="text-xl font-bold text-foreground">Choisissez votre méthode d&apos;authentification</h2>
         <div className="grid gap-5 xl:grid-cols-2">
-          <Card className="bg-white p-6">
+          <Card className="p-6">
             <div className="mb-4 flex items-start justify-between gap-4">
               <div className="flex items-start gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#eef0ff] text-primary">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                   <Smartphone className="h-5 w-5" />
                 </div>
                 <div>
@@ -135,7 +135,7 @@ export function TwoFactorClient({
                   <p className="text-sm text-muted">Google Authenticator, Authy…</p>
                 </div>
               </div>
-              <span className="rounded-full bg-[#edeafc] px-3 py-1.5 text-xs font-semibold text-primary">Recommandé</span>
+              <span className="rounded-full bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary">Recommandé</span>
             </div>
             <p className="mb-5 text-base leading-8 text-muted">
               Scannez un QR code avec votre application pour générer des codes temporaires à 6 chiffres.
@@ -146,9 +146,9 @@ export function TwoFactorClient({
             </Button>
           </Card>
 
-          <Card className="bg-white p-6">
+          <Card className="p-6">
             <div className="mb-4 flex items-start gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#fff4e8] text-yellow">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-yellow/15 text-yellow">
                 <MessageSquareText className="h-5 w-5" />
               </div>
               <div>

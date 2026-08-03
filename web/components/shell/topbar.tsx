@@ -67,6 +67,15 @@ export function Topbar({
       </div>
 
       <div className="flex items-center gap-2 sm:gap-3">
+        {/* Formule en cours — mène au détail de l'abonnement (page Profil). */}
+        <Link
+          href="/profil"
+          aria-label="Votre formule : PRO — voir l'abonnement"
+          className="rounded-full bg-purple/40 px-2.5 py-1 text-[10px] font-bold tracking-wide text-soft-purple transition-colors hover:bg-purple/60 hover:text-white"
+        >
+          PRO
+        </Link>
+
         {/* Segment Dashboard / Aide — masqué sur petits écrans */}
         <div className="hidden items-center gap-1 rounded-full border border-border bg-surface p-1 md:flex">
           <Link

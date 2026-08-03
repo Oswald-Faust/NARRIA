@@ -65,7 +65,7 @@ export function PasswordChangeClient({
       />
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.9fr)_minmax(280px,0.66fr)]">
-        <Card className="bg-white p-6">
+        <Card className="p-6">
           <div className="mb-6 flex items-center gap-3 border-b border-border pb-5">
             <KeyRound className="h-5 w-5 text-purple" />
             <h2 className="text-xl font-bold text-foreground">Nouveau mot de passe</h2>

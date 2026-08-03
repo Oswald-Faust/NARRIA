@@ -119,11 +119,6 @@ export function Sidebar({
 
       {/* Bas de sidebar */}
       <div className={cn("mt-auto pt-4", collapsed ? "flex w-full flex-col items-center" : "")}>
-        {!collapsed && (
-          <span className="mb-2 ml-3 inline-block rounded-full bg-purple/40 px-2.5 py-0.5 text-[10px] font-bold text-soft-purple">
-            PRO
-          </span>
-        )}
         <nav className={cn("space-y-1", collapsed && "flex flex-col items-center")}>
           {BOTTOM_NAV.map((item) => (
             <NavLink key={item.href} {...item} active={isActive(item.href)} collapsed={collapsed} onNavigate={onNavigate} />

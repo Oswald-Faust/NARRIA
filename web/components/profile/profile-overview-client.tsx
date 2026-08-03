@@ -125,11 +125,11 @@ export function ProfileOverviewClient({ initialProfile }: { initialProfile: Prof
       </section>
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.7fr)_minmax(320px,0.9fr)]">
-        <Card className="bg-white p-6">
+        <Card className="p-6">
           <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
               <UserRound className="h-5 w-5 text-purple" />
-              <h2 className="text-xl font-bold text-[#28214d]">Informations personnelles</h2>
+              <h2 className="text-xl font-bold text-foreground">Informations personnelles</h2>
             </div>
             {!editing ? (
               <Button
@@ -202,10 +202,10 @@ export function ProfileOverviewClient({ initialProfile }: { initialProfile: Prof
           </div>
         </Card>
 
-        <Card className="bg-white p-6">
+        <Card className="p-6">
           <div className="mb-5 flex items-center gap-3">
             <Shield className="h-5 w-5 text-purple" />
-            <h2 className="text-xl font-bold text-[#28214d]">Sécurité</h2>
+            <h2 className="text-xl font-bold text-foreground">Sécurité</h2>
           </div>
 
           <div className="space-y-4">
@@ -245,10 +245,10 @@ export function ProfileOverviewClient({ initialProfile }: { initialProfile: Prof
             return (
               <Card
                 key={plan.id}
-                className={active ? "border-soft-pink/50 bg-surface shadow-[0_12px_32px_rgba(214,73,136,0.08)]" : "bg-white"}
+                className={active ? "border-soft-pink/50 bg-surface shadow-[0_12px_32px_rgba(214,73,136,0.08)]" : "bg-surface"}
               >
                 <div className="mb-3 flex items-center justify-between gap-3">
-                  <h3 className="text-lg font-bold text-[#28214d]">{plan.label}</h3>
+                  <h3 className="text-lg font-bold text-foreground">{plan.label}</h3>
                   {active ? (
                     <span className="rounded-full bg-soft-pink/15 px-3 py-1 text-xs font-semibold text-soft-pink">
                       Actuel
