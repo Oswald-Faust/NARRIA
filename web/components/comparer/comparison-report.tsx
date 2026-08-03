@@ -82,12 +82,16 @@ export interface ComparisonReportData {
   correspondences: ComparisonCorrespondence[];
   warnings: string[];
   coverage?: ComparisonCoverage;
-  /** Confinement d'une œuvre dans l'autre (extrait, version tronquée). */
+  /** Confinement d'une œuvre dans l'autre (extrait, version tronquée, condensation). */
   inclusion?: {
     structural: number;
     textual: number | null;
     direction: "cand_in_ref" | "ref_in_cand" | null;
     detected: boolean;
+    /** Absents des comparaisons antérieures à l'alignement séquentiel (août 2026). */
+    sequential?: number;
+    condensedNodes?: number;
+    condensationRatio?: number;
   };
   genre?: ComparisonGenre;
   normalizationApplied?: boolean;
@@ -492,7 +496,22 @@ export function ComparisonReport({ data }: { data: ComparisonReportData }) {
                   <strong>{(data.inclusion.textual * 100).toFixed(0)} %</strong>
                 </li>
               ) : null}
+              {data.inclusion.condensedNodes ? (
+                <li>
+                  Épisodes fondus par condensation :{" "}
+                  <strong>{data.inclusion.condensedNodes}</strong>, soit{" "}
+                  <strong>{(data.inclusion.condensationRatio ?? 1).toFixed(1)}</strong> épisodes
+                  resserrés en un
+                </li>
+              ) : null}
             </ul>
+            {data.inclusion.condensedNodes ? (
+              <p className="mt-2 text-[0.9em] text-foreground/90">
+                La reprise procède par <strong>condensation</strong> et non par troncature : rien
+                n&apos;est retranché, la trame est resserrée. Résumé, réécriture abrégée ou
+                adaptation.
+              </p>
+            ) : null}
             <p className="mt-2 text-[0.9em] text-muted">
               Dans ce cas de figure, l&apos;indice de similarité global est mécaniquement abaissé par
               l&apos;écart de taille entre les deux œuvres : il ne doit pas être lu comme une absence de

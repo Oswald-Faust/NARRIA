@@ -27,6 +27,7 @@ import {
   type ContentSimilarityFn,
 } from "./content-similarity";
 import { maxWeightAssignment } from "./assignment";
+import { alignSequences, type SequenceAlignment } from "./condensation";
 import { compareTexts } from "./text-overlap";
 import { compareGenres, genreKey, type GenreComparison } from "./genre";
 import { evaluateAgainstBaseline, BASELINE_ALERT_Z } from "./baseline";
@@ -94,7 +95,7 @@ function modalitySimilarity(m1: Modalities, m2: Modalities): number {
   return dot / (n1 * n2);
 }
 
-function nodeSimilarity(n1: NarrativeNode, n2: NarrativeNode): number {
+export function nodeSimilarity(n1: NarrativeNode, n2: NarrativeNode): number {
   let score = 0;
   let functionMatch = false;
   let familyMatch = false;
@@ -671,7 +672,15 @@ function buildVerdict(
       inclusion.textual !== null
         ? ` La reprise est également littérale : ${(inclusion.textual * 100).toFixed(0)} % des suites de cinq mots ${shorter === "la référence" ? "de la référence" : "du candidat"} se retrouvent dans ${longer === "la référence" ? "la référence" : "le candidat"}.`
         : "";
-    return `Une œuvre paraît CONTENUE dans l'autre : ${(inclusion.structural * 100).toFixed(0)} % des nœuds narratifs ${shorter === "la référence" ? "de la référence" : "du candidat"} trouvent leur correspondance dans ${longer === "la référence" ? "la référence" : "le candidat"}.${literal} Le SNS de ${sns.toFixed(3)} est ici trompeur s'il est lu seul : il compare deux ensembles de tailles très inégales et se trouve mécaniquement abaissé par cet écart, non par une divergence de structure. Ce cas correspond à un extrait, une version tronquée ou un chapitre repris, et appelle un examen prioritaire.${crossGenreClause}`;
+    // La condensation est une opération d'écriture distincte de la troncature :
+    // rien n'est retranché, tout est resserré. Elle échappe au couplage injectif
+    // — un épisode ne peut y en expliquer qu'un seul — et c'est l'alignement
+    // séquentiel qui la révèle. Le dire explicitement oriente l'examen.
+    const condensation =
+      inclusion.condensedNodes > 0
+        ? ` La reprise procède par CONDENSATION : ${inclusion.condensedNodes} épisode${inclusion.condensedNodes > 1 ? "s" : ""} de l'œuvre longue ${inclusion.condensedNodes > 1 ? "sont fondus" : "est fondu"} dans un épisode de l'autre, à raison de ${inclusion.condensationRatio.toFixed(1)} épisodes resserrés en un. La trame est conservée, seule son amplitude change — un résumé, une réécriture abrégée ou une adaptation, et non une simple troncature.`
+        : "";
+    return `Une œuvre paraît CONTENUE dans l'autre : ${(inclusion.structural * 100).toFixed(0)} % des nœuds narratifs ${shorter === "la référence" ? "de la référence" : "du candidat"} trouvent leur correspondance dans ${longer === "la référence" ? "la référence" : "le candidat"}.${literal}${condensation} Le SNS de ${sns.toFixed(3)} est ici trompeur s'il est lu seul : il compare deux ensembles de tailles très inégales et se trouve mécaniquement abaissé par cet écart, non par une divergence de structure. Ce cas correspond à un extrait, une version tronquée ou un chapitre repris, et appelle un examen prioritaire.${crossGenreClause}`;
   }
 
   if (sns < 0.3)
@@ -775,9 +784,13 @@ function decideAlert(
       inclusion.textual !== null && inclusion.textual >= INCLUSION_TEXTUAL_THRESHOLD
         ? `, dont ${(inclusion.textual * 100).toFixed(0)} % de reprise littérale`
         : "";
+    const condensation =
+      inclusion.condensedNodes > 0
+        ? ` La reprise est CONDENSÉE (${inclusion.condensationRatio.toFixed(1)} épisodes resserrés en un) : la trame subsiste sous une amplitude réduite.`
+        : "";
     return {
       triggered: true,
-      reason: `Alerte : une œuvre est probablement contenue dans l'autre — ${(inclusion.structural * 100).toFixed(0)} % des nœuds de la plus courte y trouvent leur correspondance${literal}. Le SNS seul sous-estime ce cas, l'écart de taille l'abaissant mécaniquement.`,
+      reason: `Alerte : une œuvre est probablement contenue dans l'autre — ${(inclusion.structural * 100).toFixed(0)} % des nœuds de la plus courte y trouvent leur correspondance${literal}.${condensation} Le SNS seul sous-estime ce cas, l'écart de taille l'abaissant mécaniquement.`,
     };
   }
 
@@ -838,6 +851,7 @@ function toGenreVerdict(c: GenreComparison): GenreVerdict {
  */
 function scoreInclusion(
   coverage: CoverageReport,
+  alignment: SequenceAlignment,
   texts?: { ref: string; cand: string },
 ): InclusionReport {
   // Part de l'œuvre la PLUS COURTE que l'autre explique : c'est elle qui peut
@@ -845,7 +859,13 @@ function scoreInclusion(
   const refShare = coverage.refNodes > 0 ? coverage.refMatched / coverage.refNodes : 0;
   const candShare = coverage.candNodes > 0 ? coverage.candMatched / coverage.candNodes : 0;
   const candIsShorter = coverage.candNodes <= coverage.refNodes;
-  const structural = candIsShorter ? candShare : refShare;
+  const injective = candIsShorter ? candShare : refShare;
+
+  // L'alignement séquentiel ne peut qu'expliquer DAVANTAGE que le couplage
+  // injectif — il dispose des mêmes correspondances un-pour-un, plus les
+  // fusions. Retenir le maximum ne dégrade donc jamais la mesure ; c'est la
+  // condensation, invisible au couplage, qu'on récupère ainsi.
+  const structural = Math.max(injective, alignment.containment);
 
   const overlap = texts ? compareTexts(texts.ref, texts.cand) : null;
   const sizeRatio =
@@ -862,6 +882,9 @@ function scoreInclusion(
 
   return {
     structural,
+    sequential: alignment.containment,
+    condensedNodes: alignment.absorbedNodes,
+    condensationRatio: alignment.condensationRatio,
     textual: overlap ? overlap.containment : null,
     textualJaccard: overlap ? overlap.jaccard : null,
     direction:
@@ -915,7 +938,13 @@ export function compare(
       }
     : null;
 
-  const inclusion = scoreInclusion(coverage, options.texts);
+  // Alignement séquentiel : respecte l'ordre du sjuzet et autorise la
+  // condensation, que le couplage injectif de S_ISO ne peut pas voir.
+  const alignment = alignSequences(gRef, gCand, {
+    contentSimilarity,
+    labelSimilarity: nodeSimilarity,
+  });
+  const inclusion = scoreInclusion(coverage, alignment, options.texts);
 
   const verdict = buildVerdict(sns, ss, modality, genre, coverage, inclusion);
   const warnings = buildWarnings(sns, gRef, gCand, genre, coverage);

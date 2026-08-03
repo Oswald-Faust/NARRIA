@@ -20,6 +20,17 @@ const LlmNodeSchema = z.object({
   text_excerpt: z.string(),
   justification: z.string(),
   _cultural_correction: z.string().optional(),
+  /**
+   * Ancrage du nœud sur la plage de blocs produite par le découpage déterministe
+   * (`segmentation/block-splitter.ts`). Le modèle ne décide plus des frontières :
+   * il désigne l'intervalle de blocs que la fonction narrative recouvre. Facultatif,
+   * pour rester compatible avec les analyses en cache antérieures au découpage par blocs.
+   */
+  block_start: z.number().int().positive().optional(),
+  block_end: z.number().int().positive().optional(),
+  /** Bornes de caractères déduites de la plage de blocs, calculées côté serveur. */
+  _char_start: z.number().int().nonnegative().optional(),
+  _char_end: z.number().int().nonnegative().optional(),
 });
 
 const ActantConfigSchema = z.object({

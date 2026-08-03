@@ -8,7 +8,7 @@ const CHARS_PER_TOKEN = 4;
 const MODEL_CONTEXT_LIMIT = 200_000;
 const SAFETY_MARGIN = 60_000;
 export const CHUNK_THRESHOLD_TOKENS = MODEL_CONTEXT_LIMIT - SAFETY_MARGIN; // 140_000
-const TARGET_CHUNK_TOKENS = 90_000;
+export const TARGET_CHUNK_TOKENS = 90_000;
 const OVERLAP_TOKENS = 6_000;
 
 export function estimateTokens(text: string): number {

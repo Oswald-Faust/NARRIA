@@ -27,6 +27,17 @@ export interface NarrativeNode {
    * n'est configuré : le seuil de contenu retombe alors sur la mesure lexicale.
    */
   embedding?: number[];
+  /**
+   * Ancrage textuel du nœud (août 2026). `blockStart`/`blockEnd` désignent la
+   * plage de blocs du découpage déterministe que la fonction recouvre ;
+   * `charStart`/`charEnd` en sont les bornes de caractères dans le texte analysé.
+   * Absents sur les graphes produits avant l'introduction du découpage par blocs,
+   * et sur ceux que l'extraction n'a pas pu ancrer.
+   */
+  blockStart?: number;
+  blockEnd?: number;
+  charStart?: number;
+  charEnd?: number;
 }
 
 export interface NarrativeEdge {
@@ -102,6 +113,17 @@ export interface CoverageReport {
 export interface InclusionReport {
   /** Part des nœuds de l'œuvre la plus courte expliqués par l'autre ∈ [0, 1]. */
   structural: number;
+  /**
+   * Même mesure, obtenue par alignement séquentiel autorisant la condensation
+   * (août 2026). Contrairement à `structural`, issu d'un couplage injectif, elle
+   * sait qu'un épisode du candidat peut en résumer plusieurs de la source — cas
+   * que le couplage laissait orphelin. `structural` en retient le maximum.
+   */
+  sequential: number;
+  /** Épisodes absorbés par une fusion : 0 signifie « aucune condensation détectée ». */
+  condensedNodes: number;
+  /** Épisodes source par épisode candidat sur les étapes fusionnées ; 1 = pas de fusion. */
+  condensationRatio: number;
   /** Recouvrement littéral par n-grammes ; `null` si les textes ne sont pas fournis. */
   textual: number | null;
   /** Similarité textuelle globale (Jaccard) ; `null` si les textes ne sont pas fournis. */

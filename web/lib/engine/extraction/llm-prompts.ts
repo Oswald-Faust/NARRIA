@@ -93,7 +93,7 @@ export interface PromptMeta {
  * Construit comme fragment séparé (guillemets ordinaires) pour éviter tout
  * conflit avec les backtick du template literal englobant de `buildUserPrompt`.
  */
-const JSON_SCHEMA_BLOCK = [
+const buildJsonSchemaBlock = (hasBlocks: boolean) => [
   "Réponds UNIQUEMENT avec un objet JSON valide structuré ainsi :",
   "",
   "```json",
@@ -114,6 +114,7 @@ const JSON_SCHEMA_BLOCK = [
   '  "nodes": [',
   "    {",
   '      "sequence": 1,',
+  ...(hasBlocks ? ['      "block_start": 3,', '      "block_end": 5,'] : []),
   '      "function_code": "F10",',
   '      "function_name": "Rencontre",',
   '      "function_family": "Quête et cheminement",',
@@ -149,19 +150,94 @@ const JSON_SCHEMA_BLOCK = [
   '  "thematic_keywords": ["amour", "haine", "réconciliation", ...]',
   "}",
   "```",
-].join("\n");
+];
 
-export function buildUserPrompt(text: string, meta: PromptMeta = {}): string {
+/**
+ * Bloc d'ancrage inséré lorsque le texte a été pré-découpé par le découpeur
+ * déterministe (`segmentation/block-splitter.ts`).
+ *
+ * Les quatre règles y sont rappelées telles qu'elles ont été formulées, mais au
+ * PASSÉ : elles ont déjà été appliquées, mécaniquement, sur le texte fourni. Le
+ * modèle ne découpe plus — il ne peut donc plus dériver d'une exécution à
+ * l'autre. Il lui reste à faire ce que lui seul sait faire : reconnaître les
+ * fonctions narratives, et dire sur quels blocs elles portent.
+ */
+const BLOCK_ANCHORING_BLOCK = `# Découpage en blocs — DÉJÀ EFFECTUÉ, NON NÉGOCIABLE
+
+Le texte ci-dessus t'est fourni **déjà découpé en blocs**. Chaque bloc est
+précédé de son identifiant entre crochets : \`[12]\`. Ce découpage a été produit
+mécaniquement, par application stricte des règles suivantes, dans cet ordre :
+
+1. **Règle du Dialogue** — à chaque changement de locuteur (nouvelle ligne avec
+   tiret ou guillemets), un nouveau bloc a été créé. Deux répliques de
+   personnages différents ne sont jamais dans le même bloc.
+2. **Règle du Paragraphe** — à chaque saut de ligne marquant un nouveau
+   paragraphe, un nouveau bloc a été créé. Deux paragraphes différents ne sont
+   jamais combinés dans un seul bloc.
+3. **Règle du Saut Temporel** — à chaque marqueur temporel explicite (« Le
+   lendemain », « Trois jours plus tard », « Pendant ce temps », « Au même
+   moment »), un nouveau bloc a été créé.
+4. **Règle de Non-Fusion** — une phrase reprenant le personnage précédent par un
+   pronom (il, elle, ils) est restée dans le même bloc ; un changement de sujet
+   (« Jean entra. Marie était assise. ») a produit un nouveau bloc.
+
+Les identifiants \`[n]\` sont des repères ajoutés pour toi : ils ne font PAS
+partie de l'œuvre. Ne les recopie jamais dans \`text_excerpt\` ni dans
+\`justification\`.
+
+## Ce qui t'est demandé
+
+Tu ne redécoupes rien. Tu n'as pas à discuter ce découpage, ni à le
+contester, ni à proposer d'autres frontières. Pour chaque fonction narrative que
+tu identifies, tu indiques la PLAGE DE BLOCS qu'elle recouvre :
+
+- \`block_start\` — identifiant du premier bloc concerné ;
+- \`block_end\` — identifiant du dernier bloc concerné (égal à \`block_start\` si
+  la fonction tient dans un seul bloc).
+
+Contraintes impératives sur ces deux champs :
+- \`block_start\` ≤ \`block_end\`, et les deux existent dans la liste fournie ;
+- les plages se suivent dans l'ordre du récit : le \`block_start\` d'un nœud est
+  supérieur ou égal au \`block_start\` du nœud précédent ;
+- deux nœuds ne recouvrent pas la même plage exacte ;
+- \`text_excerpt\` est cité **mot pour mot** depuis les blocs de la plage
+  déclarée — c'est ce qui rend ton ancrage vérifiable.
+
+Un bloc est une unité de découpage, PAS une fonction narrative : une fonction
+recouvre le plus souvent plusieurs blocs consécutifs (une scène de combat, un
+échange de répliques). Le nombre de nœuds reste fixé par la règle de granularité
+ci-dessous, indépendamment du nombre de blocs.`;
+
+export function buildUserPrompt(
+  text: string,
+  meta: PromptMeta = {},
+  blocks?: { id: number; texte_brut: string }[],
+): string {
   let metaBlock = "";
   if (meta.title) metaBlock += `Titre : ${meta.title}\n`;
   if (meta.author) metaBlock += `Auteur : ${meta.author}\n`;
   if (metaBlock) metaBlock += "\n";
 
-  return `${metaBlock}Voici le texte à analyser :
+  const hasBlocks = Boolean(blocks && blocks.length > 0);
+  const body = hasBlocks
+    ? `Voici le texte à analyser, découpé en ${blocks!.length} blocs numérotés :
+
+<texte_decoupe>
+${blocks!.map((b) => `[${b.id}] ${b.texte_brut}`).join("\n")}
+</texte_decoupe>
+
+${BLOCK_ANCHORING_BLOCK}`
+    : `Voici le texte à analyser :
 
 <texte>
 ${text}
-</texte>
+</texte>`;
+
+  const anchoringItem = hasBlocks
+    ? "\n8. **La plage de blocs recouverte** (`block_start` et `block_end`), conformément aux consignes d'ancrage ci-dessus"
+    : "";
+
+  return `${metaBlock}${body}
 
 Analyse ce récit en produisant un graphe narratif structuré au format JSON.
 
@@ -172,9 +248,9 @@ Pour chaque fonction narrative identifiée, tu dois fournir :
 4. La tension dramatique estimée (entre 0.0 et 1.0, selon la courbe de Freytag)
 5. La phase dramatique (Exposition / Complication / Climax / Résolution)
 6. **Une justification textuelle citant un court extrait du texte qui appuie ton identification**
-7. Un index de séquence (ordre narratif : 1, 2, 3, ...)
+7. Un index de séquence (ordre narratif : 1, 2, 3, ...)${anchoringItem}
 
-${JSON_SCHEMA_BLOCK}
+${buildJsonSchemaBlock(hasBlocks).join("\n")}
 
 **Sur les deux schémas actantiels** : tu fournis SYSTÉMATIQUEMENT les deux configurations v1 et v2, même si l'une te paraît plus naturelle que l'autre. C'est le système NARR'IA qui choisira la combinaison la plus cohérente lors d'une comparaison entre deux œuvres. Si l'œuvre n'a vraiment qu'un seul actant central possible (par exemple un monologue introspectif), tu peux dupliquer la même configuration dans v1 et v2.
 
