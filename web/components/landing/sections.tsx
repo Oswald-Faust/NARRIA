@@ -141,7 +141,6 @@ export function HowItWorks() {
           sub="Aucune configuration, aucun balisage manuel. Vous déposez un texte, NARR'IA fait le reste."
         />
         <div className="relative mt-16 grid gap-6 md:grid-cols-3">
-          <div className="pointer-events-none absolute left-[16%] right-[16%] top-10 hidden border-t border-dashed border-lp-ink/15 md:block" aria-hidden />
           {STEPS.map((s, i) => (
             <Reveal key={s.n} delay={i * 0.15} effect={s.effect}>
               <div className="group relative h-full rounded-3xl border border-lp-ink/10 bg-lp-ink/3 p-7 transition-all duration-500 hover:-translate-y-1.5 hover:border-purple/40 hover:bg-lp-ink/5 hover:shadow-[0_24px_60px_-24px_rgba(132,59,144,0.55)]">
